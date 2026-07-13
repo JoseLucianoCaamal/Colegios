@@ -323,3 +323,34 @@ nav a:hover { background: #f2f2f2; border-radius: 5px; }
 .gallery-item img:hover {
     transform: scale(1.05); /* Un pequeño zoom al pasar el mouse */
 }
+
+.login-btn {
+    background-color: var(--primary);
+    color: white !important;
+    padding: 8px 20px !important;
+    border-radius: 25px;
+    border: 2px solid var(--primary);
+    transition: all 0.3s ease;
+}
+
+.login-btn:hover {
+    background-color: white;
+    color: var(--primary) !important;
+}
+
+.user-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary) !important;
+    border: 2px solid var(--primary);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    transition: all 0.3s;
+}
+
+.user-icon:hover {
+    background-color: var(--primary);
+    color: white !important;
+}
