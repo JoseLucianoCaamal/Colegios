@@ -92,3 +92,126 @@ nav a:hover { background: #f2f2f2; border-radius: 5px; }
 
 .container { max-width: 960px; margin: 20px auto; padding: 0 20px; }
 .contacto-card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+/* =========================================
+   SECCIÓN DE CONTACTO REVOLUCIONADA
+   ========================================= */
+.section-title {
+    text-align: center;
+    margin: 40px 0 30px;
+}
+
+.section-title h2 {
+    color: var(--primary);
+    font-size: 2.2rem;
+    margin-bottom: 10px;
+    position: relative;
+    display: inline-block;
+}
+
+/* Línea decorativa debajo del título */
+.section-title h2::after {
+    content: '';
+    width: 60%;
+    height: 4px;
+    background: #e63946; /* Acento rojo para resaltar */
+    position: absolute;
+    bottom: -8px;
+    left: 20%;
+    border-radius: 2px;
+}
+
+.section-title p {
+    color: #65676B;
+    font-size: 1.1rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* El sistema de columnas (Grid) */
+.contact-grid {
+    display: grid;
+    /* Se adapta a celulares (1 columna) o PC (3 columnas) automáticamente */
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 30px;
+    margin-bottom: 50px;
+}
+
+/* Diseño de las tarjetas */
+.modern-card {
+    background: white;
+    border-radius: 16px;
+    padding: 30px 20px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Animación al pasar el mouse (hover) */
+.modern-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0, 45, 90, 0.15);
+}
+
+.card-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+}
+
+.modern-card h3 {
+    color: var(--primary);
+    font-size: 1.4rem;
+    margin-bottom: 10px;
+}
+
+.modern-card p {
+    color: #666;
+    margin-bottom: 25px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+/* Tarjeta de ubicación destacada */
+.location-card {
+    border: 2px solid #e63946; /* Borde rojo sutil */
+    background: linear-gradient(to bottom, #ffffff, #fff9fa);
+}
+
+/* =========================================
+   BOTONES PROFESIONALES
+   ========================================= */
+.btn {
+    display: inline-block;
+    padding: 12px 25px;
+    border-radius: 30px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+}
+
+.btn-outline {
+    color: var(--primary);
+    border: 2px solid var(--primary);
+    background: transparent;
+}
+
+.btn-outline:hover {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary), #00509e);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 15px rgba(0, 45, 90, 0.3);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #00509e, var(--primary));
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(0, 45, 90, 0.4);
+}
