@@ -3,20 +3,29 @@ import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/1
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 export const iniciarSesion = async (e) => {
-    // Solución al error: Solo detenemos el evento si 'e' realmente existe
+    // 1. Detenemos la recarga de la página si existe el evento
     if (e && typeof e.preventDefault === 'function') {
         e.preventDefault();
     }
     
-    // Obtener los valores del formulario
-    const emailUsuario = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
+    // 2. Búsqueda inteligente: buscamos las cajas de texto por sus nombres más comunes
+    const inputEmail = document.getElementById('email') || document.getElementById('usuario') || document.getElementById('user');
+    const inputPassword = document.getElementById('password') || document.getElementById('pass') || document.getElementById('clave');
+    
+    // Si de plano no encuentra las cajas, nos avisa en lugar de romper el sistema
+    if (!inputEmail || !inputPassword) {
+        alert("Error: No se encontraron las cajas de texto. Asegúrate de que en tu login.html tengan id='email' y id='password'.");
+        return;
+    }
+
+    const emailUsuario = inputEmail.value;
+    const password = inputPassword.value;
     
     // Autocompletar el dominio si no lo escribieron
     const emailCompleto = emailUsuario.includes('@') ? emailUsuario : `${emailUsuario}@amorylibertad.org`;
 
     try {
-        // 1. Buscar el rol en Firestore usando el ID del usuario (sin el @)
+        // 3. Buscar el rol en Firestore usando el ID del usuario (sin el @)
         const idUsuario = emailUsuario.replace('@amorylibertad.org', '');
         const usuarioRef = doc(db, "usuarios", idUsuario);
         const docSnap = await getDoc(usuarioRef);
@@ -24,10 +33,10 @@ export const iniciarSesion = async (e) => {
         if (docSnap.exists()) {
             const userData = docSnap.data();
             
-            // 2. Si existe en la base de datos, intentamos iniciar sesión
+            // 4. Si existe en la base de datos, intentamos iniciar sesión
             await signInWithEmailAndPassword(auth, emailCompleto, password);
             
-            // 3. Redirigir según el rol
+            // 5. Redirigir según el rol
             if (userData.rol === "directora") {
                 window.location.href = "dashboard-directora.html";
             } else if (userData.rol === "maestro") {
@@ -36,7 +45,7 @@ export const iniciarSesion = async (e) => {
                 window.location.href = "dashboard-recepcion.html";
             } else {
                 alert("Acceso denegado: Rol no reconocido.");
-                auth.signOut(); // Cerramos la sesión si el rol es inválido
+                auth.signOut(); 
             }
         } else {
             alert("El usuario no existe en la base de datos.");
