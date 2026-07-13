@@ -1,74 +1,94 @@
 :root {
-    --primary: #003366;
-    --secondary: #f4f7f6;
-    --accent: #ffcc00;
-    --text: #333;
+    --primary: #002d5a;
+    --secondary: #f0f2f5; /* Un gris muy clarito tipo Facebook */
+    --text: #050505;
 }
 
-body {
-    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+body { 
+    font-family: 'Segoe UI', Arial, sans-serif; 
+    margin: 0; 
+    background-color: var(--secondary); 
+    color: var(--text); 
+}
+
+/* =========================================
+   CABECERA (PORTADA + LOGO + TEXTO)
+   ========================================= */
+.profile-header {
+    background: white;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    padding-bottom: 15px;
+}
+
+.cover-photo {
+    width: 100%;
+    height: 250px; /* Altura de la portada */
+    overflow: hidden;
+}
+
+.cover-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Llena el espacio sin deformar la imagen */
+    object-position: center;
+}
+
+/* Contenedor flexible para logo y texto */
+.profile-info {
+    display: flex;
+    align-items: flex-end; /* Alinea los elementos por debajo */
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 20px;
+    gap: 20px; /* Espacio entre el logo y el texto */
+}
+
+.profile-logo {
+    margin-top: -40px; /* Esto hace que el logo suba hacia la portada */
+    z-index: 2;
+}
+
+.profile-logo img {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    border: 4px solid white; /* Borde blanco para separar de la portada */
+    background: white;
+    object-fit: contain;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+
+.profile-text {
+    padding-bottom: 15px; /* Para que quede alineado con el logo */
+}
+
+.profile-text h1 {
     margin: 0;
-    background-color: var(--secondary);
+    font-size: 2rem;
     color: var(--text);
 }
 
-header {
-    background-color: var(--primary);
-    color: white;
-    padding: 2rem;
-    text-align: center;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+.profile-text p {
+    margin: 5px 0 0 0;
+    color: #65676B; /* Gris oscuro para el texto secundario */
+    font-weight: 500;
 }
 
-nav {
-    background: white;
-    display: flex;
-    justify-content: center;
-    padding: 1rem;
-    gap: 20px;
-    position: sticky;
-    top: 0;
+/* =========================================
+   NAVEGACIÓN Y CONTENIDO
+   ========================================= */
+nav { 
+    background: white; 
+    display: flex; 
+    justify-content: flex-start; /* Alinea a la izquierda */
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 15px 20px; 
+    gap: 20px; 
+    border-top: 1px solid #ddd;
 }
+nav a { text-decoration: none; color: #65676B; font-weight: bold; font-size: 0.95rem; padding: 10px; }
+nav a:hover { background: #f2f2f2; border-radius: 5px; }
 
-nav a {
-    text-decoration: none;
-    color: var(--primary);
-    font-weight: bold;
-    text-transform: uppercase;
-    font-size: 0.9rem;
-}
-
-.container {
-    max-width: 900px;
-    margin: 20px auto;
-    padding: 20px;
-}
-
-.hero-card {
-    background: white;
-    padding: 2rem;
-    border-radius: 15px;
-    text-align: center;
-    box-shadow: 0 10px 15px rgba(0,0,0,0.05);
-}
-
-
-
-header img {
-    display: block;
-    margin: 0 auto 15px auto;
-    width: 120px;       /* Tamaño fijo */
-    height: 120px;      /* Tamaño fijo igual que width para que sea círculo */
-    border-radius: 50%; /* Esto crea el círculo perfecto */
-    background: white;  /* El fondo blanco que viste en la vista previa */
-    padding: 10px;      /* Espacio interno para que el logo no toque el borde */
-    object-fit: contain;/* Asegura que el logo no se deforme */
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Sombra para que resalte */
-}
-
-.hero-image img {
-    display: block;
-    max-width: 100%;
-    height: auto;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-}
+.container { max-width: 960px; margin: 20px auto; padding: 0 20px; }
+.contacto-card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
