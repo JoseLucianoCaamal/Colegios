@@ -5,44 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pase de Lista - Amor y Libertad</title>
     <link rel="stylesheet" href="css/styles.css">
+    <!-- Script para generar el PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         body { background-color: #f4f7fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         .container { max-width: 950px; margin: 30px auto; padding: 0 20px; }
-        
-        /* Tarjetas estilo "Glass" y suaves */
         .card { padding: 30px; border-radius: 20px; background: #ffffff; border: 1px solid #eef2f7; box-shadow: 0 8px 16px rgba(0,0,0,0.03); margin-bottom: 25px; }
-        
-        /* Botón regresar */
         .btn-back-clean { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 15px; color: #7f8fa4; text-decoration: none; font-weight: 600; font-size: 0.95rem; transition: 0.3s; }
         .btn-back-clean:hover { color: #004a99; transform: translateX(-5px); }
-        
-        /* Filtros superiores */
         .filters-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; align-items: end; }
         .input-control { width: 100%; padding: 12px 15px; border: 2px solid #eef2f7; border-radius: 10px; font-family: inherit; font-size: 0.95rem; color: #333; transition: 0.3s; outline: none; }
         .input-control:focus { border-color: #004a99; }
         label { font-size: 0.85rem; font-weight: 700; color: #8898aa; display: block; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
-
-        /* Estilos de la tabla de asistencia (Moderna) */
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th { padding: 15px; text-align: left; font-size: 0.85rem; color: #8898aa; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #eef2f7; }
         td { padding: 15px; vertical-align: middle; border-bottom: 1px solid #f4f7fa; }
         .student-row { transition: background 0.2s; }
         .student-row:hover { background: #f8fbff; }
         .student-name { font-weight: 600; color: #32325d; font-size: 1.05rem; }
-
-        /* Botones de Asistencia tipo "Píldora" */
         .attendance-options { display: flex; gap: 10px; justify-content: flex-end; }
-        .attendance-options label {
-            cursor: pointer; padding: 8px 18px; border-radius: 20px; background: #f4f7fa; color: #7f8fa4; font-weight: 700; font-size: 0.85rem; text-transform: capitalize; transition: all 0.2s ease; border: 2px solid transparent; display: flex; align-items: center; gap: 5px; margin: 0;
-        }
+        .attendance-options label { cursor: pointer; padding: 8px 18px; border-radius: 20px; background: #f4f7fa; color: #7f8fa4; font-weight: 700; font-size: 0.85rem; transition: all 0.2s ease; border: 2px solid transparent; display: flex; align-items: center; gap: 5px; margin: 0; }
         .attendance-options input[type="radio"] { display: none; }
-        
-        /* Colores activos */
         .attendance-options input[value="Presente"]:checked + label { background: #e8f5e9; color: #2e7d32; border-color: #4CAF50; box-shadow: 0 4px 6px rgba(76, 175, 80, 0.15); }
         .attendance-options input[value="Retardo"]:checked + label { background: #fff8e1; color: #f57f17; border-color: #FFC107; box-shadow: 0 4px 6px rgba(255, 193, 7, 0.15); }
         .attendance-options input[value="Falta"]:checked + label { background: #ffebee; color: #c62828; border-color: #F44336; box-shadow: 0 4px 6px rgba(244, 67, 54, 0.15); }
-
         .btn-guardar { background: linear-gradient(135deg, #4CAF50, #2E7D32); color: white; border: none; padding: 16px; border-radius: 12px; font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3); }
         .btn-guardar:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(76, 175, 80, 0.4); }
     </style>
@@ -61,17 +47,19 @@
 </header>
 
 <main class="container">
-    <!-- Configuración del Pase de Lista -->
     <section class="card">
         <div class="filters-grid">
             <div>
                 <label>Grupo</label>
                 <select id="filtroGrupo" class="input-control">
                     <option value="">Seleccione grupo...</option>
-                    <option value="Maternal">Maternal</option>
-                    <option value="1ro A Kínder">1ro A Kínder</option>
-                    <option value="2do A Kínder">2do A Kínder</option>
-                    <option value="3ro A Kínder">3ro A Kínder</option>
+                    <option value="Preescolar 1 y 2 multigrado">Preescolar 1 y 2 multigrado</option>
+                    <option value="Preescolar 3">Preescolar 3</option>
+                    <option value="Primaria baja: 1° y 2°">Primaria baja: 1° y 2°</option>
+                    <option value="Primaria media: 3° y 4° multigrado">Primaria media: 3° y 4° multigrado</option>
+                    <option value="Primaria alta: 5° y 6° multigrado">Primaria alta: 5° y 6° multigrado</option>
+                    <option value="Secundaria 1">Secundaria 1</option>
+                    <option value="Secundaria 2 y 3 multigrado">Secundaria 2 y 3 multigrado</option>
                 </select>
             </div>
             <div>
@@ -90,7 +78,6 @@
         </div>
     </section>
 
-    <!-- Lista Dinámica -->
     <section class="card" id="seccion-lista" style="display: none;">
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eef2f7; padding-bottom: 15px; margin-bottom: 15px;">
             <h3 style="margin: 0; color: #004a99; font-size: 1.4rem;" id="titulo-lista">Alumnos</h3>
@@ -98,18 +85,14 @@
         </div>
         
         <table>
-            <thead>
-                <tr>
-                    <th>Nombre del Alumno</th>
-                    <th style="text-align: right; padding-right: 25px;">Estado de Asistencia</th>
-                </tr>
-            </thead>
-            <tbody id="tabla-asistencia">
-                <!-- Se llena con JS -->
-            </tbody>
+            <thead><tr><th>Nombre del Alumno</th><th style="text-align: right; padding-right: 25px;">Estado de Asistencia</th></tr></thead>
+            <tbody id="tabla-asistencia"></tbody>
         </table>
         
-        <button id="btn-guardar-asistencia" class="btn-guardar" style="width:100%; margin-top: 30px;">✅ Confirmar y Guardar Asistencia</button>
+        <div style="display: flex; gap: 15px; margin-top: 30px;">
+            <button id="btn-guardar-asistencia" class="btn-guardar" style="flex: 2;">✅ Confirmar y Guardar</button>
+            <button id="btn-exportar-pdf" class="btn" style="flex: 1; background: #004a99; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer;">📄 Descargar PDF</button>
+        </div>
     </section>
 </main>
 
@@ -117,32 +100,21 @@
     import { db } from './js/firebase-config.js';
     import { collection, query, where, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // Poner la fecha de hoy por defecto
-    const hoy = new Date();
-    document.getElementById('fechaAsistencia').valueAsDate = hoy;
-
+    document.getElementById('fechaAsistencia').valueAsDate = new Date();
     const filtroGrupo = document.getElementById('filtroGrupo');
     const selectMateria = document.getElementById('materiaAsistencia');
     const btnCargar = document.getElementById('btn-cargar-lista');
     const tabla = document.getElementById('tabla-asistencia');
     const seccionLista = document.getElementById('seccion-lista');
-    
     let alumnosActuales = [];
 
-    // 1. CARGAR MATERIAS AL CAMBIAR EL GRUPO (Corregido)
     filtroGrupo.addEventListener('change', async () => {
         const grupoSeleccionado = filtroGrupo.value;
         selectMateria.innerHTML = "<option value=''>Cargando...</option>";
-
-        if (!grupoSeleccionado) {
-            selectMateria.innerHTML = "<option value=''>Esperando grupo...</option>";
-            return;
-        }
-
+        if (!grupoSeleccionado) { selectMateria.innerHTML = "<option value=''>Esperando grupo...</option>"; return; }
         try {
             const qMaterias = query(collection(db, "materias"), where("grupo", "==", grupoSeleccionado));
             const querySnapshot = await getDocs(qMaterias);
-            
             selectMateria.innerHTML = "<option value=''>Seleccione asignatura...</option>";
             let contador = 0;
             querySnapshot.forEach((docSnap) => {
@@ -150,39 +122,26 @@
                 const data = docSnap.data();
                 selectMateria.innerHTML += `<option value="${data.nombre}">${data.nombre}</option>`;
             });
-
-            if (contador === 0) {
-                selectMateria.innerHTML = "<option value=''>Sin materias asignadas</option>";
-            }
-        } catch (error) {
-            console.error("Error al cargar materias:", error);
-            selectMateria.innerHTML = "<option value=''>Error al cargar</option>";
-        }
+            if (contador === 0) selectMateria.innerHTML = "<option value=''>Sin materias asignadas</option>";
+        } catch (error) { selectMateria.innerHTML = "<option value=''>Error al cargar</option>"; }
     });
 
-    // 2. GENERAR LISTA DE ALUMNOS
     btnCargar.addEventListener('click', async () => {
         const grupo = filtroGrupo.value;
         const materia = selectMateria.value;
         const fecha = document.getElementById('fechaAsistencia').value;
 
-        if(!grupo || !materia) {
-            alert("⚠️ Selecciona un grupo y una asignatura primero.");
-            return;
-        }
-
+        if(!grupo || !materia) return alert("⚠️ Selecciona un grupo y una asignatura primero.");
         tabla.innerHTML = "<tr><td colspan='2' style='text-align:center; padding: 40px; color:#8898aa;'>Buscando alumnos... 🔍</td></tr>";
         seccionLista.style.display = 'block';
         alumnosActuales = [];
         
-        // Formatear fecha para el título
         document.getElementById('badge-fecha').innerText = fecha;
         document.getElementById('titulo-lista').innerText = `${grupo} - ${materia}`;
 
         try {
             const q = query(collection(db, "alumnos"), where("grupo", "==", grupo));
             const querySnapshot = await getDocs(q);
-            
             tabla.innerHTML = "";
             let contador = 0;
 
@@ -190,21 +149,16 @@
                 contador++;
                 const data = docSnap.data();
                 alumnosActuales.push(docSnap.id); 
-                
                 const row = document.createElement('tr');
                 row.className = "student-row";
                 row.innerHTML = `
-                    <td>
-                        <div class="student-name">${data.nombre}</div>
-                    </td>
+                    <td><div class="student-name">${data.nombre}</div></td>
                     <td>
                         <div class="attendance-options">
                             <input type="radio" name="ast_${docSnap.id}" id="p_${docSnap.id}" value="Presente" checked>
                             <label for="p_${docSnap.id}">✔️ Presente</label>
-                            
                             <input type="radio" name="ast_${docSnap.id}" id="r_${docSnap.id}" value="Retardo">
                             <label for="r_${docSnap.id}">⏱️ Retardo</label>
-                            
                             <input type="radio" name="ast_${docSnap.id}" id="f_${docSnap.id}" value="Falta">
                             <label for="f_${docSnap.id}">❌ Falta</label>
                         </div>
@@ -212,49 +166,29 @@
                 `;
                 tabla.appendChild(row);
             });
-
-            if(contador === 0) {
-                tabla.innerHTML = "<tr><td colspan='2' style='text-align:center; padding: 40px; color:#8898aa;'>No hay alumnos inscritos en este grupo todavía.</td></tr>";
-            }
-
-        } catch (error) {
-            console.error("Error:", error);
-            tabla.innerHTML = "<tr><td colspan='2' style='text-align:center; color:#F44336;'>Hubo un error de conexión con la base de datos.</td></tr>";
-        }
+            if(contador === 0) tabla.innerHTML = "<tr><td colspan='2' style='text-align:center; padding: 40px; color:#8898aa;'>No hay alumnos inscritos en este grupo todavía.</td></tr>";
+        } catch (error) { tabla.innerHTML = "<tr><td colspan='2' style='text-align:center; color:#F44336;'>Hubo un error de conexión.</td></tr>"; }
     });
 
-    // 3. GUARDAR LA ASISTENCIA
     document.getElementById('btn-guardar-asistencia').addEventListener('click', async () => {
         if(alumnosActuales.length === 0) return;
-
-        const grupo = filtroGrupo.value;
-        const materia = selectMateria.value;
-        const fecha = document.getElementById('fechaAsistencia').value;
-
+        const grupo = filtroGrupo.value; const materia = selectMateria.value; const fecha = document.getElementById('fechaAsistencia').value;
         let registroAsistencia = {};
-        alumnosActuales.forEach(id => {
-            const opcionSeleccionada = document.querySelector(`input[name="ast_${id}"]:checked`).value;
-            registroAsistencia[id] = opcionSeleccionada;
-        });
+        alumnosActuales.forEach(id => { registroAsistencia[id] = document.querySelector(`input[name="ast_${id}"]:checked`).value; });
 
         try {
-            await addDoc(collection(db, "asistencias"), {
-                grupo: grupo,
-                materia: materia,
-                fecha: fecha,
-                detalles: registroAsistencia,
-                timestamp: new Date()
-            });
-
+            await addDoc(collection(db, "asistencias"), { grupo, materia, fecha, detalles: registroAsistencia, timestamp: new Date() });
             alert("🎉 ¡Asistencia guardada exitosamente!");
-            seccionLista.style.display = 'none'; 
-            selectMateria.value = ""; 
-        } catch (error) {
-            console.error("Error al guardar:", error);
-            alert("Error al guardar la asistencia.");
-        }
+            seccionLista.style.display = 'none'; selectMateria.value = ""; 
+        } catch (error) { alert("Error al guardar la asistencia."); }
+    });
+
+    // Código para el PDF
+    document.getElementById('btn-exportar-pdf').addEventListener('click', () => {
+        const elemento = document.getElementById('seccion-lista');
+        const opciones = { margin: 10, filename: 'Pase_De_Lista.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
+        html2pdf().set(opciones).from(elemento).save();
     });
 </script>
-
 </body>
 </html>

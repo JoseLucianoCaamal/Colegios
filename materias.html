@@ -30,7 +30,6 @@
 </header>
 
 <main class="grid-layout">
-    <!-- Formulario -->
     <section class="card">
         <h3 style="margin-top:0; color:#004a99;">📚 Nueva Materia</h3>
         <label>Nombre de la Materia</label>
@@ -39,16 +38,18 @@
         <label>Asignar al Grupo</label>
         <select id="grupoMateria" class="input-control">
             <option value="">Selecciona un grupo...</option>
-            <option value="Maternal">Maternal</option>
-            <option value="1ro A Kínder">1ro A Kínder</option>
-            <option value="2do A Kínder">2do A Kínder</option>
-            <option value="3ro A Kínder">3ro A Kínder</option>
+            <option value="Preescolar 1 y 2 multigrado">Preescolar 1 y 2 multigrado</option>
+            <option value="Preescolar 3">Preescolar 3</option>
+            <option value="Primaria baja: 1° y 2°">Primaria baja: 1° y 2°</option>
+            <option value="Primaria media: 3° y 4° multigrado">Primaria media: 3° y 4° multigrado</option>
+            <option value="Primaria alta: 5° y 6° multigrado">Primaria alta: 5° y 6° multigrado</option>
+            <option value="Secundaria 1">Secundaria 1</option>
+            <option value="Secundaria 2 y 3 multigrado">Secundaria 2 y 3 multigrado</option>
         </select>
         
         <button id="btn-registrar-materia" class="btn btn-primary" style="width:100%; padding:12px; border-radius:8px;">Guardar Materia</button>
     </section>
 
-    <!-- Lista -->
     <section class="card">
         <h3 style="margin-top:0; color:#004a99;">📋 Materias Registradas</h3>
         <table>
@@ -62,7 +63,6 @@
     import { db } from './js/firebase-config.js';
     import { collection, addDoc, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // 1. Guardar Materia
     document.getElementById('btn-registrar-materia').addEventListener('click', async () => {
         const nombre = document.getElementById('nombreMateria').value;
         const grupo = document.getElementById('grupoMateria').value;
@@ -78,7 +78,6 @@
         }
     });
 
-    // 2. Cargar Materias
     async function cargarMaterias() {
         const lista = document.getElementById('lista-materias');
         try {

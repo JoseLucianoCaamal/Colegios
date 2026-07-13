@@ -14,6 +14,10 @@
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
         @media (max-width: 768px) { .grid-layout { grid-template-columns: 1fr; } }
+
+        /* Estilos de la Ventana Emergente (Modal) */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; z-index: 1000; }
+        .modal-content { background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
@@ -30,10 +34,8 @@
 </header>
 
 <main class="grid-layout">
-    <!-- Formulario de Registro -->
     <section class="card">
         <h3 style="margin-top: 0; color: #004a99;">🧒 Dar de alta nuevo alumno</h3>
-        
         <div class="input-group"><label>Nombre Completo</label><input type="text" id="nombreAlumno" class="input-control"></div>
         <div class="input-group"><label>Fecha de Nacimiento</label><input type="date" id="fechaNacimiento" class="input-control"></div>
         <div class="input-group"><label>Alergias o Condiciones</label><input type="text" id="alergias" class="input-control" placeholder="Ej: Ninguna"></div>
@@ -55,7 +57,6 @@
         <button id="btn-registrar" class="btn btn-primary" style="width: 100%; padding: 12px; border-radius: 8px; font-weight: bold;">Guardar Alumno</button>
     </section>
 
-    <!-- Lista de Alumnos General -->
     <section class="card">
         <h3 style="margin-top: 0; color: #004a99;">📋 Todos los Alumnos</h3>
         <div style="overflow-x: auto;">
@@ -66,6 +67,30 @@
         </div>
     </section>
 </main>
+
+<!-- VENTANA EMERGENTE PARA PROMOVER (Modal) -->
+<div id="modal-promover" class="modal-overlay">
+    <div class="modal-content">
+        <h3 style="color:#004a99; margin-top:0;">Promover de Grado</h3>
+        <p>Selecciona el nuevo grupo para:<br><strong id="modal-nombre-alumno" style="font-size: 1.1rem; color:#333;"></strong></p>
+        
+        <select id="modal-nuevo-grupo" class="input-control" style="margin-bottom:20px;">
+            <option value="Preescolar 1 y 2 multigrado">Preescolar 1 y 2 multigrado</option>
+            <option value="Preescolar 3">Preescolar 3</option>
+            <option value="Primaria baja: 1° y 2°">Primaria baja: 1° y 2°</option>
+            <option value="Primaria media: 3° y 4° multigrado">Primaria media: 3° y 4° multigrado</option>
+            <option value="Primaria alta: 5° y 6° multigrado">Primaria alta: 5° y 6° multigrado</option>
+            <option value="Secundaria 1">Secundaria 1</option>
+            <option value="Secundaria 2 y 3 multigrado">Secundaria 2 y 3 multigrado</option>
+            <option value="Egresado / Baja">Egresado / Baja</option>
+        </select>
+
+        <div style="display:flex; gap:10px;">
+            <button id="btn-cerrar-modal" class="btn" style="flex:1; background:#e0e6ed; color:#333; font-weight:bold; border-radius:8px; border:none; padding:10px; cursor:pointer;">Cancelar</button>
+            <button id="btn-guardar-promocion" class="btn btn-primary" style="flex:1; border-radius:8px; padding:10px; font-weight:bold;">Guardar</button>
+        </div>
+    </div>
+</div>
 
 <script type="module">
     import { db, auth } from './js/firebase-config.js';
@@ -90,6 +115,9 @@
         } catch (e) { alert("Error: " + e.message); }
     });
 
+    // Variables para controlar la promoción
+    let idAlumnoAEditar = null;
+
     async function cargarAlumnos() {
         const lista = document.getElementById('lista-alumnos');
         const querySnapshot = await getDocs(collection(db, "alumnos"));
@@ -100,29 +128,49 @@
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td style="font-weight:bold;">${data.nombre}</td>
-                <td><span style="background:#eef2f7; padding:4px 8px; border-radius:4px; font-size:0.8rem;">${data.grupo}</span></td>
-                <td>${data.tutor} (${data.telefono})<br><small style="color:red;">Alergias: ${data.alergias}</small></td>
+                <td><span style="background:#eef2f7; padding:4px 8px; border-radius:4px; font-size:0.8rem; text-align:center; display:inline-block;">${data.grupo}</span></td>
+                <td>${data.tutor} (${data.telefono})<br><small style="color:#e63946; font-weight:bold;">Alergias: ${data.alergias}</small></td>
                 <td>
-                    <button class="btn-editar" style="background:#FFC107; border:none; padding:5px; border-radius:4px; cursor:pointer;">Promover</button>
-                    <button class="btn-delete" style="background:#ff4d4d; color:white; border:none; padding:5px; border-radius:4px; cursor:pointer;">Borrar</button>
+                    <button class="btn-editar" style="background:#FFC107; border:none; padding:6px 10px; border-radius:5px; cursor:pointer; font-weight:bold; margin-bottom:5px; width:100%;">Promover</button>
+                    <button class="btn-delete" style="background:#ff4d4d; color:white; border:none; padding:6px 10px; border-radius:5px; cursor:pointer; font-weight:bold; width:100%;">Borrar</button>
                 </td>
             `;
 
-            row.querySelector('.btn-editar').addEventListener('click', async () => {
-                const nuevoGrupo = prompt("Escribe el nuevo grupo para promover al alumno:", data.grupo);
-                if(nuevoGrupo && nuevoGrupo !== data.grupo) {
-                    await updateDoc(doc(db, "alumnos", docSnap.id), { grupo: nuevoGrupo });
-                    location.reload();
-                }
+            // Abrir Modal de Promoción
+            row.querySelector('.btn-editar').addEventListener('click', () => {
+                idAlumnoAEditar = docSnap.id;
+                document.getElementById('modal-nombre-alumno').innerText = data.nombre;
+                document.getElementById('modal-nuevo-grupo').value = data.grupo; // Pone el grupo actual por defecto
+                document.getElementById('modal-promover').style.display = 'flex'; // Muestra la ventana
             });
 
             row.querySelector('.btn-delete').addEventListener('click', async () => {
-                if(confirm("¿Eliminar alumno?")) { await deleteDoc(doc(db, "alumnos", docSnap.id)); location.reload(); }
+                if(confirm(`¿Estás seguro de eliminar a ${data.nombre}?`)) { await deleteDoc(doc(db, "alumnos", docSnap.id)); location.reload(); }
             });
 
             lista.appendChild(row);
         });
     }
+
+    // Cerrar el Modal
+    document.getElementById('btn-cerrar-modal').addEventListener('click', () => {
+        document.getElementById('modal-promover').style.display = 'none';
+        idAlumnoAEditar = null;
+    });
+
+    // Guardar la Promoción
+    document.getElementById('btn-guardar-promocion').addEventListener('click', async () => {
+        if (!idAlumnoAEditar) return;
+        const nuevoGrupo = document.getElementById('modal-nuevo-grupo').value;
+        
+        try {
+            await updateDoc(doc(db, "alumnos", idAlumnoAEditar), { grupo: nuevoGrupo });
+            document.getElementById('modal-promover').style.display = 'none';
+            location.reload();
+        } catch (error) {
+            alert("Hubo un error al actualizar el grupo.");
+        }
+    });
 </script>
 </body>
 </html>
