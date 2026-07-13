@@ -2,7 +2,8 @@ import { auth, db } from './firebase-config.js';
 import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-document.getElementById('login-form').addEventListener('submit', async (e) => {
+// Agregamos el "export const iniciarSesion" que tu login.html está buscando
+export const iniciarSesion = async (e) => {
     e.preventDefault();
     
     // Obtener los valores del formulario
@@ -13,14 +14,15 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
     const emailCompleto = emailUsuario.includes('@') ? emailUsuario : `${emailUsuario}@amorylibertad.org`;
 
     try {
-        // 1. Buscar el rol en Firestore primero usando el nombre de usuario
-        const usuarioRef = doc(db, "usuarios", emailUsuario.replace('@amorylibertad.org', ''));
+        // 1. Buscar el rol en Firestore usando el ID del usuario (sin el @)
+        const idUsuario = emailUsuario.replace('@amorylibertad.org', '');
+        const usuarioRef = doc(db, "usuarios", idUsuario);
         const docSnap = await getDoc(usuarioRef);
 
         if (docSnap.exists()) {
             const userData = docSnap.data();
             
-            // 2. Si existe, intentamos iniciar sesión en Authentication
+            // 2. Si existe en la base de datos, intentamos iniciar sesión
             await signInWithEmailAndPassword(auth, emailCompleto, password);
             
             // 3. Redirigir según el rol
@@ -32,7 +34,7 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
                 window.location.href = "dashboard-recepcion.html";
             } else {
                 alert("Acceso denegado: Rol no reconocido.");
-                auth.signOut();
+                auth.signOut(); // Cerramos la sesión si el rol es inválido
             }
         } else {
             alert("El usuario no existe en la base de datos.");
@@ -41,4 +43,4 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
         console.error("Error en login:", error);
         alert("Credenciales incorrectas o error de conexión.");
     }
-});
+};
