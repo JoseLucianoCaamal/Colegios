@@ -2,7 +2,6 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel de Maestros - Amor y Libertad</title>
     <link rel="stylesheet" href="css/styles.css">
     <style>
@@ -32,45 +31,36 @@
 </div>
 
 <main>
-    <div style="text-align: center; margin-top: 20px;">
-        <h2 style="color: #004a99;">¿Qué haremos hoy?</h2>
-        <hr style="width: 50px; border: 2px solid #ff4d4d; margin: auto;">
-    </div>
-
     <div class="grid-options">
-        <!-- AQUÍ ESTÁ EL CAMBIO: Solo Directorio, no Registro -->
         <div class="option-card">
             <span class="option-icon">🧒</span>
-            <h3>Directorio de Alumnos</h3>
-            <p style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">Consulta la lista y datos de los alumnos.</p>
+            <h3>Directorio</h3>
             <a href="ver-alumnos.html" class="btn btn-primary">ENTRAR</a>
         </div>
-
         <div class="option-card">
             <span class="option-icon">📋</span>
             <h3>Pase de Lista</h3>
-            <p style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">Registra la asistencia diaria de tu grupo.</p>
             <a href="asistencia.html" class="btn btn-primary">ENTRAR</a>
         </div>
-
         <div class="option-card">
             <span class="option-icon">📚</span>
-            <h3>Materias</h3>
-            <p style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">Gestiona las asignaturas impartidas.</p>
+            <h3>Mis Materias</h3>
             <a href="materias.html" class="btn btn-primary">ENTRAR</a>
         </div>
-
+        <!-- NUEVO BOTÓN CALIFICACIONES -->
+        <div class="option-card">
+            <span class="option-icon">📝</span>
+            <h3>Calificaciones</h3>
+            <a href="calificaciones.html" class="btn btn-primary" style="background:#4CAF50; border-color:#4CAF50;">ENTRAR</a>
+        </div>
         <div class="option-card">
             <span class="option-icon">📸</span>
             <h3>Subir Fotos</h3>
-            <p style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">Sube evidencias y actividades.</p>
             <a href="fotos.html" class="btn btn-primary">ENTRAR</a>
         </div>
-
         <div class="option-card">
             <span class="option-icon">🔒</span>
-            <h3>Mi Seguridad</h3>
-            <p style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">Cambia tu contraseña de acceso.</p>
+            <h3>Seguridad</h3>
             <a href="cambiar-password.html" class="btn btn-primary">CAMBIAR CLAVE</a>
         </div>
     </div>
@@ -83,7 +73,7 @@
     onAuthStateChanged(auth, (user) => { if (!user) window.location.href = "login.html"; });
 
     document.getElementById('btn-logout').addEventListener('click', () => {
-        signOut(auth).then(() => { window.location.href = "login.html"; });
+        signOut(auth).then(() => window.location.href = "login.html");
     });
 </script>
 </body>

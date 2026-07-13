@@ -21,8 +21,8 @@
     <div class="profile-info">
         <a href="dashboard-maestro.html" class="btn-back-clean">⬅ Volver al Panel</a>
         <div class="profile-text">
-            <h1>Gestión de Materias</h1>
-            <p>Asignaturas por grupo</p>
+            <h1>Mis Materias</h1>
+            <p>Tus asignaturas por grupo</p>
         </div>
     </div>
 </header>
@@ -31,7 +31,7 @@
     <section class="card">
         <h3 style="margin-top:0; color:#004a99;">📚 Nueva Materia</h3>
         <label>Nombre de la Materia</label>
-        <input type="text" id="nombreMateria" class="input-control" placeholder="Ej: Matemáticas, Educación Física...">
+        <input type="text" id="nombreMateria" class="input-control" placeholder="Ej: Matemáticas">
         
         <label>Asignar al Grupo</label>
         <select id="grupoMateria" class="input-control">
@@ -42,7 +42,7 @@
     </section>
 
     <section class="card">
-        <h3 style="margin-top:0; color:#004a99;">📋 Materias Registradas</h3>
+        <h3 style="margin-top:0; color:#004a99;">📋 Mis Materias Registradas</h3>
         <table>
             <thead><tr><th>Materia</th><th>Grupo</th><th>Acción</th></tr></thead>
             <tbody id="lista-materias"></tbody>
@@ -53,29 +53,28 @@
 <script type="module">
     import { db, auth } from './js/firebase-config.js';
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { collection, addDoc, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { collection, addDoc, getDocs, doc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    let maestroActual = null;
 
     onAuthStateChanged(auth, (user) => {
         if (!user) window.location.href = "login.html";
         else {
+            maestroActual = user.email;
             cargarGruposOficiales();
-            cargarMaterias();
+            cargarMisMaterias();
         }
     });
 
-    // MAGIA: Leer grupos de Firebase
     async function cargarGruposOficiales() {
         const selectGrupo = document.getElementById('grupoMateria');
         try {
             const querySnapshot = await getDocs(collection(db, "grupos"));
             selectGrupo.innerHTML = '<option value="">Selecciona un grupo...</option>';
             querySnapshot.forEach((docSnap) => {
-                const nombre = docSnap.data().nombre;
-                selectGrupo.innerHTML += `<option value="${nombre}">${nombre}</option>`;
+                selectGrupo.innerHTML += `<option value="${docSnap.data().nombre}">${docSnap.data().nombre}</option>`;
             });
-        } catch (error) {
-            selectGrupo.innerHTML = '<option value="">Error al cargar grupos</option>';
-        }
+        } catch (error) { selectGrupo.innerHTML = '<option value="">Error al cargar grupos</option>'; }
     }
 
     document.getElementById('btn-registrar-materia').addEventListener('click', async () => {
@@ -84,15 +83,18 @@
         if (!nombre || !grupo) return alert("Completa ambos campos");
 
         try {
-            await addDoc(collection(db, "materias"), { nombre, grupo });
+            // Guardamos la materia amarrada al correo del maestro
+            await addDoc(collection(db, "materias"), { nombre, grupo, maestro_email: maestroActual });
             alert("Materia registrada con éxito"); location.reload();
-        } catch (error) { alert("Error al guardar: " + error.message); }
+        } catch (error) { alert("Error al guardar."); }
     });
 
-    async function cargarMaterias() {
+    async function cargarMisMaterias() {
         const lista = document.getElementById('lista-materias');
         try {
-            const querySnapshot = await getDocs(collection(db, "materias"));
+            // Solo trae las materias que le pertenecen a este maestro
+            const q = query(collection(db, "materias"), where("maestro_email", "==", maestroActual));
+            const querySnapshot = await getDocs(q);
             lista.innerHTML = "";
             querySnapshot.forEach((docSnap) => {
                 const data = docSnap.data();
