@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Maestros - Amor y Libertad</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .grid-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; max-width: 900px; margin: 40px auto; padding: 0 20px; }
+        .option-card { background: white; padding: 40px 20px; border-radius: 15px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: transform 0.3s; }
+        .option-card:hover { transform: translateY(-5px); }
+        .option-icon { font-size: 3rem; margin-bottom: 15px; display: block; }
+        .logout-container { max-width: 1000px; margin: auto; text-align: right; padding: 10px 20px; }
+        .btn-logout { background: #ff4d4d; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<header class="profile-header">
+    <div class="cover-photo"><img src="Img/logo2.png" alt="Portada"></div>
+    <div class="profile-info">
+        <div class="profile-logo"><img src="Img/logo.png" alt="Logo"></div>
+        <div class="profile-text">
+            <h1>Hola, Maestro(a)</h1>
+            <p>Panel de Control Docente</p>
+        </div>
+    </div>
+</header>
+
+<div class="logout-container">
+    <button id="btn-logout" class="btn-logout">Cerrar Sesión</button>
+</div>
+
+<main>
+    <div style="text-align: center; margin-top: 20px;">
+        <h2 style="color: #004a99;">¿Qué haremos hoy?</h2>
+        <hr style="width: 50px; border: 2px solid #ff4d4d; margin: auto;">
+    </div>
+
+    <div class="grid-options">
+    <!-- 1. Alta de Alumnos -->
+    <div class="option-card">
+        <span class="option-icon">🧒</span>
+        <h3>Registro de Alumnos</h3>
+        <p style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">Da de alta a los niños y sus datos médicos.</p>
+        <a href="registro-alumnos.html" class="btn btn-primary">ENTRAR</a>
+    </div>
+
+    <!-- 2. Pase de Lista -->
+    <div class="option-card">
+        <span class="option-icon">📋</span>
+        <h3>Pase de Lista</h3>
+        <p style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">Registra la asistencia diaria de tu grupo.</p>
+        <a href="asistencia.html" class="btn btn-primary">ENTRAR</a>
+    </div>
+
+    <!-- 3. Planeación -->
+    <div class="option-card">
+        <span class="option-icon">📝</span>
+        <h3>Planeación</h3>
+        <p style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">Sube o redacta tus planes de clase.</p>
+        <a href="planeacion.html" class="btn btn-primary">ENTRAR</a>
+    </div>
+
+    <!-- 4. Materias -->
+    <div class="option-card">
+        <span class="option-icon">📚</span>
+        <h3>Materias</h3>
+        <p style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">Gestiona las asignaturas y calificaciones.</p>
+        <a href="materias.html" class="btn btn-primary">ENTRAR</a>
+    </div>
+
+    <!-- 5. Fotos -->
+    <div class="option-card">
+        <span class="option-icon">📸</span>
+        <h3>Subir Fotos</h3>
+        <p style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">Sube evidencias y actividades.</p>
+        <a href="fotos.html" class="btn btn-primary">ENTRAR</a>
+    </div>
+
+    <!-- 6. Avisos -->
+    <div class="option-card">
+        <span class="option-icon">📌</span>
+        <h3>Ver Avisos</h3>
+        <p style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">Revisa los anuncios de la dirección.</p>
+        <a href="avisos.html" class="btn btn-primary">ENTRAR</a>
+    </div>
+</div>
+</main>
+
+<script type="module">
+    import { auth } from './js/firebase-config.js';
+    import { signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+    document.getElementById('btn-logout').addEventListener('click', () => {
+        signOut(auth).then(() => {
+            window.location.href = "login.html";
+        }).catch((error) => {
+            console.error("Error al cerrar sesión", error);
+        });
+    });
+</script>
+
+</body>
+</html>

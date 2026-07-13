@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Alumnos - Amor y Libertad</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 1100px; margin: 20px auto; padding: 0 20px; }
+        .card { padding: 30px; border-radius: 20px; background: #ffffff; border: 1px solid #e0e6ed; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        /* Botón de regreso mejorado y más limpio */
+        .btn-back-clean { display: inline-flex; align-items: center; gap: 5px; margin-bottom: 15px; color: #666; text-decoration: none; font-size: 0.9rem; font-weight: bold; transition: color 0.3s; }
+        .btn-back-clean:hover { color: #004a99; }
+        
+        /* Estilos de formulario */
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; margin-bottom: 5px; color: #333; font-weight: bold; font-size: 0.9rem; }
+        .input-control { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-family: inherit; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        .btn-delete { background: #ff4d4d; color: white; border: none; padding: 6px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; }
+        
+        @media (max-width: 768px) {
+            .grid-layout { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="profile-header">
+    <div class="cover-photo"><img src="Img/logo2.png" alt="Portada"></div>
+    <div class="profile-info">
+        <!-- Botón de regreso integrado en la cabecera -->
+        <a href="dashboard-maestro.html" class="btn-back-clean">⬅ Volver al Panel</a>
+        <div class="profile-logo"><img src="Img/logo.png" alt="Logo"></div>
+        <div class="profile-text">
+            <h1>Registro de Alumnos</h1>
+            <p>Base de datos escolar</p>
+        </div>
+    </div>
+</header>
+
+<main class="grid-layout">
+    <!-- Formulario de Registro de Niños -->
+    <section class="card">
+        <h3 style="margin-top: 0; color: #004a99;">🧒 Dar de alta nuevo alumno</h3>
+        
+        <div class="input-group">
+            <label>Nombre Completo</label>
+            <input type="text" id="nombreAlumno" class="input-control" placeholder="Ej: María José Pérez Gómez">
+        </div>
+        
+        <div class="input-group">
+            <label>Fecha de Nacimiento</label>
+            <input type="date" id="fechaNacimiento" class="input-control">
+        </div>
+
+        <div class="input-group">
+            <label>Alergias o Condiciones Médicas</label>
+            <input type="text" id="alergias" class="input-control" placeholder="Ej: Ninguna / Alérgico a la penicilina">
+        </div>
+
+        <div class="input-group">
+            <label>Nombre del Tutor</label>
+            <input type="text" id="tutor" class="input-control" placeholder="Ej: Carlos Pérez">
+        </div>
+
+        <div class="input-group">
+            <label>Teléfono de Emergencia</label>
+            <input type="tel" id="telefono" class="input-control" placeholder="Ej: 999 123 4567">
+        </div>
+
+        <div class="input-group">
+            <label>Grado y Grupo</label>
+            <select id="grupo" class="input-control">
+                <option value="">Selecciona un grupo...</option>
+                <option value="Maternal">Maternal</option>
+                <option value="1ro A Kínder">1ro A Kínder</option>
+                <option value="2do A Kínder">2do A Kínder</option>
+                <option value="3ro A Kínder">3ro A Kínder</option>
+            </select>
+        </div>
+
+        <button id="btn-registrar-alumno" class="btn btn-primary" style="width: 100%; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 10px;">Guardar Alumno</button>
+    </section>
+
+    <!-- Lista de Alumnos Registrados -->
+    <section class="card">
+        <h3 style="margin-top: 0; color: #004a99;">📋 Alumnos en el Sistema</h3>
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Grupo</th>
+                        <th>Tutor</th>
+                        <th>Alergias</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="lista-alumnos">
+                    <!-- Aquí aparecerán los alumnos -->
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<script type="module">
+    import { db } from './js/firebase-config.js';
+    import { collection, addDoc, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    // 1. Guardar Alumno en Firebase
+    document.getElementById('btn-registrar-alumno').addEventListener('click', async () => {
+        const nombre = document.getElementById('nombreAlumno').value;
+        const fecha = document.getElementById('fechaNacimiento').value;
+        const alergias = document.getElementById('alergias').value;
+        const tutor = document.getElementById('tutor').value;
+        const telefono = document.getElementById('telefono').value;
+        const grupo = document.getElementById('grupo').value;
+
+        // Validar que no falten datos importantes
+        if (!nombre || !fecha || !tutor || !telefono || !grupo) {
+            alert("Por favor, rellena todos los campos obligatorios.");
+            return;
+        }
+
+        try {
+            // Usamos addDoc para que Firebase genere un ID único para cada niño automáticamente
+            await addDoc(collection(db, "alumnos"), {
+                nombre: nombre,
+                fechaNacimiento: fecha,
+                alergias: alergias || "Ninguna",
+                tutor: tutor,
+                telefono: telefono,
+                grupo: grupo,
+                fechaRegistro: new Date() // Guardamos cuándo se registró
+            });
+            
+            alert("¡Alumno registrado con éxito!");
+            location.reload(); // Recargar para ver el cambio
+        } catch (error) {
+            console.error("Error al guardar:", error);
+            alert("Error al registrar alumno: " + error.message);
+        }
+    });
+
+    // 2. Leer y Mostrar Alumnos
+    async function cargarAlumnos() {
+        const lista = document.getElementById('lista-alumnos');
+        lista.innerHTML = "<tr><td colspan='5'>Cargando alumnos...</td></tr>";
+
+        try {
+            const querySnapshot = await getDocs(collection(db, "alumnos"));
+            lista.innerHTML = ""; // Limpiar tabla
+            
+            let contador = 0;
+            querySnapshot.forEach((docSnap) => {
+                contador++;
+                const data = docSnap.data();
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td style="font-weight:bold;">${data.nombre}</td>
+                    <td><span style="background:#eef2f7; padding:4px 8px; border-radius:4px; font-size:0.8rem;">${data.grupo}</span></td>
+                    <td>${data.tutor}<br><small style="color:#666;">📞 ${data.telefono}</small></td>
+                    <td>${data.alergias}</td>
+                    <td><button class="btn-delete">Borrar</button></td>
+                `;
+
+                // Botón para borrar al niño
+                row.querySelector('.btn-delete').addEventListener('click', async () => {
+                    if(confirm(`¿Estás seguro de eliminar a ${data.nombre} del sistema?`)) {
+                        await deleteDoc(doc(db, "alumnos", docSnap.id));
+                        location.reload();
+                    }
+                });
+
+                lista.appendChild(row);
+            });
+
+            if (contador === 0) {
+                lista.innerHTML = "<tr><td colspan='5' style='text-align:center;'>No hay alumnos registrados.</td></tr>";
+            }
+        } catch (error) {
+            console.error("Error al cargar alumnos:", error);
+            lista.innerHTML = "<tr><td colspan='5'>Error al cargar la base de datos.</td></tr>";
+        }
+    }
+
+    // Ejecutar al abrir la página
+    cargarAlumnos();
+</script>
+</body>
+</html>

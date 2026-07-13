@@ -20,12 +20,16 @@ export async function iniciarSesion(usuarioIngresado, pass) {
         // Autenticamos usando el email real y la contraseña
         await signInWithEmailAndPassword(auth, userData.email, pass);
         
+        await signInWithEmailAndPassword(auth, userData.email, pass);
         console.log("Autenticación exitosa. Redirigiendo...");
         
+        // ¡ESTA ES LA PARTE NUEVA!
         if (userData.rol === "directora") {
             window.location.href = "dashboard-directora.html";
+        } else if (userData.rol === "maestro") {
+            window.location.href = "dashboard-maestro.html"; // Redirige al maestro
         } else {
-            alert("Acceso denegado: No tienes rol de directora.");
+            alert("Acceso denegado: Rol no reconocido.");
         }
     } catch (error) {
         console.error("Error completo de Firebase:", error);

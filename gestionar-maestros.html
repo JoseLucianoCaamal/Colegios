@@ -2,95 +2,108 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestionar Maestros - Amor y Libertad</title>
     <link rel="stylesheet" href="css/styles.css">
     <style>
-        /* Esto hace que en celulares se vea uno debajo del otro y no tan junto */
-@media (max-width: 768px) {
-    .grid-layout { grid-template-columns: 1fr; gap: 15px; }
-    .gestion-container { padding: 10px; }
-}
-.btn-back { display: inline-block; margin-bottom: 10px; color: var(--primary); text-decoration: none; font-weight: bold; }
+        .grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 1000px; margin: 20px auto; padding: 0 20px; }
+        .card { padding: 30px; border-radius: 20px; background: #ffffff; border: 1px solid #e0e6ed; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .btn-back { display: inline-block; margin-bottom: 10px; color: var(--primary); text-decoration: none; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        .btn-delete { background: #ff4d4d; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; }
+        
+        @media (max-width: 768px) {
+            .grid-layout { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
 
+<!-- TU CABECERA ORIGINAL RECUPERADA -->
 <header class="profile-header">
     <div class="cover-photo"><img src="Img/logo2.png" alt="Portada"></div>
     <div class="profile-info">
         <a href="dashboard-directora.html" class="btn-back">← Regresar al Dashboard</a>
         <div class="profile-logo"><img src="Img/logo.png" alt="Logo"></div>
-        <div class="profile-text"><h1>Gestionar Maestros</h1><p>Panel Administrativo</p></div>
+        <div class="profile-text">
+            <h1>Gestionar Maestros</h1>
+            <p>Panel Administrativo</p>
+        </div>
     </div>
 </header>
 
-<main class="gestion-container grid-layout">
-    <div class="card" style="padding: 30px; border-radius: 20px; background: #ffffff; border: 1px solid #e0e6ed;">
-    <h3 style="margin-top: 0; color: var(--primary); font-size: 1.5rem; margin-bottom: 20px;">
-         Nuevo Maestro
-    </h3>
-    
-    <div class="input-group">
-        <input type="text" id="nuevoUsuario" placeholder="Usuario (ej: maestro_juan)" 
-               style="width: 100%; padding: 15px; margin-bottom: 15px; border: 2px solid #eef2f7; border-radius: 12px; font-size: 1rem; transition: 0.3s; box-sizing: border-box;">
-    </div>
-    
-    <div class="input-group">
-        <input type="password" id="nuevaPass" placeholder="Clave temporal" 
-               style="width: 100%; padding: 15px; margin-bottom: 20px; border: 2px solid #eef2f7; border-radius: 12px; font-size: 1rem; transition: 0.3s; box-sizing: border-box;">
-    </div>
-    
-    <button id="btn-registrar" class="btn btn-primary" 
-            style="width: 100%; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.3s;">
-        Registrar Maestro
-    </button>
-</div>
+<main class="grid-layout">
+    <!-- Formulario de Registro -->
+    <section class="card">
+        <h3 style="margin-top: 0; color: #004a99;">✨ Nuevo Maestro</h3>
+        <input type="text" id="nuevoUsuario" placeholder="Usuario (ej: maestro.juan)" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
+        <input type="password" id="nuevaPass" placeholder="Clave temporal" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
+        <button id="btn-registrar" class="btn btn-primary" style="width: 100%; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold;">Registrar Maestro</button>
+    </section>
 
-    <!-- Lista de Maestros -->
-    <div class="card">
+    <!-- Lista -->
+    <section class="card">
         <h3>Maestros Registrados</h3>
         <table>
             <thead><tr><th>Usuario</th><th>Acción</th></tr></thead>
-            <tbody id="lista-maestros"></tbody>
+            <tbody id="lista-maestros">
+                <!-- Aquí aparecerán los maestros -->
+            </tbody>
         </table>
-    </div>
+    </section>
 </main>
 
 <script type="module">
     import { db, auth } from './js/firebase-config.js';
     import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { collection, getDocs, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     document.getElementById('btn-registrar').addEventListener('click', async () => {
         const usuarioInput = document.getElementById('nuevoUsuario').value;
         const pass = document.getElementById('nuevaPass').value;
 
-        if (!usuarioInput || !pass) {
-            alert("Por favor, rellena ambos campos.");
-            return;
-        }
-
-        // Aquí hacemos la magia: le agregamos el dominio automáticamente
+        if (!usuarioInput || !pass) { alert("Rellena todos los campos"); return; }
         const emailCompleto = `${usuarioInput}@amorylibertad.org`;
 
         try {
-            // 1. Crear usuario en Firebase Authentication
             await createUserWithEmailAndPassword(auth, emailCompleto, pass);
-            
-            // 2. Guardar datos en Firestore
             await setDoc(doc(db, "usuarios", usuarioInput), {
                 usuario: usuarioInput,
                 rol: "maestro",
                 email: emailCompleto
             });
-
-            alert("¡Maestro registrado con éxito como: " + emailCompleto);
+            alert("¡Registrado con éxito!");
             location.reload(); 
         } catch (error) {
-            console.error("Error detallado:", error);
-            alert("Error al registrar: " + error.message);
+            alert("Error: " + error.message);
         }
     });
+
+    async function cargarMaestros() {
+        const lista = document.getElementById('lista-maestros');
+        try {
+            const querySnapshot = await getDocs(collection(db, "usuarios"));
+            lista.innerHTML = "";
+            querySnapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                if(data.rol === "maestro") {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `<td>${data.usuario}</td><td><button class="btn-delete">Eliminar</button></td>`;
+                    row.querySelector('.btn-delete').addEventListener('click', async () => {
+                        if(confirm("¿Borrar a este maestro?")) {
+                            await deleteDoc(doc(db, "usuarios", data.usuario));
+                            location.reload();
+                        }
+                    });
+                    lista.appendChild(row);
+                }
+            });
+        } catch (error) {
+            console.error("Error al cargar:", error);
+        }
+    }
+    cargarMaestros();
 </script>
 </body>
 </html>

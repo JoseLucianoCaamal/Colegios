@@ -4,54 +4,141 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fotos - Amor y Libertad</title>
-    <link rel="icon" type="image/png" href="Img/logo.png">
-    <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="css/styles.css">
+    <style>
+        body { background: #f4f7f6; padding-bottom: 50px; }
+        .container-gallery { max-width: 1100px; margin: auto; padding: 0 20px; }
+        .card { padding: 20px; border-radius: 15px; background: #ffffff; border: 1px solid #e0e6ed; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .btn-back-clean { display: inline-flex; align-items: center; gap: 5px; margin-bottom: 15px; color: #666; text-decoration: none; font-weight: bold; transition: 0.3s; }
+        .btn-back-clean:hover { color: #004a99; }
+        
+        /* Controles de subida y filtros */
+        .controls-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end; }
+        .input-control { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; }
+        label { font-size: 0.85rem; font-weight: bold; color: #555; display: block; margin-bottom: 5px; }
+        
+        /* Cuadrícula de fotos */
+        .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; margin-top: 20px; }
+        .photo-item { position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); background: #000; aspect-ratio: 4/3; }
+        .photo-item img { width: 100%; height: 100%; object-fit: cover; opacity: 0.9; transition: transform 0.3s; }
+        .photo-item:hover img { transform: scale(1.05); opacity: 1; }
+        
+        /* Detalles sobre la foto */
+        .photo-info { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.8)); color: white; padding: 15px 10px 10px; font-size: 0.85rem; }
+        
+        /* Botón eliminar superpuesto */
+        .btn-delete-photo { position: absolute; top: 10px; right: 10px; background: rgba(255, 77, 77, 0.9); color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; font-weight: bold; opacity: 0; transition: 0.3s; }
+        .photo-item:hover .btn-delete-photo { opacity: 1; } /* Solo aparece al pasar el ratón */
+    </style>
 </head>
 <body>
 
-<!-- Cabecera (Igual que en inicio) -->
 <header class="profile-header">
-    <div class="cover-photo">
-        <img src="Img/logo2.png" alt="Portada Amor y Libertad">
-    </div>
+    <div class="cover-photo"><img src="Img/logo2.png" alt="Portada"></div>
     <div class="profile-info">
-        <div class="profile-logo">
-            <img src="Img/logo.png" alt="Logo Amor y Libertad">
-        </div>
+        <!-- Le agregamos el ID btn-regresar -->
+        <a href="dashboard-maestro.html" id="btn-regresar" class="btn-back-clean">⬅ Volver al Panel</a>
+        <div class="profile-logo"><img src="Img/logo.png" alt="Logo"></div>
         <div class="profile-text">
-            <h1>Centro Educativo Amor y Libertad</h1>
-            <p>Galería de Actividades</p>
+            <h1>Galería Escolar</h1>
+            <p>Evidencias y Actividades</p>
         </div>
     </div>
 </header>
 
-<!-- Menú de Navegación -->
-<nav>
-    <a href="index.html">INICIO</a>
-    <a href="Enero-2025.pdf" target="_blank">CALENDARIO</a>
-    <a href="#">FOTOS</a> <!-- Aquí ya no va a ningún lado porque ya estamos en fotos -->
-    <a href="index.html#contacto">CONTACTO</a> <!-- Regresa a inicio y baja a contacto -->
-</nav>
-
-<!-- Contenedor de la Galería -->
-<main class="container">
-    <div class="section-title">
-        <h2>Galería de Actividades</h2>
-    </div>
-
-    <div class="gallery-grid">
-        <!-- Ejemplo de cómo agregar cada foto -->
-        <div class="gallery-item">
-            <img src="Img/actividad1.jpg" alt="Actividad escolar">
+<main class="container-gallery">
+    <!-- Le agregamos el ID panel-subida a esta sección -->
+    <section class="card" id="panel-subida">
+        <h3 style="margin-top:0; color:#004a99;">☁ Subir Nueva Foto</h3>
+        <div class="controls-grid">
+            <div>
+                <label>Álbum / Evento</label>
+                <input type="text" id="album" class="input-control" placeholder="Ej: Día de la Primavera">
+            </div>
+            <div>
+                <label>Fecha de la actividad</label>
+                <input type="date" id="fechaActividad" class="input-control">
+            </div>
+            <div>
+                <label>Seleccionar Archivo</label>
+                <input type="file" id="archivoFoto" class="input-control" accept="image/*">
+            </div>
+            <div>
+                <button class="btn btn-primary" style="width:100%; padding:10px; border-radius:8px;">Subir Foto</button>
+            </div>
         </div>
-        <div class="gallery-item">
-            <img src="Img/actividad2.jpg" alt="Actividad escolar">
+    </section>
+
+    <!-- Filtros de búsqueda (Esto sí lo ven los papás) -->
+    <section class="card" style="background: #f8fafd; border-color: #cce0ff;">
+        <div class="controls-grid">
+            <div>
+                <label>Filtrar por Álbum</label>
+                <select class="input-control">
+                    <option value="Todos">Todos los álbumes</option>
+                    <option value="Día de la Primavera">Día de la Primavera</option>
+                    <option value="Honores a la Bandera">Honores a la Bandera</option>
+                </select>
+            </div>
+            <div>
+                <label>Filtrar por Fecha</label>
+                <input type="date" class="input-control">
+            </div>
+            <div>
+                <button class="btn" style="background:#fff; border:1px solid #004a99; color:#004a99; width:100%; padding:10px; border-radius:8px; font-weight:bold;">Buscar</button>
+            </div>
         </div>
-        <!-- Puedes seguir agregando más bloques de .gallery-item aquí -->
+    </section>
+
+    <!-- Cuadrícula de la Galería -->
+    <div class="photo-grid">
+        <!-- Foto 1 -->
+        <div class="photo-item">
+            <img src="Img/logo2.png" alt="Actividad escolar">
+            <div class="photo-info">
+                <strong>Día de la Primavera</strong><br>
+                12/08/2026
+            </div>
+            <button class="btn-delete-photo">🗑 Eliminar</button>
+        </div>
+
+        <!-- Foto 2 -->
+        <div class="photo-item">
+            <img src="Img/logo.png" alt="Actividad escolar">
+            <div class="photo-info">
+                <strong>Honores a la Bandera</strong><br>
+                05/08/2026
+            </div>
+            <button class="btn-delete-photo">🗑 Eliminar</button>
+        </div>
     </div>
 </main>
 
-<script src="js/app.js"></script>
+<script type="module">
+    import { auth } from './js/firebase-config.js';
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+    // GUARDIA DE SEGURIDAD
+    onAuthStateChanged(auth, (user) => {
+        const panelSubida = document.getElementById('panel-subida');
+        const btnRegresar = document.getElementById('btn-regresar');
+        const botonesBorrar = document.querySelectorAll('.btn-delete-photo');
+
+        if (!user) {
+            // MODO VISITANTE (Padres): Ocultamos cosas de administración
+            if (panelSubida) panelSubida.style.display = 'none';
+            if (btnRegresar) btnRegresar.style.display = 'none';
+            // Desaparecemos los botones de basura de las fotos
+            botonesBorrar.forEach(btn => btn.style.display = 'none');
+        } else {
+            // MODO MAESTRO/DIRECTORA: Todo es visible
+            if (panelSubida) panelSubida.style.display = 'block';
+            if (btnRegresar) btnRegresar.style.display = 'inline-flex';
+            // Nos aseguramos que los botones de basura puedan aparecer al hacer hover
+            botonesBorrar.forEach(btn => btn.style.display = '');
+        }
+    });
+</script>
+
 </body>
 </html>
