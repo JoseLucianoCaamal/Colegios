@@ -1,5 +1,5 @@
 // Cambiamos a v2 para forzar la actualización
-const CACHE_NAME = 'colegio-v2.1'; 
+const CACHE_NAME = 'colegio-v2.2'; 
 const ASSETS = [
   '/Colegios/',
   '/Colegios/index.html',

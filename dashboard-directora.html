@@ -15,6 +15,19 @@
         <div class="profile-logo"><img src="Img/logo.png" alt="Logo"></div>
         <div class="profile-text"><h1>Hola, Directora</h1><p>Panel de Administración</p></div>
     </div>
+    <button id="btn-logout" class="btn btn-secondary">Cerrar Sesión</button>
+
+    <script type="module">
+        import { auth } from './js/firebase-config.js';
+        import { signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        document.getElementById('btn-logout').addEventListener('click', () => {
+            signOut(auth).then(() => {
+                window.location.href = "login.html";
+            });
+        });
+
+    </script>
 </header>
 
 <main class="container">
@@ -26,14 +39,14 @@
             <div class="card-icon">👥</div>
             <h3>Gestionar Maestros</h3>
             <p>Alta y baja de personal docente.</p>
-            <a href="#" class="btn btn-primary">Entrar</a>
+            <a href="gestionar-maestros.html" class="btn btn-primary">ENTRAR</a>
         </div>
         
         <div class="modern-card">
             <div class="card-icon">📸</div>
             <h3>Revisar Fotos</h3>
             <p>Supervisar contenido publicado.</p>
-            <a href="#" class="btn btn-primary">Entrar</a>
+            <a href="fotos.html" class="btn btn-primary">ENTRAR</a>
         </div>
         
         <div class="modern-card">
