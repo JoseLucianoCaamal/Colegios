@@ -1,15 +1,62 @@
-/* Colores Institucionales */
 :root {
-    --primary-color: #003366; /* Azul oscuro institucional */
-    --secondary-color: #e9ecef;
-    --text-color: #333;
+    --primary: #003366;
+    --secondary: #f4f7f6;
+    --accent: #ffcc00;
+    --text: #333;
 }
 
-body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f8f9fa; color: var(--text-color); }
+body {
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    margin: 0;
+    background-color: var(--secondary);
+    color: var(--text);
+}
 
-header { background: var(--primary-color); color: white; padding: 20px; text-align: center; }
+header {
+    background-color: var(--primary);
+    color: white;
+    padding: 2rem;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
 
-nav { display: flex; justify-content: center; background: var(--secondary-color); padding: 10px; }
-nav a { margin: 0 15px; text-decoration: none; color: var(--primary-color); font-weight: bold; }
+nav {
+    background: white;
+    display: flex;
+    justify-content: center;
+    padding: 1rem;
+    gap: 20px;
+    position: sticky;
+    top: 0;
+}
 
-.container { max-width: 800px; margin: 20px auto; padding: 20px; }
+nav a {
+    text-decoration: none;
+    color: var(--primary);
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+}
+
+.container {
+    max-width: 900px;
+    margin: 20px auto;
+    padding: 20px;
+}
+
+.hero-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 10px 15px rgba(0,0,0,0.05);
+}
+
+/* Estilo para que el logo sea responsivo */
+header img {
+    display: block;
+    margin: 0 auto 15px auto;
+    border-radius: 50%; /* Opcional: le da forma circular si el logo es cuadrado */
+    background: white; /* Por si el logo tiene fondo transparente */
+    padding: 5px;
+}
