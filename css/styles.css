@@ -295,3 +295,31 @@ nav a:hover { background: #f2f2f2; border-radius: 5px; }
 }
 .avisos-card h3 { margin-top: 0; color: #e63946; font-size: 1.2rem; }
 .avisos-card p { margin-bottom: 0; font-weight: 500; }
+
+/* Estilo para la Galería de Fotos */
+.gallery-grid {
+    display: grid;
+    /* Esto crea columnas automáticas que se ajustan al tamaño de la pantalla */
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+    padding: 10px;
+    margin-top: 20px;
+}
+
+.gallery-item {
+    aspect-ratio: 1 / 1; /* Esto hace que cada foto sea un cuadrado perfecto */
+    overflow: hidden;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Recorta la imagen para que rellene el cuadrado sin deformarse */
+    transition: transform 0.3s ease;
+}
+
+.gallery-item img:hover {
+    transform: scale(1.05); /* Un pequeño zoom al pasar el mouse */
+}
