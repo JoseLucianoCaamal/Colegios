@@ -65,3 +65,10 @@ header img {
     object-fit: contain;/* Asegura que el logo no se deforme */
     box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Sombra para que resalte */
 }
+
+.hero-image img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
