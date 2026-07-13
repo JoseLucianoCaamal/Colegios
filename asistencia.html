@@ -6,23 +6,30 @@
     <link rel="stylesheet" href="css/styles.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        body { background-color: #f4f7fa; }
+        body { background-color: #f4f7fa; font-family: 'Segoe UI', sans-serif;}
         .container { max-width: 950px; margin: 30px auto; padding: 0 20px; }
         .card { padding: 30px; border-radius: 20px; background: #ffffff; border: 1px solid #eef2f7; box-shadow: 0 8px 16px rgba(0,0,0,0.03); margin-bottom: 25px; }
         .btn-back-clean { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 15px; color: #7f8fa4; text-decoration: none; font-weight: bold; }
         .filters-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; align-items: end; }
-        .input-control { width: 100%; padding: 12px 15px; border: 2px solid #eef2f7; border-radius: 10px; font-family: inherit; font-size: 0.95rem; }
+        .input-control { width: 100%; padding: 12px 15px; border: 2px solid #eef2f7; border-radius: 10px; font-size: 0.95rem; outline: none; transition:0.3s;}
+        .input-control:focus { border-color: #004a99; }
         label { font-size: 0.85rem; font-weight: 700; color: #8898aa; display: block; margin-bottom: 8px; text-transform: uppercase; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { padding: 15px; border-bottom: 1px solid #f4f7fa; text-align:left; }
         .student-name { font-weight: 600; color: #32325d; font-size: 1.05rem; }
+        
         .attendance-options { display: flex; gap: 10px; justify-content: flex-end; }
         .attendance-options label { cursor: pointer; padding: 8px 18px; border-radius: 20px; background: #f4f7fa; color: #7f8fa4; font-weight: 700; font-size: 0.85rem; border: 2px solid transparent; }
         .attendance-options input[type="radio"] { display: none; }
+        
+        /* Colores dinámicos al seleccionar */
         .attendance-options input[value="Presente"]:checked + label { background: #e8f5e9; color: #2e7d32; border-color: #4CAF50; }
         .attendance-options input[value="Retardo"]:checked + label { background: #fff8e1; color: #f57f17; border-color: #FFC107; }
         .attendance-options input[value="Falta"]:checked + label { background: #ffebee; color: #c62828; border-color: #F44336; }
-        .btn-guardar { background: linear-gradient(135deg, #4CAF50, #2E7D32); color: white; border: none; padding: 16px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%;}
+        
+        .btn-guardar { background: linear-gradient(135deg, #4CAF50, #2E7D32); color: white; border: none; padding: 16px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s;}
+        .btn-guardar:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(76,175,80,0.4);}
+        .badge-history { background: #FF9800; color: white; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; display: none; margin-left: 10px;}
     </style>
 </head>
 <body>
@@ -33,7 +40,7 @@
         <a href="dashboard-maestro.html" class="btn-back-clean">⬅ Volver al Panel</a>
         <div class="profile-text">
             <h1>Pase de Lista</h1>
-            <p style="color: #8898aa;">Control Diario de Asistencia</p>
+            <p style="color: #8898aa;">Control y Consulta Histórica de Asistencia</p>
         </div>
     </div>
 </header>
@@ -54,18 +61,21 @@
                 </select>
             </div>
             <div>
-                <label>Fecha</label>
+                <label>Fecha a Consultar / Pasar Lista</label>
                 <input type="date" id="fechaAsistencia" class="input-control">
             </div>
             <div>
-                <button id="btn-cargar-lista" class="btn btn-primary" style="width:100%; padding:12px; border-radius:10px; font-weight:bold;">Generar Lista</button>
+                <button id="btn-cargar-lista" class="btn btn-primary" style="width:100%; padding:12px; border-radius:10px; font-weight:bold;">Generar / Buscar Lista</button>
             </div>
         </div>
     </section>
 
     <section class="card" id="seccion-lista" style="display: none;">
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eef2f7; padding-bottom: 15px; margin-bottom: 15px;">
-            <h3 style="margin: 0; color: #004a99; font-size: 1.4rem;" id="titulo-lista">Alumnos</h3>
+            <div style="display: flex; align-items: center;">
+                <h3 style="margin: 0; color: #004a99; font-size: 1.4rem;" id="titulo-lista">Alumnos</h3>
+                <span id="badge-recuperado" class="badge-history">Historial Recuperado</span>
+            </div>
             <span style="background: #e8f5e9; color: #2e7d32; padding: 5px 12px; border-radius: 20px; font-weight: bold;" id="badge-fecha"></span>
         </div>
         
@@ -84,22 +94,25 @@
 <script type="module">
     import { db, auth } from './js/firebase-config.js';
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { collection, query, where, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { collection, query, where, getDocs, addDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+    // Poner fecha de hoy
     document.getElementById('fechaAsistencia').valueAsDate = new Date();
+    
     const filtroGrupo = document.getElementById('filtroGrupo');
     const selectMateria = document.getElementById('materiaAsistencia');
     const btnCargar = document.getElementById('btn-cargar-lista');
     const tabla = document.getElementById('tabla-asistencia');
     const seccionLista = document.getElementById('seccion-lista');
+    
     let alumnosActuales = [];
+    let idAsistenciaGuardada = null; // Variable para saber si estamos actualizando el historial
 
     onAuthStateChanged(auth, (user) => {
         if (!user) window.location.href = "login.html";
         else cargarGruposOficiales();
     });
 
-    // MAGIA: Cargar grupos creados por directora
     async function cargarGruposOficiales() {
         try {
             const querySnapshot = await getDocs(collection(db, "grupos"));
@@ -130,48 +143,133 @@
     });
 
     btnCargar.addEventListener('click', async () => {
-        const grupo = filtroGrupo.value; const materia = selectMateria.value; const fecha = document.getElementById('fechaAsistencia').value;
+        const grupo = filtroGrupo.value; 
+        const materia = selectMateria.value; 
+        const fecha = document.getElementById('fechaAsistencia').value;
+        
         if(!grupo || !materia) return alert("⚠️ Selecciona un grupo y una asignatura primero.");
-        tabla.innerHTML = "<tr><td colspan='2' style='text-align:center;'>Buscando alumnos... 🔍</td></tr>";
-        seccionLista.style.display = 'block'; alumnosActuales = [];
-        document.getElementById('badge-fecha').innerText = fecha; document.getElementById('titulo-lista').innerText = `${grupo} - ${materia}`;
+        
+        tabla.innerHTML = "<tr><td colspan='2' style='text-align:center;'>Buscando alumnos e historial... 🔍</td></tr>";
+        seccionLista.style.display = 'block'; 
+        alumnosActuales = [];
+        idAsistenciaGuardada = null;
+        document.getElementById('badge-fecha').innerText = fecha; 
+        document.getElementById('titulo-lista').innerText = `${grupo} - ${materia}`;
 
         try {
-            const q = query(collection(db, "alumnos"), where("grupo", "==", grupo));
-            const querySnapshot = await getDocs(q);
-            tabla.innerHTML = ""; let contador = 0;
-            querySnapshot.forEach((docSnap) => {
-                contador++; const data = docSnap.data(); alumnosActuales.push(docSnap.id); 
+            // 1. Buscamos si ya hay un pase de lista guardado para esa fecha exacta
+            let historialAsistencia = {};
+            const qHistorial = query(collection(db, "asistencias"), 
+                where("grupo", "==", grupo), 
+                where("materia", "==", materia), 
+                where("fecha", "==", fecha)
+            );
+            const historialSnap = await getDocs(qHistorial);
+            
+            if (!historialSnap.empty) {
+                // Sí hay historial, recuperamos los datos
+                const docHistorial = historialSnap.docs[0];
+                idAsistenciaGuardada = docHistorial.id;
+                historialAsistencia = docHistorial.data().detalles;
+                document.getElementById('badge-recuperado').style.display = 'inline-block';
+                document.getElementById('btn-guardar-asistencia').innerText = "🔄 Actualizar Asistencia";
+            } else {
+                // No hay historial, es pase de lista nuevo
+                document.getElementById('badge-recuperado').style.display = 'none';
+                document.getElementById('btn-guardar-asistencia').innerText = "✅ Confirmar y Guardar";
+            }
+
+            // 2. Buscamos a los alumnos correspondientes al grupo
+            const qAlumnos = query(collection(db, "alumnos"), where("grupo", "==", grupo));
+            const alumnosSnap = await getDocs(qAlumnos);
+            
+            tabla.innerHTML = ""; 
+            let contador = 0;
+            
+            alumnosSnap.forEach((docSnap) => {
+                contador++; 
+                const data = docSnap.data(); 
+                const idAlumno = docSnap.id;
+                alumnosActuales.push(idAlumno); 
+                
+                // Determinamos qué botón de radio debe estar marcado (por defecto 'Presente', o lo que diga el historial)
+                let estadoGuardado = historialAsistencia[idAlumno] || "Presente";
+                
+                const isP = estadoGuardado === "Presente" ? "checked" : "";
+                const isR = estadoGuardado === "Retardo" ? "checked" : "";
+                const isF = estadoGuardado === "Falta" ? "checked" : "";
+
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td><div class="student-name">${data.nombre}</div></td>
                     <td>
                         <div class="attendance-options">
-                            <input type="radio" name="ast_${docSnap.id}" id="p_${docSnap.id}" value="Presente" checked><label for="p_${docSnap.id}">✔️ P</label>
-                            <input type="radio" name="ast_${docSnap.id}" id="r_${docSnap.id}" value="Retardo"><label for="r_${docSnap.id}">⏱️ R</label>
-                            <input type="radio" name="ast_${docSnap.id}" id="f_${docSnap.id}" value="Falta"><label for="f_${docSnap.id}">❌ F</label>
+                            <input type="radio" name="ast_${idAlumno}" id="p_${idAlumno}" value="Presente" ${isP}><label for="p_${idAlumno}">✔️ P</label>
+                            <input type="radio" name="ast_${idAlumno}" id="r_${idAlumno}" value="Retardo" ${isR}><label for="r_${idAlumno}">⏱️ R</label>
+                            <input type="radio" name="ast_${idAlumno}" id="f_${idAlumno}" value="Falta" ${isF}><label for="f_${idAlumno}">❌ F</label>
                         </div>
                     </td>
                 `;
                 tabla.appendChild(row);
             });
+            
             if(contador === 0) tabla.innerHTML = "<tr><td colspan='2' style='text-align:center;'>No hay alumnos en este grupo.</td></tr>";
-        } catch (error) {}
+        } catch (error) {
+            console.error(error);
+        }
     });
 
     document.getElementById('btn-guardar-asistencia').addEventListener('click', async () => {
         if(alumnosActuales.length === 0) return;
+        
         let registroAsistencia = {};
-        alumnosActuales.forEach(id => { registroAsistencia[id] = document.querySelector(`input[name="ast_${id}"]:checked`).value; });
+        alumnosActuales.forEach(id => { 
+            registroAsistencia[id] = document.querySelector(`input[name="ast_${id}"]:checked`).value; 
+        });
 
         try {
-            await addDoc(collection(db, "asistencias"), { grupo: filtroGrupo.value, materia: selectMateria.value, fecha: document.getElementById('fechaAsistencia').value, detalles: registroAsistencia, timestamp: new Date() });
-            alert("🎉 ¡Guardado exitoso!"); seccionLista.style.display = 'none'; selectMateria.value = ""; 
-        } catch (error) { alert("Error al guardar."); }
+            if (idAsistenciaGuardada) {
+                // Si el pase de lista ya existía, lo actualizamos
+                await updateDoc(doc(db, "asistencias", idAsistenciaGuardada), { 
+                    detalles: registroAsistencia, 
+                    timestamp: new Date() 
+                });
+                alert("🔄 ¡Historial de asistencia actualizado correctamente!");
+            } else {
+                // Si es nuevo, lo creamos
+                await addDoc(collection(db, "asistencias"), { 
+                    grupo: filtroGrupo.value, 
+                    materia: selectMateria.value, 
+                    fecha: document.getElementById('fechaAsistencia').value, 
+                    detalles: registroAsistencia, 
+                    timestamp: new Date() 
+                });
+                alert("🎉 ¡Lista guardada exitosamente!");
+            }
+            
+            seccionLista.style.display = 'none'; 
+            selectMateria.value = ""; 
+        } catch (error) { 
+            alert("Error al guardar la base de datos."); 
+        }
     });
 
+    // Código para el PDF
     document.getElementById('btn-exportar-pdf').addEventListener('click', () => {
-        html2pdf().set({ margin: 10, filename: 'Pase_De_Lista.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(document.getElementById('seccion-lista')).save();
+        // Ocultamos los botones al imprimir
+        const botones = document.getElementById('btn-guardar-asistencia').parentElement;
+        botones.style.display = 'none';
+        
+        html2pdf().set({ 
+            margin: 10, 
+            filename: `Pase_De_Lista_${document.getElementById('fechaAsistencia').value}.pdf`, 
+            image: { type: 'jpeg', quality: 0.98 }, 
+            html2canvas: { scale: 2 }, 
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
+        }).from(document.getElementById('seccion-lista')).save().then(() => {
+            // Regresamos los botones a la normalidad
+            botones.style.display = 'flex';
+        });
     });
 </script>
 </body>
