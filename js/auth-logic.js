@@ -1,38 +1,44 @@
 import { auth, db } from './firebase-config.js';
 import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-export async function iniciarSesion(usuarioIngresado, pass) {
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    // Obtener los valores del formulario
+    const emailUsuario = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    
+    // Autocompletar el dominio si no lo escribieron
+    const emailCompleto = emailUsuario.includes('@') ? emailUsuario : `${emailUsuario}@amorylibertad.org`;
+
     try {
-        console.log("Intentando iniciar sesión con:", usuarioIngresado);
-        
-        // Buscamos el documento donde el campo 'usuario' coincide con lo que escribió la directora
-        const q = query(collection(db, "usuarios"), where("usuario", "==", usuarioIngresado));
-        const snapshot = await getDocs(q);
+        // 1. Buscar el rol en Firestore primero usando el nombre de usuario
+        const usuarioRef = doc(db, "usuarios", emailUsuario.replace('@amorylibertad.org', ''));
+        const docSnap = await getDoc(usuarioRef);
 
-        if (snapshot.empty) {
-            alert("Error: Usuario no encontrado en la base de datos.");
-            return;
-        }
-
-        const userData = snapshot.docs[0].data();
-        
-        // Autenticamos usando el email real y la contraseña
-        await signInWithEmailAndPassword(auth, userData.email, pass);
-        
-        await signInWithEmailAndPassword(auth, userData.email, pass);
-        console.log("Autenticación exitosa. Redirigiendo...");
-        
-        // ¡ESTA ES LA PARTE NUEVA!
-        if (userData.rol === "directora") {
-            window.location.href = "dashboard-directora.html";
-        } else if (userData.rol === "maestro") {
-            window.location.href = "dashboard-maestro.html"; // Redirige al maestro
+        if (docSnap.exists()) {
+            const userData = docSnap.data();
+            
+            // 2. Si existe, intentamos iniciar sesión en Authentication
+            await signInWithEmailAndPassword(auth, emailCompleto, password);
+            
+            // 3. Redirigir según el rol
+            if (userData.rol === "directora") {
+                window.location.href = "dashboard-directora.html";
+            } else if (userData.rol === "maestro") {
+                window.location.href = "dashboard-maestro.html";
+            } else if (userData.rol === "recepcion") {
+                window.location.href = "dashboard-recepcion.html";
+            } else {
+                alert("Acceso denegado: Rol no reconocido.");
+                auth.signOut();
+            }
         } else {
-            alert("Acceso denegado: Rol no reconocido.");
+            alert("El usuario no existe en la base de datos.");
         }
     } catch (error) {
-        console.error("Error completo de Firebase:", error);
-        alert("Error al ingresar: " + error.message);
+        console.error("Error en login:", error);
+        alert("Credenciales incorrectas o error de conexión.");
     }
-}
+});

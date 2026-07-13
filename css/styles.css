@@ -355,3 +355,21 @@ nav a:hover { background: #f2f2f2; border-radius: 5px; }
     color: white !important;
 }
 
+/* Asegúrate de que tu botón de login tenga la clase .btn-login en el HTML */
+.btn-login {
+    background: linear-gradient(135deg, #004a99, #0073e6);
+    color: white;
+    font-size: 1.2rem;
+    padding: 15px 30px;
+    border-radius: 50px; /* Bordes muy redondeados */
+    box-shadow: 0 8px 20px rgba(0, 74, 153, 0.4);
+    transition: all 0.3s ease;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
+}
+.btn-login:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 12px 25px rgba(0, 74, 153, 0.6);
+}

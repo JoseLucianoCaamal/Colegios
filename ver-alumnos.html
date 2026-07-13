@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Directorio de Alumnos</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .container { max-width: 900px; margin: 30px auto; padding: 0 20px; }
+        .card { padding: 30px; border-radius: 20px; background: #ffffff; border: 1px solid #eef2f7; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .input-control { width: 100%; padding: 12px; border: 2px solid #eef2f7; border-radius: 8px; margin-bottom: 20px; font-size: 1rem; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.95rem; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
+        .btn-back-clean { display: inline-flex; align-items: center; gap: 5px; color: #666; text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<header class="profile-header">
+    <div class="cover-photo"><img src="Img/logo2.png" alt="Portada"></div>
+    <div class="profile-info">
+        <a href="dashboard-maestro.html" class="btn-back-clean">⬅ Volver al Panel</a>
+        <div class="profile-text">
+            <h1>Directorio Escolar</h1>
+            <p>Consulta de Alumnos por Grupo</p>
+        </div>
+    </div>
+</header>
+
+<main class="container">
+    <section class="card">
+        <label style="font-weight:bold; color:#555;">Filtrar lista por Grupo:</label>
+        <select id="filtroGrupo" class="input-control">
+            <option value="Todos">Mostrar Todos</option>
+            <option value="Preescolar 1 y 2 multigrado">Preescolar 1 y 2 multigrado</option>
+            <option value="Preescolar 3">Preescolar 3</option>
+            <option value="Primaria baja: 1° y 2°">Primaria baja: 1° y 2°</option>
+            <option value="Primaria media: 3° y 4° multigrado">Primaria media: 3° y 4° multigrado</option>
+            <option value="Primaria alta: 5° y 6° multigrado">Primaria alta: 5° y 6° multigrado</option>
+            <option value="Secundaria 1">Secundaria 1</option>
+            <option value="Secundaria 2 y 3 multigrado">Secundaria 2 y 3 multigrado</option>
+        </select>
+
+        <table>
+            <thead><tr><th>Alumno</th><th>Grupo</th><th>Tutor y Contacto</th><th>Datos Médicos</th></tr></thead>
+            <tbody id="tabla-directorio"></tbody>
+        </table>
+    </section>
+</main>
+
+<script type="module">
+    import { db } from './js/firebase-config.js';
+    import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const filtroGrupo = document.getElementById('filtroGrupo');
+    const tabla = document.getElementById('tabla-directorio');
+
+    async function cargarDirectorio(grupoFiltro) {
+        tabla.innerHTML = "<tr><td colspan='4'>Buscando...</td></tr>";
+        try {
+            let q;
+            if(grupoFiltro === "Todos") {
+                q = collection(db, "alumnos");
+            } else {
+                q = query(collection(db, "alumnos"), where("grupo", "==", grupoFiltro));
+            }
+            
+            const querySnapshot = await getDocs(q);
+            tabla.innerHTML = "";
+            let contador = 0;
+
+            querySnapshot.forEach((docSnap) => {
+                contador++;
+                const data = docSnap.data();
+                tabla.innerHTML += `
+                    <tr>
+                        <td style="font-weight:bold; color:#004a99;">${data.nombre}</td>
+                        <td><span style="background:#f4f7fa; padding:5px 10px; border-radius:15px; font-size:0.85rem;">${data.grupo}</span></td>
+                        <td>${data.tutor}<br><span style="color:#666;">📞 ${data.telefono}</span></td>
+                        <td style="color:red; font-weight:bold;">${data.alergias}</td>
+                    </tr>
+                `;
+            });
+
+            if(contador === 0) tabla.innerHTML = "<tr><td colspan='4'>No se encontraron alumnos en este grupo.</td></tr>";
+
+        } catch (error) { tabla.innerHTML = "<tr><td colspan='4'>Error de conexión.</td></tr>"; }
+    }
+
+    filtroGrupo.addEventListener('change', () => cargarDirectorio(filtroGrupo.value));
+    cargarDirectorio("Todos"); // Carga inicial
+</script>
+</body>
+</html>
