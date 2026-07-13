@@ -2,9 +2,11 @@ import { auth, db } from './firebase-config.js';
 import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// Agregamos el "export const iniciarSesion" que tu login.html está buscando
 export const iniciarSesion = async (e) => {
-    e.preventDefault();
+    // Solución al error: Solo detenemos el evento si 'e' realmente existe
+    if (e && typeof e.preventDefault === 'function') {
+        e.preventDefault();
+    }
     
     // Obtener los valores del formulario
     const emailUsuario = document.getElementById('email').value;
