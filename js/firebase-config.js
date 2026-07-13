@@ -4,7 +4,7 @@ import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-// --- AQUÍ PEGA TUS DATOS DE FIREBASE ---
+// --- TUS DATOS DE FIREBASE ---
 const firebaseConfig = {
   apiKey: "AIzaSyAMR28OTi03GHAHfWwfFLbFyINws8g2w4o",
   authDomain: "colegio-628e8.firebaseapp.com",
@@ -17,9 +17,10 @@ const firebaseConfig = {
 // Inicializar Firebase
 const app = initializeApp(firebaseConfig);
 
-// Exportar los servicios para usarlos en login.html o fotos.html
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
+// Inicializar los servicios
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
 
+// Exportar todo en una sola línea al final (sin duplicados)
 export { auth, db, storage };
