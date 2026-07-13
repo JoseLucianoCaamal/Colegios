@@ -4,6 +4,11 @@
     --text: #050505;
 }
 
+/* Deslizamiento suave para toda la página */
+html {
+    scroll-behavior: smooth;
+}
+
 body { 
     font-family: 'Segoe UI', Arial, sans-serif; 
     margin: 0; 

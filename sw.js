@@ -1,5 +1,5 @@
 // Cambiamos a v2 para forzar la actualización
-const CACHE_NAME = 'colegio-v1.0'; 
+const CACHE_NAME = 'colegio-v1.1'; 
 const ASSETS = [
   '/Colegios/',
   '/Colegios/index.html',
@@ -7,7 +7,8 @@ const ASSETS = [
   '/Colegios/js/app.js',
   '/Colegios/manifest.json',
   '/Colegios/Img/logo.png',
-  '/Colegios/Img/logo2.png'
+  '/Colegios/Img/logo2.png',
+  '/Colegios/Enero-2025.pdf'
 ];
 
 // Instalar y forzar que tome el control inmediatamente

@@ -3,41 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="css/styles.css">
-    <title>Amor y Libertad</title>
+    <title>Centro Educativo Amor y Libertad</title>
+    
+    <!-- Favicon para la pestaña del navegador -->
     <link rel="icon" type="image/png" href="Img/logo.png">
+    
+    <!-- Enlace al Manifest para PWA -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Enlace a tus estilos CSS -->
+    <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
-<!-- Cabecera estilo página de Facebook -->
+<!-- =========================================
+     CABECERA TIPO PERFIL
+     ========================================= -->
 <header class="profile-header">
     <div class="cover-photo">
-        <!-- La imagen de fondo (portada) -->
         <img src="Img/logo2.png" alt="Portada Amor y Libertad">
     </div>
     
     <div class="profile-info">
         <div class="profile-logo">
-            <!-- El logo a la izquierda -->
-            <img src="Img/logo.png" alt="Logo">
+            <img src="Img/logo.png" alt="Logo Amor y Libertad">
         </div>
         <div class="profile-text">
-            <!-- El nombre al lado del logo -->
             <h1>Centro Educativo Amor y Libertad</h1>
-
+            <p>1,1 mil seguidores • 12 seguidos</p>
         </div>
     </div>
 </header>
 
+<!-- =========================================
+     BARRA DE NAVEGACIÓN
+     ========================================= -->
 <nav>
     <a href="#">INICIO</a>
-    <a href="#">CALENDARIO</a>
-    <a href="#">CONTACTO</a>
-    <!-- Botón de instalación dinámico -->
+    <!-- Enlace directo al PDF del calendario -->
+    <a href="Enero-2025.pdf" target="_blank">CALENDARIO</a>
+    <!-- Enlace ancla para bajar a la sección de contacto -->
+    <a href="#contacto">CONTACTO</a>
+    <!-- Botón dinámico para instalar la App -->
     <a href="#" id="btn-instalar">📲 Instalar App</a>
 </nav>
 
+<!-- =========================================
+     CONTENIDO PRINCIPAL
+     ========================================= -->
 <main class="container">
+    
     <!-- SECCIÓN: PIZARRA DE AVISOS -->
     <div class="avisos-card">
         <h3>📌 Aviso Importante</h3>
@@ -67,24 +82,31 @@
         </div>
     </div>
 
-    <!-- SECCIÓN: CONTACTO (La que ya teníamos) -->
-    <div class="section-title">
+    <!-- SECCIÓN: CONTACTO -->
+    <!-- Agregamos el id="contacto" para que funcione la barra de navegación -->
+    <div class="section-title" id="contacto">
         <h2>Ponte en Contacto</h2>
         <p>Estamos aquí para resolver tus dudas y acompañarte en el proceso de inscripción.</p>
     </div>
+    
     <div class="contact-grid">
+        <!-- Tarjeta de Teléfono -->
         <div class="contact-card modern-card">
             <div class="card-icon">📞</div>
             <h3>Llámanos</h3>
             <p>Lunes a Viernes<br>8:00 am - 2:00 pm</p>
             <a href="tel:+529994850016" class="btn btn-outline">999 485 0016</a>
         </div>
+        
+        <!-- Tarjeta de Email -->
         <div class="contact-card modern-card">
             <div class="card-icon">✉️</div>
             <h3>Escríbenos</h3>
             <p>Respondemos en<br>menos de 24 horas</p>
             <a href="mailto:jessica.torres@amorylibertad.org" class="btn btn-outline">Enviar Correo</a>
         </div>
+        
+        <!-- Tarjeta de Ubicación -->
         <div class="contact-card modern-card location-card">
             <div class="card-icon">📍</div>
             <h3>Visítanos</h3>
@@ -94,7 +116,9 @@
     </div>
 </main>
 
-<!-- BOTÓN FLOTANTE WHATSAPP -->
+<!-- =========================================
+     BOTÓN FLOTANTE WHATSAPP
+     ========================================= -->
 <a href="https://wa.me/529994850016?text=Hola,%20me%20gustaría%20recibir%20más%20información%20sobre%20las%20inscripciones." class="whatsapp-float" target="_blank">
     <!-- Icono SVG de WhatsApp -->
     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -102,5 +126,7 @@
     </svg>
 </a>
 
+<!-- Archivo JavaScript donde configuraste el Service Worker -->
+<script src="js/app.js"></script>
 </body>
 </html>
