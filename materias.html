@@ -2,14 +2,12 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Materias - Amor y Libertad</title>
     <link rel="stylesheet" href="css/styles.css">
     <style>
         .grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 1000px; margin: 20px auto; padding: 0 20px; }
         .card { padding: 30px; border-radius: 20px; background: #ffffff; border: 1px solid #e0e6ed; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .btn-back-clean { display: inline-flex; align-items: center; gap: 5px; margin-bottom: 15px; color: #666; text-decoration: none; font-weight: bold; }
-        .btn-back-clean:hover { color: #004a99; }
         .input-control { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
@@ -37,14 +35,7 @@
         
         <label>Asignar al Grupo</label>
         <select id="grupoMateria" class="input-control">
-            <option value="">Selecciona un grupo...</option>
-            <option value="Preescolar 1 y 2 multigrado">Preescolar 1 y 2 multigrado</option>
-            <option value="Preescolar 3">Preescolar 3</option>
-            <option value="Primaria baja: 1° y 2°">Primaria baja: 1° y 2°</option>
-            <option value="Primaria media: 3° y 4° multigrado">Primaria media: 3° y 4° multigrado</option>
-            <option value="Primaria alta: 5° y 6° multigrado">Primaria alta: 5° y 6° multigrado</option>
-            <option value="Secundaria 1">Secundaria 1</option>
-            <option value="Secundaria 2 y 3 multigrado">Secundaria 2 y 3 multigrado</option>
+            <option value="">Cargando grupos oficiales...</option>
         </select>
         
         <button id="btn-registrar-materia" class="btn btn-primary" style="width:100%; padding:12px; border-radius:8px;">Guardar Materia</button>
@@ -60,22 +51,42 @@
 </main>
 
 <script type="module">
-    import { db } from './js/firebase-config.js';
+    import { db, auth } from './js/firebase-config.js';
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { collection, addDoc, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    onAuthStateChanged(auth, (user) => {
+        if (!user) window.location.href = "login.html";
+        else {
+            cargarGruposOficiales();
+            cargarMaterias();
+        }
+    });
+
+    // MAGIA: Leer grupos de Firebase
+    async function cargarGruposOficiales() {
+        const selectGrupo = document.getElementById('grupoMateria');
+        try {
+            const querySnapshot = await getDocs(collection(db, "grupos"));
+            selectGrupo.innerHTML = '<option value="">Selecciona un grupo...</option>';
+            querySnapshot.forEach((docSnap) => {
+                const nombre = docSnap.data().nombre;
+                selectGrupo.innerHTML += `<option value="${nombre}">${nombre}</option>`;
+            });
+        } catch (error) {
+            selectGrupo.innerHTML = '<option value="">Error al cargar grupos</option>';
+        }
+    }
 
     document.getElementById('btn-registrar-materia').addEventListener('click', async () => {
         const nombre = document.getElementById('nombreMateria').value;
         const grupo = document.getElementById('grupoMateria').value;
-
-        if (!nombre || !grupo) { alert("Completa ambos campos"); return; }
+        if (!nombre || !grupo) return alert("Completa ambos campos");
 
         try {
             await addDoc(collection(db, "materias"), { nombre, grupo });
-            alert("Materia registrada con éxito");
-            location.reload();
-        } catch (error) {
-            alert("Error al guardar: " + error.message);
-        }
+            alert("Materia registrada con éxito"); location.reload();
+        } catch (error) { alert("Error al guardar: " + error.message); }
     });
 
     async function cargarMaterias() {
@@ -92,18 +103,12 @@
                     <td><button class="btn-delete">Borrar</button></td>
                 `;
                 row.querySelector('.btn-delete').addEventListener('click', async () => {
-                    if(confirm("¿Borrar materia?")) {
-                        await deleteDoc(doc(db, "materias", docSnap.id));
-                        location.reload();
-                    }
+                    if(confirm("¿Borrar materia?")) { await deleteDoc(doc(db, "materias", docSnap.id)); location.reload(); }
                 });
                 lista.appendChild(row);
             });
-        } catch (error) {
-            console.error(error);
-        }
+        } catch (error) {}
     }
-    cargarMaterias();
 </script>
 </body>
 </html>
