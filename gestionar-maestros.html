@@ -5,12 +5,12 @@
     <title>Gestionar Maestros - Amor y Libertad</title>
     <link rel="stylesheet" href="css/styles.css">
     <style>
-        .gestion-container { max-width: 900px; margin: 20px auto; padding: 20px; }
-        .grid-layout { display: grid; grid-template-columns: 1fr 1.5fr; gap: 30px; }
-        .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
-        .btn-delete { background: #ff4d4d; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+        /* Esto hace que en celulares se vea uno debajo del otro y no tan junto */
+@media (max-width: 768px) {
+    .grid-layout { grid-template-columns: 1fr; gap: 15px; }
+    .gestion-container { padding: 10px; }
+}
+.btn-back { display: inline-block; margin-bottom: 10px; color: var(--primary); text-decoration: none; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -18,6 +18,7 @@
 <header class="profile-header">
     <div class="cover-photo"><img src="Img/logo2.png" alt="Portada"></div>
     <div class="profile-info">
+        <a href="dashboard-directora.html" class="btn-back">← Regresar al Dashboard</a>
         <div class="profile-logo"><img src="Img/logo.png" alt="Logo"></div>
         <div class="profile-text"><h1>Gestionar Maestros</h1><p>Panel Administrativo</p></div>
     </div>
@@ -56,32 +57,40 @@
 </main>
 
 <script type="module">
-    import { db } from './js/firebase-config.js';
-    import { collection, getDocs, doc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { db, auth } from './js/firebase-config.js';
+    import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    async function cargarMaestros() {
-        const querySnapshot = await getDocs(collection(db, "usuarios"));
-        const lista = document.getElementById('lista-maestros');
-        lista.innerHTML = "";
-        
-        querySnapshot.forEach((docSnap) => {
-            const data = docSnap.data();
-            if(data.rol === "maestro") {
-                const fila = `<tr><td>${data.usuario}</td>
-                    <td><button class="btn-delete" onclick="eliminar('${docSnap.id}')">Eliminar</button></td></tr>`;
-                lista.innerHTML += fila;
-            }
-        });
-    }
+    document.getElementById('btn-registrar').addEventListener('click', async () => {
+        const usuarioInput = document.getElementById('nuevoUsuario').value;
+        const pass = document.getElementById('nuevaPass').value;
 
-    window.eliminar = async (id) => {
-        if(confirm("¿Eliminar a este maestro?")) {
-            await deleteDoc(doc(db, "usuarios", id));
-            cargarMaestros();
+        if (!usuarioInput || !pass) {
+            alert("Por favor, rellena ambos campos.");
+            return;
         }
-    };
 
-    cargarMaestros();
+        // Aquí hacemos la magia: le agregamos el dominio automáticamente
+        const emailCompleto = `${usuarioInput}@amorylibertad.org`;
+
+        try {
+            // 1. Crear usuario en Firebase Authentication
+            await createUserWithEmailAndPassword(auth, emailCompleto, pass);
+            
+            // 2. Guardar datos en Firestore
+            await setDoc(doc(db, "usuarios", usuarioInput), {
+                usuario: usuarioInput,
+                rol: "maestro",
+                email: emailCompleto
+            });
+
+            alert("¡Maestro registrado con éxito como: " + emailCompleto);
+            location.reload(); 
+        } catch (error) {
+            console.error("Error detallado:", error);
+            alert("Error al registrar: " + error.message);
+        }
+    });
 </script>
 </body>
 </html>
