@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestionar Grupos - Directora</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 1000px; margin: 20px auto; padding: 0 20px; }
+        .card { padding: 30px; border-radius: 20px; background: #ffffff; border: 1px solid #e0e6ed; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .btn-back-clean { display: inline-flex; align-items: center; gap: 5px; margin-bottom: 15px; color: #666; text-decoration: none; font-weight: bold; }
+        .input-control { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; margin-bottom: 15px;}
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.95rem; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        @media (max-width: 768px) { .grid-layout { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<header class="profile-header">
+    <div class="cover-photo"><img src="Img/logo2.png" alt="Portada"></div>
+    <div class="profile-info">
+        <a href="dashboard-directora.html" class="btn-back-clean">⬅ Volver al Panel</a>
+        <div class="profile-text">
+            <h1>Gestión de Grupos</h1>
+            <p>Configuración de Grados Escolares</p>
+        </div>
+    </div>
+</header>
+
+<main class="grid-layout">
+    <!-- Formulario para agregar -->
+    <section class="card">
+        <h3 style="margin-top: 0; color: #FF9800;">🏫 Crear Nuevo Grupo</h3>
+        <label style="font-weight:bold; font-size:0.9rem;">Nombre Oficial del Grupo</label>
+        <input type="text" id="nombreGrupo" class="input-control" placeholder="Ej: Secundaria 1">
+        <button id="btn-guardar" class="btn btn-primary" style="width: 100%; padding: 12px; border-radius: 8px; font-weight: bold; background:#FF9800; border:none;">Guardar Grupo</button>
+    </section>
+
+    <!-- Lista de grupos -->
+    <section class="card">
+        <h3 style="margin-top: 0; color: #004a99;">📋 Grupos Actuales</h3>
+        <table>
+            <thead><tr><th>Nombre del Grupo</th><th>Acciones</th></tr></thead>
+            <tbody id="lista-grupos"></tbody>
+        </table>
+    </section>
+</main>
+
+<script type="module">
+    import { db, auth } from './js/firebase-config.js';
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { collection, addDoc, getDocs, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    onAuthStateChanged(auth, (user) => { if (!user) window.location.href = "login.html"; else cargarGrupos(); });
+
+    document.getElementById('btn-guardar').addEventListener('click', async () => {
+        const nombre = document.getElementById('nombreGrupo').value.trim();
+        if (!nombre) return alert("Por favor escribe el nombre del grupo.");
+
+        try {
+            await addDoc(collection(db, "grupos"), { nombre: nombre });
+            alert("Grupo creado exitosamente.");
+            location.reload();
+        } catch (e) { alert("Error: " + e.message); }
+    });
+
+    async function cargarGrupos() {
+        const lista = document.getElementById('lista-grupos');
+        lista.innerHTML = "<tr><td colspan='2'>Cargando...</td></tr>";
+        
+        try {
+            const querySnapshot = await getDocs(collection(db, "grupos"));
+            lista.innerHTML = "";
+            
+            querySnapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td style="font-weight:bold;">${data.nombre}</td>
+                    <td>
+                        <button class="btn-editar" style="background:#004a99; color:white; border:none; padding:6px 10px; border-radius:5px; cursor:pointer;">Editar</button>
+                        <button class="btn-delete" style="background:#ff4d4d; color:white; border:none; padding:6px 10px; border-radius:5px; cursor:pointer;">Borrar</button>
+                    </td>
+                `;
+
+                row.querySelector('.btn-editar').addEventListener('click', async () => {
+                    const nuevoNombre = prompt("Modificar nombre del grupo:", data.nombre);
+                    if(nuevoNombre && nuevoNombre.trim() !== data.nombre) {
+                        await updateDoc(doc(db, "grupos", docSnap.id), { nombre: nuevoNombre.trim() });
+                        location.reload();
+                    }
+                });
+
+                row.querySelector('.btn-delete').addEventListener('click', async () => {
+                    if(confirm(`¿Borrar definitivamente el grupo "${data.nombre}"?`)) {
+                        await deleteDoc(doc(db, "grupos", docSnap.id));
+                        location.reload();
+                    }
+                });
+                lista.appendChild(row);
+            });
+        } catch (error) {
+            console.error(error);
+        }
+    }
+</script>
+</body>
+</html>
