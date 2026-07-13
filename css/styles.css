@@ -1,0 +1,15 @@
+/* Colores Institucionales */
+:root {
+    --primary-color: #003366; /* Azul oscuro institucional */
+    --secondary-color: #e9ecef;
+    --text-color: #333;
+}
+
+body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f8f9fa; color: var(--text-color); }
+
+header { background: var(--primary-color); color: white; padding: 20px; text-align: center; }
+
+nav { display: flex; justify-content: center; background: var(--secondary-color); padding: 10px; }
+nav a { margin: 0 15px; text-decoration: none; color: var(--primary-color); font-weight: bold; }
+
+.container { max-width: 800px; margin: 20px auto; padding: 20px; }

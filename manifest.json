@@ -1,0 +1,15 @@
+{
+  "name": "Amor y Libertad - Ventas",
+  "short_name": "AmorLibertad",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2c3e50",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
