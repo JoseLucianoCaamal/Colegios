@@ -52,21 +52,33 @@
     <h2>Iniciar Sesión</h2>
     <p>Bienvenido al sistema administrativo</p>
     
-    <input type="email" id="email" placeholder="Correo electrónico">
+    <!-- CAMBIAMOS A TEXTO PARA EL USUARIO -->
+    <input type="text" id="usuario" placeholder="Nombre de usuario">
     <input type="password" id="password" placeholder="Contraseña">
     
-    <button onclick="login()">Entrar al Sistema</button>
+    <!-- BOTÓN CON ID PARA CONECTARLO AL JS -->
+    <button id="btn-entrar">Entrar al Sistema</button>
     
     <p style="margin-top: 20px; font-size: 0.8rem;">
         <a href="index.html">← Regresar al sitio</a>
     </p>
 </div>
 
-<script>
-    function login() {
-        // Aquí conectaremos después con Firebase
-        alert("¡Conexión a Firebase pendiente!");
-    }
+<!-- BORRA EL SCRIPT ANTIGUO Y PON ESTE -->
+<script type="module">
+    import { loginDirectora } from './js/auth-logic.js';
+
+    document.getElementById('btn-entrar').addEventListener('click', () => {
+        const user = document.getElementById('usuario').value;
+        const pass = document.getElementById('password').value;
+
+        if (user === "" || pass === "") {
+            alert("Por favor, rellena todos los campos.");
+            return;
+        }
+
+        loginDirectora(user, pass);
+    });
 </script>
 
 </body>
