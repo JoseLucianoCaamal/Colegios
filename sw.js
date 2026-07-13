@@ -1,20 +1,38 @@
-const CACHE_NAME = 'colegio-v1';
+// Cambiamos a v2 para forzar la actualización
+const CACHE_NAME = 'colegio-v1'; 
 const ASSETS = [
   '/Colegios/',
   '/Colegios/index.html',
   '/Colegios/css/styles.css',
   '/Colegios/js/app.js',
   '/Colegios/manifest.json',
-  '/Colegios/Img/logo.png' 
+  '/Colegios/Img/logo.png',
+  '/Colegios/Img/logo2.png'
 ];
 
-// Instalar el Service Worker
+// Instalar y forzar que tome el control inmediatamente
 self.addEventListener('install', (e) => {
+  self.skipWaiting(); 
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      // Usamos un bucle para añadir archivos y que falle solo el que no encuentra
       return Promise.all(
         ASSETS.map(url => cache.add(url).catch(err => console.error('No se pudo cachear:', url)))
+      );
+    })
+  );
+});
+
+// Activar y borrar la caché vieja (Esto arregla el problema del teléfono)
+self.addEventListener('activate', (e) => {
+  e.waitUntil(
+    caches.keys().then(keys => {
+      return Promise.all(
+        keys.map(key => {
+          if (key !== CACHE_NAME) {
+            console.log('Borrando caché antigua:', key);
+            return caches.delete(key);
+          }
+        })
       );
     })
   );
