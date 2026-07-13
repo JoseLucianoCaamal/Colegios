@@ -215,3 +215,78 @@ nav a:hover { background: #f2f2f2; border-radius: 5px; }
     transform: scale(1.05);
     box-shadow: 0 6px 20px rgba(0, 45, 90, 0.4);
 }
+
+/* =========================================
+   AJUSTE PARA CELULARES (CABECERA HORIZONTAL COMPACTA)
+   ========================================= */
+@media (max-width: 768px) {
+    .cover-photo { height: 120px; } /* Portada más bajita */
+    .profile-info { 
+        gap: 15px; 
+        align-items: center; /* Centra el texto y el logo en la misma línea */
+        padding: 0 15px;
+    }
+    .profile-logo { margin-top: -30px; } /* Sube menos */
+    .profile-logo img { 
+        width: 80px; 
+        height: 80px; 
+        border-width: 3px; 
+    }
+    .profile-text { padding-bottom: 0; }
+    .profile-text h1 { font-size: 1.2rem; line-height: 1.1; }
+    .profile-text p { font-size: 0.8rem; margin-top: 2px; }
+    nav { flex-wrap: wrap; justify-content: center; gap: 10px; padding: 10px; }
+    nav a { font-size: 0.85rem; padding: 5px; }
+}
+
+/* =========================================
+   BOTÓN FLOTANTE DE WHATSAPP
+   ========================================= */
+.whatsapp-float {
+    position: fixed;
+    width: 60px;
+    height: 60px;
+    bottom: 20px;
+    right: 20px;
+    background-color: #25d366;
+    color: #FFF;
+    border-radius: 50px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: transform 0.3s ease;
+}
+.whatsapp-float:hover { transform: scale(1.1); }
+.whatsapp-float svg { width: 35px; height: 35px; fill: white; }
+
+/* =========================================
+   BOTÓN DE INSTALAR APP
+   ========================================= */
+#btn-instalar {
+    background: #e63946;
+    color: white;
+    border-radius: 20px;
+    padding: 5px 15px;
+    display: none; /* Se oculta por defecto hasta que el teléfono diga que es instalable */
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(230, 57, 70, 0.4);
+}
+#btn-instalar:hover { background: #d62828; color: white; }
+
+/* =========================================
+   PIZARRA DE AVISOS
+   ========================================= */
+.avisos-card {
+    background: #fff9fa;
+    border-left: 5px solid #e63946;
+    padding: 20px;
+    border-radius: 0 10px 10px 0;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+.avisos-card h3 { margin-top: 0; color: #e63946; font-size: 1.2rem; }
+.avisos-card p { margin-bottom: 0; font-weight: 500; }
