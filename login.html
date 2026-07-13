@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acceso - Amor y Libertad</title>
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" type="image/png" href="Img/logo.png">
     <style>
         /* Estilo específico para centrar el login */
         .login-body {
@@ -66,18 +67,19 @@
 
 <!-- BORRA EL SCRIPT ANTIGUO Y PON ESTE -->
 <script type="module">
-    import { loginDirectora } from './js/auth-logic.js';
+    import { iniciarSesion } from './js/auth-logic.js';
 
+    // Asegúrate de que el botón tenga el ID 'btn-entrar'
     document.getElementById('btn-entrar').addEventListener('click', () => {
         const user = document.getElementById('usuario').value;
         const pass = document.getElementById('password').value;
 
-        if (user === "" || pass === "") {
-            alert("Por favor, rellena todos los campos.");
+        if (!user || !pass) {
+            alert("Por favor, ingresa usuario y contraseña.");
             return;
         }
 
-        loginDirectora(user, pass);
+        iniciarSesion(user, pass);
     });
 </script>
 
