@@ -52,11 +52,16 @@ nav a {
     box-shadow: 0 10px 15px rgba(0,0,0,0.05);
 }
 
-/* Estilo para que el logo sea responsivo */
+
+
 header img {
     display: block;
     margin: 0 auto 15px auto;
-    border-radius: 50%; /* Opcional: le da forma circular si el logo es cuadrado */
-    background: white; /* Por si el logo tiene fondo transparente */
-    padding: 5px;
+    width: 120px;       /* Tamaño fijo */
+    height: 120px;      /* Tamaño fijo igual que width para que sea círculo */
+    border-radius: 50%; /* Esto crea el círculo perfecto */
+    background: white;  /* El fondo blanco que viste en la vista previa */
+    padding: 10px;      /* Espacio interno para que el logo no toque el borde */
+    object-fit: contain;/* Asegura que el logo no se deforme */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Sombra para que resalte */
 }
