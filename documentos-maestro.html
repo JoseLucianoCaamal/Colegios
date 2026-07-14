@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Documentos - Amor y Libertad</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .grid-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; max-width: 900px; margin: 40px auto; padding: 0 20px; }
+        .option-card { background: white; padding: 40px 20px; border-radius: 15px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: transform 0.3s; border: 1px solid #eef2f7;}
+        .option-card:hover { transform: translateY(-5px); border-color:#004a99;}
+        .option-icon { font-size: 3rem; margin-bottom: 15px; display: block; }
+        .btn-back-clean { display: inline-flex; align-items: center; gap: 5px; color: #666; text-decoration: none; font-weight: bold; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+<header class="profile-header">
+    <div class="cover-photo"><img src="Img/logo2.png" alt="Portada"></div>
+    <div class="profile-info">
+        <a href="dashboard-maestro.html" class="btn-back-clean">⬅ Volver al Panel Principal</a>
+        <div class="profile-text">
+            <h1>Carpeta de Documentos</h1>
+            <p>Archivos y Reportes del Docente</p>
+        </div>
+    </div>
+</header>
+
+<main>
+    <div class="grid-options">
+        <div class="option-card">
+            <span class="option-icon">📋</span>
+            <h3>Pase de Lista</h3>
+            <a href="asistencia.html" class="btn btn-primary">ABRIR</a>
+        </div>
+        <div class="option-card">
+            <span class="option-icon">📝</span>
+            <h3>Calificaciones</h3>
+            <a href="calificaciones.html" class="btn btn-primary" style="background:#4CAF50; border-color:#4CAF50;">ABRIR</a>
+        </div>
+        <div class="option-card">
+            <span class="option-icon">📄</span>
+            <h3>Fichas Descriptivas</h3>
+            <a href="fichas-descriptivas.html" class="btn btn-primary" style="background:#FF9800; border-color:#FF9800; color:#333;">ABRIR</a>
+        </div>
+    </div>
+</main>
+</body>
+</html>

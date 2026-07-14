@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Exportar Fichas - Amor y Libertad</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <!-- Librerías mágicas para crear el archivo ZIP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        .container { max-width: 600px; margin: 50px auto; padding: 0 20px; }
+        .card { padding: 40px; border-radius: 20px; background: #ffffff; border: 1px solid #eef2f7; box-shadow: 0 8px 16px rgba(0,0,0,0.05); text-align: center;}
+        .input-control { width: 100%; padding: 15px; border: 2px solid #eef2f7; border-radius: 10px; font-size: 1.1rem; margin-bottom: 25px; outline:none;}
+        label { font-size: 1rem; font-weight: bold; color: #555; display: block; margin-bottom: 10px; text-transform: uppercase;}
+        .btn-back-clean { display: inline-flex; align-items: center; gap: 5px; color: #666; text-decoration: none; font-weight: bold; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+<main class="container">
+    <a href="dashboard-directora.html" class="btn-back-clean">⬅ Volver al Panel</a>
+    
+    <section class="card">
+        <span style="font-size: 4rem; display:block; margin-bottom:10px;">🗂️</span>
+        <h2 style="color:#004a99; margin-top:0;">Exportador de Fichas Descriptivas</h2>
+        <p style="color:#666; margin-bottom:30px;">Selecciona un grupo para empaquetar todas las fichas descriptivas de los alumnos en un archivo .ZIP</p>
+        
+        <label>Grupo a Exportar</label>
+        <select id="filtroGrupo" class="input-control">
+            <option value="">Cargando grupos...</option>
+        </select>
+        
+        <button id="btn-descargar-zip" class="btn" style="width:100%; padding:15px; border-radius:8px; background:#FF9800; color:#333; font-weight:bold; font-size:1.1rem; border:none; cursor:pointer; transition:0.3s;">
+            📥 Generar y Descargar ZIP
+        </button>
+        
+        <p id="estado-descarga" style="color:#4CAF50; font-weight:bold; margin-top:15px; display:none;">¡Comprimiendo archivos, por favor espera...!</p>
+    </section>
+</main>
+
+<script type="module">
+    import { db, auth } from './js/firebase-config.js';
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    onAuthStateChanged(auth, (user) => {
+        if (!user) window.location.href = "login.html";
+        else cargarGrupos();
+    });
+
+    async function cargarGrupos() {
+        const snap = await getDocs(collection(db, "grupos"));
+        const filtroGrupo = document.getElementById('filtroGrupo');
+        filtroGrupo.innerHTML = '<option value="">Seleccione grupo...</option>';
+        snap.forEach(doc => filtroGrupo.innerHTML += `<option value="${doc.data().nombre}">${doc.data().nombre}</option>`);
+    }
+
+    document.getElementById('btn-descargar-zip').addEventListener('click', async () => {
+        const grupo = document.getElementById('filtroGrupo').value;
+        if (!grupo) return alert("Por favor, selecciona un grupo.");
+        
+        const estado = document.getElementById('estado-descarga');
+        estado.style.display = 'block';
+        estado.innerText = "Buscando fichas en la base de datos... 🔍";
+
+        try {
+            // Buscamos todas las fichas de ese grupo
+            const qFichas = query(collection(db, "fichas"), where("grupo", "==", grupo));
+            const querySnapshot = await getDocs(qFichas);
+            
+            if(querySnapshot.empty) {
+                estado.innerText = "❌ No hay fichas creadas para este grupo.";
+                estado.style.color = "#ff4d4d";
+                return;
+            }
+
+            estado.innerText = "Empaquetando en ZIP... 📦";
+            estado.style.color = "#FF9800";
+
+            // Creamos una nueva instancia de ZIP
+            const zip = new JSZip();
+            
+            // Creamos una carpeta adentro del ZIP con el nombre del grupo
+            const carpeta = zip.folder(`Fichas_${grupo.replace(/\s+/g, '_')}`);
+
+            querySnapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                const nombreArchivo = `Ficha descriptiva ${data.nombre_alumno} ${data.grupo}.txt`;
+                
+                // Le damos formato oficial al contenido del archivo de texto
+                const contenidoTexto = `
+CENTRO EDUCATIVO AMOR Y LIBERTAD
+DOCUMENTO OFICIAL: FICHA DESCRIPTIVA
+------------------------------------------------------
+ALUMNO: ${data.nombre_alumno}
+GRUPO: ${data.grupo}
+DOCENTE EVALUADOR: ${data.maestro_email.split('@')[0]}
+------------------------------------------------------
+
+OBSERVACIONES Y DESEMPEÑO:
+${data.texto}
+                `;
+
+                // Metemos el archivo de texto en la carpeta del ZIP
+                carpeta.file(nombreArchivo, contenidoTexto);
+            });
+
+            // Generamos el archivo ZIP y lo descargamos
+            zip.generateAsync({type:"blob"}).then(function(content) {
+                saveAs(content, `Fichas_Descriptivas_${grupo.replace(/\s+/g, '_')}.zip`);
+                estado.innerText = "✅ ¡Descarga Completada con Éxito!";
+                estado.style.color = "#4CAF50";
+            });
+
+        } catch (error) {
+            estado.innerText = "❌ Hubo un error al generar el archivo.";
+            estado.style.color = "#ff4d4d";
+        }
+    });
+</script>
+</body>
+</html>

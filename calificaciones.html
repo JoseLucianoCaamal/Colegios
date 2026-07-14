@@ -8,11 +8,12 @@
         .container { max-width: 900px; margin: 30px auto; padding: 0 20px; }
         .card { padding: 30px; border-radius: 20px; background: #ffffff; border: 1px solid #eef2f7; box-shadow: 0 8px 16px rgba(0,0,0,0.03); margin-bottom: 25px; }
         .filters-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end; }
-        .input-control { width: 100%; padding: 12px; border: 2px solid #eef2f7; border-radius: 8px; font-size: 1rem; }
+        .input-control { width: 100%; padding: 12px; border: 2px solid #eef2f7; border-radius: 8px; font-size: 1rem; outline:none; transition:0.3s;}
+        .input-control:focus {border-color: #004a99;}
         label { font-size: 0.85rem; font-weight: bold; color: #8898aa; display: block; margin-bottom: 5px; text-transform: uppercase;}
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
-        .input-calificacion { width: 80px; padding: 10px; text-align: center; font-weight: bold; border: 2px solid #ddd; border-radius: 8px; font-size: 1.1rem;}
+        .input-calificacion { width: 100%; max-width: 150px; padding: 10px; font-weight: bold; border: 2px solid #ddd; border-radius: 8px; font-size: 1rem;}
         .btn-back-clean { display: inline-flex; align-items: center; gap: 5px; color: #666; text-decoration: none; font-weight: bold; margin-bottom: 15px; }
     </style>
 </head>
@@ -21,7 +22,7 @@
 <header class="profile-header">
     <div class="cover-photo"><img src="Img/logo2.png" alt="Portada"></div>
     <div class="profile-info">
-        <a href="dashboard-maestro.html" class="btn-back-clean">⬅ Volver al Panel</a>
+        <a href="documentos-maestro.html" class="btn-back-clean">⬅ Volver a Documentos</a>
         <div class="profile-text">
             <h1>Registro de Calificaciones</h1>
             <p>Evaluación de alumnos por periodo</p>
@@ -57,10 +58,10 @@
     <section class="card" id="seccion-lista" style="display: none;">
         <h3 style="margin-top: 0; color: #4CAF50;" id="titulo-lista">Alumnos a Evaluar</h3>
         <table>
-            <thead><tr><th>Nombre del Alumno</th><th>Calificación Final (0-10)</th></tr></thead>
+            <thead><tr><th>Nombre del Alumno</th><th>Calificación / Observación</th></tr></thead>
             <tbody id="tabla-calificaciones"></tbody>
         </table>
-        <button id="btn-guardar" class="btn btn-primary" style="width:100%; margin-top:20px; padding:15px; border-radius:8px; font-weight:bold; background:#004a99; border:none;">✅ Guardar Calificaciones</button>
+        <button id="btn-guardar" class="btn btn-primary" style="width:100%; margin-top:20px; padding:15px; border-radius:8px; font-weight:bold; background:#004a99; border:none; cursor:pointer;">✅ Guardar Calificaciones</button>
     </section>
 </main>
 
@@ -112,7 +113,6 @@
         document.getElementById('titulo-lista').innerText = `Evaluando ${materia} - ${periodo}`;
 
         try {
-            // Buscamos si ya hay calificaciones guardadas (Usamos setDoc con un ID personalizado para evitar duplicados)
             const idDocumento = `${grupo}_${materia}_${periodo}`.replace(/\s+/g, '');
             const docCalificaciones = await getDocs(query(collection(db, "calificaciones"), where("id_unico", "==", idDocumento)));
             let notasGuardadas = {};
@@ -127,10 +127,11 @@
                 alumnosActuales.push(idAlumno);
                 let notaPrevia = notasGuardadas[idAlumno] || "";
 
+                // AHORA ES TIPO TEXTO (acepta letras y números)
                 tabla.innerHTML += `
                     <tr>
-                        <td style="font-weight:bold; font-size:1.1rem;">${data.nombre}</td>
-                        <td><input type="number" min="0" max="10" step="0.1" class="input-calificacion" id="calif_${idAlumno}" value="${notaPrevia}" placeholder="-"></td>
+                        <td style="font-weight:bold; font-size:1.05rem;">${data.nombre}</td>
+                        <td><input type="text" class="input-calificacion" id="calif_${idAlumno}" value="${notaPrevia}" placeholder="Ej: 10, B, Excelente..."></td>
                     </tr>
                 `;
             });
@@ -147,7 +148,6 @@
         alumnosActuales.forEach(id => { notas[id] = document.getElementById(`calif_${id}`).value; });
 
         try {
-            // Guardamos todo el bloque de calificaciones
             await setDoc(doc(db, "calificaciones", idDocumento), { 
                 id_unico: idDocumento, grupo, materia, periodo, maestro_email: maestroActual, notas 
             });

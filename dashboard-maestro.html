@@ -37,21 +37,19 @@
             <h3>Directorio</h3>
             <a href="ver-alumnos.html" class="btn btn-primary">ENTRAR</a>
         </div>
+        
+        <!-- NUEVA CARPETA DOCUMENTOS -->
         <div class="option-card">
-            <span class="option-icon">📋</span>
-            <h3>Pase de Lista</h3>
-            <a href="asistencia.html" class="btn btn-primary">ENTRAR</a>
+            <span class="option-icon">📁</span>
+            <h3>Documentos</h3>
+            <p style="color: #666; font-size: 0.8rem; margin-bottom: 15px;">Listas, Calificaciones y Fichas.</p>
+            <a href="documentos-maestro.html" class="btn btn-primary" style="background:#004a99; border:none;">ABRIR CARPETA</a>
         </div>
+
         <div class="option-card">
             <span class="option-icon">📚</span>
             <h3>Mis Materias</h3>
             <a href="materias.html" class="btn btn-primary">ENTRAR</a>
-        </div>
-        <!-- NUEVO BOTÓN CALIFICACIONES -->
-        <div class="option-card">
-            <span class="option-icon">📝</span>
-            <h3>Calificaciones</h3>
-            <a href="calificaciones.html" class="btn btn-primary" style="background:#4CAF50; border-color:#4CAF50;">ENTRAR</a>
         </div>
         <div class="option-card">
             <span class="option-icon">📸</span>
@@ -69,9 +67,7 @@
 <script type="module">
     import { auth } from './js/firebase-config.js';
     import { signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
     onAuthStateChanged(auth, (user) => { if (!user) window.location.href = "login.html"; });
-
     document.getElementById('btn-logout').addEventListener('click', () => {
         signOut(auth).then(() => window.location.href = "login.html");
     });

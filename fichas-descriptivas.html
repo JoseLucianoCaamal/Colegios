@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Fichas Descriptivas - Amor y Libertad</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .container { max-width: 900px; margin: 30px auto; padding: 0 20px; }
+        .card { padding: 30px; border-radius: 20px; background: #ffffff; border: 1px solid #eef2f7; box-shadow: 0 8px 16px rgba(0,0,0,0.03); margin-bottom: 25px; }
+        .filters-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; align-items: end; }
+        .input-control { width: 100%; padding: 12px; border: 2px solid #eef2f7; border-radius: 8px; font-size: 1rem; outline:none;}
+        .input-control:focus {border-color: #FF9800;}
+        label { font-size: 0.85rem; font-weight: bold; color: #8898aa; display: block; margin-bottom: 5px; text-transform: uppercase;}
+        textarea.input-control { min-height: 250px; resize: vertical; line-height: 1.5; }
+        .btn-back-clean { display: inline-flex; align-items: center; gap: 5px; color: #666; text-decoration: none; font-weight: bold; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+<header class="profile-header">
+    <div class="cover-photo"><img src="Img/logo2.png" alt="Portada"></div>
+    <div class="profile-info">
+        <a href="documentos-maestro.html" class="btn-back-clean">⬅ Volver a Documentos</a>
+        <div class="profile-text">
+            <h1>Fichas Descriptivas</h1>
+            <p>Resumen y observaciones del alumno</p>
+        </div>
+    </div>
+</header>
+
+<main class="container">
+    <section class="card">
+        <div class="filters-grid">
+            <div>
+                <label>Selecciona el Grupo</label>
+                <select id="filtroGrupo" class="input-control"><option value="">Cargando...</option></select>
+            </div>
+            <div>
+                <label>Selecciona al Alumno</label>
+                <select id="filtroAlumno" class="input-control" disabled><option value="">Primero elige un grupo...</option></select>
+            </div>
+        </div>
+    </section>
+
+    <section class="card" id="area-redaccion" style="display: none;">
+        <h3 style="color:#FF9800; margin-top:0;">Ficha de: <span id="nombre-alumno-ui" style="color:#333;"></span></h3>
+        <p style="color:#666; font-size:0.9rem; margin-bottom:15px;">Escribe el resumen de desempeño, habilidades y observaciones.</p>
+        
+        <textarea id="textoFicha" class="input-control" placeholder="El alumno ha demostrado gran avance en..."></textarea>
+        
+        <button id="btn-guardar-ficha" class="btn" style="width:100%; margin-top:15px; padding:15px; border-radius:8px; background:#004a99; color:white; font-weight:bold; border:none; cursor:pointer;">💾 Guardar Ficha Descriptiva</button>
+    </section>
+</main>
+
+<script type="module">
+    import { db, auth } from './js/firebase-config.js';
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { collection, query, where, getDocs, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const filtroGrupo = document.getElementById('filtroGrupo');
+    const filtroAlumno = document.getElementById('filtroAlumno');
+    const areaRedaccion = document.getElementById('area-redaccion');
+    const textoFicha = document.getElementById('textoFicha');
+    
+    let maestroActual = null;
+    let nombreAlumnoActual = "";
+
+    onAuthStateChanged(auth, (user) => {
+        if (!user) window.location.href = "login.html";
+        else { maestroActual = user.email; cargarGrupos(); }
+    });
+
+    async function cargarGrupos() {
+        const snap = await getDocs(collection(db, "grupos"));
+        filtroGrupo.innerHTML = '<option value="">Seleccione grupo...</option>';
+        snap.forEach(doc => filtroGrupo.innerHTML += `<option value="${doc.data().nombre}">${doc.data().nombre}</option>`);
+    }
+
+    filtroGrupo.addEventListener('change', async () => {
+        const grupoSel = filtroGrupo.value;
+        filtroAlumno.innerHTML = "<option value=''>Cargando alumnos...</option>";
+        areaRedaccion.style.display = 'none';
+        if (!grupoSel) { filtroAlumno.disabled = true; return; }
+        
+        filtroAlumno.disabled = false;
+        const qAlumnos = query(collection(db, "alumnos"), where("grupo", "==", grupoSel));
+        const snap = await getDocs(qAlumnos);
+        
+        filtroAlumno.innerHTML = "<option value=''>Selecciona un alumno...</option>";
+        snap.forEach((docSnap) => {
+            filtroAlumno.innerHTML += `<option value="${docSnap.id}">${docSnap.data().nombre}</option>`;
+        });
+    });
+
+    filtroAlumno.addEventListener('change', async () => {
+        const idAlumno = filtroAlumno.value;
+        if (!idAlumno) { areaRedaccion.style.display = 'none'; return; }
+        
+        nombreAlumnoActual = filtroAlumno.options[filtroAlumno.selectedIndex].text;
+        document.getElementById('nombre-alumno-ui').innerText = nombreAlumnoActual;
+        textoFicha.value = "Cargando archivo previo...";
+        areaRedaccion.style.display = 'block';
+
+        // Buscar si ya existe una ficha para este alumno
+        try {
+            const docFicha = await getDocs(query(collection(db, "fichas"), where("id_alumno", "==", idAlumno)));
+            if (!docFicha.empty) {
+                textoFicha.value = docFicha.docs[0].data().texto;
+            } else {
+                textoFicha.value = "";
+            }
+        } catch (e) { textoFicha.value = ""; }
+    });
+
+    document.getElementById('btn-guardar-ficha').addEventListener('click', async () => {
+        const idAlumno = filtroAlumno.value;
+        const grupo = filtroGrupo.value;
+        const texto = textoFicha.value.trim();
+        if(!texto) return alert("La ficha no puede estar vacía.");
+
+        try {
+            // Guardamos la ficha usando el ID del alumno
+            await setDoc(doc(db, "fichas", idAlumno), {
+                id_alumno: idAlumno,
+                nombre_alumno: nombreAlumnoActual,
+                grupo: grupo,
+                maestro_email: maestroActual,
+                texto: texto,
+                ultima_actualizacion: new Date()
+            });
+            alert("✅ ¡Ficha guardada exitosamente!");
+        } catch (error) { alert("Error al guardar."); }
+    });
+</script>
+</body>
+</html>
