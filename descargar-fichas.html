@@ -2,47 +2,113 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Exportar Fichas - Amor y Libertad</title>
+    <title>Gestión de Fichas - Amor y Libertad</title>
     <link rel="stylesheet" href="css/styles.css">
-    <!-- Librerías mágicas para crear el archivo ZIP -->
+    
+    <!-- Librerías para crear el archivo ZIP y los PDFs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    
     <style>
-        .container { max-width: 600px; margin: 50px auto; padding: 0 20px; }
-        .card { padding: 40px; border-radius: 20px; background: #ffffff; border: 1px solid #eef2f7; box-shadow: 0 8px 16px rgba(0,0,0,0.05); text-align: center;}
-        .input-control { width: 100%; padding: 15px; border: 2px solid #eef2f7; border-radius: 10px; font-size: 1.1rem; margin-bottom: 25px; outline:none;}
-        label { font-size: 1rem; font-weight: bold; color: #555; display: block; margin-bottom: 10px; text-transform: uppercase;}
-        .btn-back-clean { display: inline-flex; align-items: center; gap: 5px; color: #666; text-decoration: none; font-weight: bold; margin-bottom: 20px; }
+        .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
+        .card { padding: 30px; border-radius: 20px; background: #ffffff; border: 1px solid #eef2f7; box-shadow: 0 8px 16px rgba(0,0,0,0.05); margin-bottom: 25px; }
+        .input-control { width: 100%; padding: 12px 15px; border: 2px solid #eef2f7; border-radius: 10px; font-size: 1rem; outline: none; margin-bottom: 20px;}
+        label { font-size: 0.85rem; font-weight: bold; color: #8898aa; display: block; margin-bottom: 8px; text-transform: uppercase;}
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.95rem; }
+        th { padding: 15px; text-align: left; border-bottom: 2px solid #eef2f7; color: #004a99; text-transform: uppercase; font-size: 0.85rem;}
+        td { padding: 15px; text-align: left; border-bottom: 1px solid #f4f7fa; }
+        .btn-back-clean { display: inline-flex; align-items: center; gap: 5px; color: #666; text-decoration: none; font-weight: bold; margin-bottom: 15px; }
+        
+        /* ESTILOS PARA LA PLANTILLA DEL PDF (Corregido para que no salga en blanco) */
+        #plantilla-pdf { display: none; width: 800px; background: white; padding: 40px; color: #333; font-family: 'Arial', sans-serif; box-sizing: border-box;}
+        .pdf-header { text-align: center; border-bottom: 3px solid #004a99; padding-bottom: 20px; margin-bottom: 30px; }
+        .pdf-header img { width: 120px; margin-bottom: 10px; }
+        .pdf-header h1 { color: #004a99; font-size: 24px; margin: 0; }
+        .pdf-header h2 { color: #555; font-size: 18px; margin: 5px 0 0 0; font-weight: normal; }
+        .pdf-info-box { background: #f8fafd; padding: 20px; border-radius: 10px; border: 1px solid #e0e6ed; margin-bottom: 30px; }
+        .pdf-info-box p { margin: 8px 0; font-size: 14px; font-weight: bold; color:#004a99;}
+        .pdf-info-box span { font-weight: normal; color:#333;}
+        .pdf-body { line-height: 1.8; font-size: 14px; text-align: justify; white-space: pre-wrap; }
     </style>
 </head>
 <body>
 
+<header class="profile-header">
+    <div class="cover-photo"><img src="Img/logo2.png" alt="Portada"></div>
+    <div class="profile-info">
+        <a href="dashboard-directora.html" class="btn-back-clean">⬅ Volver al Panel</a>
+        <div class="profile-text">
+            <h1>Gestión de Fichas Descriptivas</h1>
+            <p>Control y Exportación Oficial de Documentos</p>
+        </div>
+    </div>
+</header>
+
 <main class="container">
-    <a href="dashboard-directora.html" class="btn-back-clean">⬅ Volver al Panel</a>
-    
     <section class="card">
-        <span style="font-size: 4rem; display:block; margin-bottom:10px;">🗂️</span>
-        <h2 style="color:#004a99; margin-top:0;">Exportador de Fichas Descriptivas</h2>
-        <p style="color:#666; margin-bottom:30px;">Selecciona un grupo para empaquetar todas las fichas descriptivas de los alumnos en un archivo .ZIP</p>
-        
-        <label>Grupo a Exportar</label>
+        <label>🏫 Selecciona un Grupo para ver sus Fichas</label>
         <select id="filtroGrupo" class="input-control">
             <option value="">Cargando grupos...</option>
         </select>
+        <button id="btn-buscar" class="btn btn-primary" style="width: 100%; padding: 12px; border-radius: 8px; font-weight: bold; background:#004a99; border:none; cursor:pointer;">Buscar Fichas</button>
+    </section>
+
+    <section class="card" id="seccion-resultados" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="color:#004a99; margin:0;">📋 Fichas Encontradas</h3>
+            
+            <div style="display: flex; gap: 10px;" id="botones-accion-global">
+                <button id="btn-borrar-todo" class="btn" style="background:#ff4d4d; color:white; font-weight:bold; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; display:flex; align-items:center; gap:8px;">
+                    🗑️ Borrar Todas
+                </button>
+                <button id="btn-descargar-zip" class="btn" style="background:#FF9800; color:#333; font-weight:bold; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; display:flex; align-items:center; gap:8px;">
+                    🗂️ Descargar Carpeta ZIP
+                </button>
+            </div>
+        </div>
         
-        <button id="btn-descargar-zip" class="btn" style="width:100%; padding:15px; border-radius:8px; background:#FF9800; color:#333; font-weight:bold; font-size:1.1rem; border:none; cursor:pointer; transition:0.3s;">
-            📥 Generar y Descargar ZIP
-        </button>
-        
-        <p id="estado-descarga" style="color:#4CAF50; font-weight:bold; margin-top:15px; display:none;">¡Comprimiendo archivos, por favor espera...!</p>
+        <p id="estado-zip" style="color:#4CAF50; font-weight:bold; text-align:right; display:none;"></p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Alumno</th>
+                    <th>Docente Evaluador</th>
+                    <th>Fecha</th>
+                    <th style="text-align: center;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tabla-fichas">
+                <!-- Se llena con JS -->
+            </tbody>
+        </table>
     </section>
 </main>
+
+<!-- PLANTILLA PARA EL PDF -->
+<div id="plantilla-pdf">
+    <div class="pdf-header">
+        <img src="Img/logo.png" alt="Logo">
+        <h1>Centro Educativo Amor y Libertad</h1>
+        <h2>Documento Oficial: Ficha Descriptiva</h2>
+    </div>
+    <div class="pdf-info-box">
+        <p>ALUMNO: <span id="pdf-nombre"></span></p>
+        <p>GRUPO: <span id="pdf-grupo"></span></p>
+        <p>DOCENTE EVALUADOR: <span id="pdf-maestro"></span></p>
+    </div>
+    <div class="pdf-body" id="pdf-texto"></div>
+</div>
 
 <script type="module">
     import { db, auth } from './js/firebase-config.js';
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { collection, query, where, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+    let fichasActuales = []; 
+    
     onAuthStateChanged(auth, (user) => {
         if (!user) window.location.href = "login.html";
         else cargarGrupos();
@@ -55,66 +121,174 @@
         snap.forEach(doc => filtroGrupo.innerHTML += `<option value="${doc.data().nombre}">${doc.data().nombre}</option>`);
     }
 
-    document.getElementById('btn-descargar-zip').addEventListener('click', async () => {
+    document.getElementById('btn-buscar').addEventListener('click', async () => {
         const grupo = document.getElementById('filtroGrupo').value;
         if (!grupo) return alert("Por favor, selecciona un grupo.");
         
-        const estado = document.getElementById('estado-descarga');
-        estado.style.display = 'block';
-        estado.innerText = "Buscando fichas en la base de datos... 🔍";
+        document.getElementById('seccion-resultados').style.display = 'block';
+        const tabla = document.getElementById('tabla-fichas');
+        tabla.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Buscando fichas... 🔍</td></tr>";
 
         try {
-            // Buscamos todas las fichas de ese grupo
             const qFichas = query(collection(db, "fichas"), where("grupo", "==", grupo));
             const querySnapshot = await getDocs(qFichas);
             
-            if(querySnapshot.empty) {
-                estado.innerText = "❌ No hay fichas creadas para este grupo.";
-                estado.style.color = "#ff4d4d";
-                return;
-            }
-
-            estado.innerText = "Empaquetando en ZIP... 📦";
-            estado.style.color = "#FF9800";
-
-            // Creamos una nueva instancia de ZIP
-            const zip = new JSZip();
-            
-            // Creamos una carpeta adentro del ZIP con el nombre del grupo
-            const carpeta = zip.folder(`Fichas_${grupo.replace(/\s+/g, '_')}`);
+            fichasActuales = [];
+            tabla.innerHTML = "";
+            let contador = 0;
 
             querySnapshot.forEach((docSnap) => {
+                contador++;
                 const data = docSnap.data();
-                const nombreArchivo = `Ficha descriptiva ${data.nombre_alumno} ${data.grupo}.txt`;
-                
-                // Le damos formato oficial al contenido del archivo de texto
-                const contenidoTexto = `
-CENTRO EDUCATIVO AMOR Y LIBERTAD
-DOCUMENTO OFICIAL: FICHA DESCRIPTIVA
-------------------------------------------------------
-ALUMNO: ${data.nombre_alumno}
-GRUPO: ${data.grupo}
-DOCENTE EVALUADOR: ${data.maestro_email.split('@')[0]}
-------------------------------------------------------
+                data.id = docSnap.id; 
+                fichasActuales.push(data); 
 
-OBSERVACIONES Y DESEMPEÑO:
-${data.texto}
+                const row = document.createElement('tr');
+                let fechaFormato = "Reciente";
+                if(data.ultima_actualizacion) {
+                    fechaFormato = data.ultima_actualizacion.toDate().toLocaleDateString('es-MX');
+                }
+
+                row.innerHTML = `
+                    <td style="font-weight:bold;">${data.nombre_alumno}</td>
+                    <td>${data.maestro_email.split('@')[0]}</td>
+                    <td>${fechaFormato}</td>
+                    <td style="text-align: center;">
+                        <button class="btn-ver-pdf" style="background:#004a99; color:white; border:none; padding:6px 12px; border-radius:5px; cursor:pointer; font-weight:bold; margin-right:5px;">📄 Ver PDF</button>
+                        <button class="btn-delete" style="background:#ff4d4d; color:white; border:none; padding:6px 12px; border-radius:5px; cursor:pointer; font-weight:bold;">🗑️ Borrar</button>
+                    </td>
                 `;
 
-                // Metemos el archivo de texto en la carpeta del ZIP
-                carpeta.file(nombreArchivo, contenidoTexto);
+                row.querySelector('.btn-ver-pdf').addEventListener('click', () => {
+                    generarPDFIndividual(data);
+                });
+
+                row.querySelector('.btn-delete').addEventListener('click', async () => {
+                    if(confirm(`¿Estás seguro de eliminar la ficha de ${data.nombre_alumno}?`)) {
+                        await deleteDoc(doc(db, "fichas", data.id));
+                        document.getElementById('btn-buscar').click(); 
+                    }
+                });
+
+                tabla.appendChild(row);
             });
 
-            // Generamos el archivo ZIP y lo descargamos
-            zip.generateAsync({type:"blob"}).then(function(content) {
-                saveAs(content, `Fichas_Descriptivas_${grupo.replace(/\s+/g, '_')}.zip`);
-                estado.innerText = "✅ ¡Descarga Completada con Éxito!";
-                estado.style.color = "#4CAF50";
-            });
+            const botonesAccion = document.getElementById('botones-accion-global');
+            if(contador === 0) {
+                tabla.innerHTML = "<tr><td colspan='4' style='text-align:center; color:#ff4d4d;'>No hay fichas creadas para este grupo aún.</td></tr>";
+                botonesAccion.style.display = 'none';
+            } else {
+                botonesAccion.style.display = 'flex';
+            }
 
         } catch (error) {
-            estado.innerText = "❌ Hubo un error al generar el archivo.";
-            estado.style.color = "#ff4d4d";
+            tabla.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Error al cargar los datos.</td></tr>";
+        }
+    });
+
+    document.getElementById('btn-borrar-todo').addEventListener('click', async () => {
+        const grupo = document.getElementById('filtroGrupo').value;
+        if(confirm(`🚨 ADVERTENCIA: ¿Estás seguro de que deseas ELIMINAR TODAS las fichas del grupo "${grupo}"?\n\nEsta acción NO se puede deshacer.`)) {
+            
+            const estado = document.getElementById('estado-zip');
+            estado.style.display = 'block';
+            estado.style.color = '#ff4d4d';
+            estado.innerText = "⏳ Borrando fichas... (No cierres la página)";
+            
+            try {
+                for (let i = 0; i < fichasActuales.length; i++) {
+                    await deleteDoc(doc(db, "fichas", fichasActuales[i].id));
+                }
+                alert("✅ Todas las fichas del grupo han sido eliminadas.");
+                document.getElementById('btn-buscar').click(); 
+                estado.style.display = 'none';
+            } catch (error) {
+                alert("Ocurrió un error al borrar las fichas.");
+                estado.style.display = 'none';
+            }
+        }
+    });
+
+    function generarPDFIndividual(data) {
+        document.getElementById('pdf-nombre').innerText = data.nombre_alumno;
+        document.getElementById('pdf-grupo').innerText = data.grupo;
+        document.getElementById('pdf-maestro').innerText = data.maestro_email.split('@')[0];
+        document.getElementById('pdf-texto').innerText = data.texto;
+
+        const plantilla = document.getElementById('plantilla-pdf');
+        
+        // 1. Mostrar la plantilla
+        plantilla.style.display = 'block';
+        
+        const opciones = {
+            margin: 15,
+            filename: `${data.nombre_alumno} ${data.grupo}.pdf`, 
+            image: { type: 'jpeg', quality: 1 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
+        };
+
+        // 2. Crear PDF y luego ocultar la plantilla
+        html2pdf().set(opciones).from(plantilla).save().then(() => {
+            plantilla.style.display = 'none';
+        });
+    }
+
+    document.getElementById('btn-descargar-zip').addEventListener('click', async () => {
+        const grupo = document.getElementById('filtroGrupo').value;
+        const estado = document.getElementById('estado-zip');
+        const btnZip = document.getElementById('btn-descargar-zip');
+        
+        btnZip.disabled = true;
+        estado.style.display = 'block';
+        estado.style.color = '#FF9800';
+        estado.innerText = "⏳ Generando PDFs y comprimiendo... (No cierres la página)";
+
+        const zip = new JSZip();
+        const carpeta = zip.folder(`Fichas_PDF_${grupo.replace(/\s+/g, '_')}`);
+        const plantilla = document.getElementById('plantilla-pdf');
+
+        const opcionesPDF = {
+            margin: 15,
+            image: { type: 'jpeg', quality: 1 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
+        };
+
+        try {
+            // Mostramos la plantilla antes de iniciar el ciclo para que la cámara la vea
+            plantilla.style.display = 'block';
+
+            for (let i = 0; i < fichasActuales.length; i++) {
+                const data = fichasActuales[i];
+                
+                document.getElementById('pdf-nombre').innerText = data.nombre_alumno;
+                document.getElementById('pdf-grupo').innerText = data.grupo;
+                document.getElementById('pdf-maestro').innerText = data.maestro_email.split('@')[0];
+                document.getElementById('pdf-texto').innerText = data.texto;
+
+                const pdfBlob = await html2pdf().set(opcionesPDF).from(plantilla).output('blob');
+                
+                carpeta.file(`${data.nombre_alumno} ${data.grupo}.pdf`, pdfBlob);
+            }
+
+            estado.innerText = "📦 Descargando archivo ZIP...";
+            const contenidoZip = await zip.generateAsync({type:"blob"});
+            
+            saveAs(contenidoZip, `Fichas_Completas_${grupo.replace(/\s+/g, '_')}.zip`);
+            
+            estado.style.color = '#4CAF50';
+            estado.innerText = "✅ ¡Descarga Finalizada!";
+            btnZip.disabled = false;
+
+        } catch (error) {
+            console.error(error);
+            estado.style.color = '#ff4d4d';
+            estado.innerText = "❌ Ocurrió un error al generar los PDFs.";
+            btnZip.disabled = false;
+        } finally {
+            // Importante: pase lo que pase, ocultamos la plantilla al final
+            plantilla.style.display = 'none';
         }
     });
 </script>

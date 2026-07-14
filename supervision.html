@@ -6,13 +6,20 @@
     <link rel="stylesheet" href="css/styles.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        .container { max-width: 950px; margin: 30px auto; padding: 0 20px; }
+        .container { max-width: 1100px; margin: 30px auto; padding: 0 20px; }
         .card { padding: 30px; border-radius: 20px; background: #ffffff; border: 1px solid #eef2f7; box-shadow: 0 8px 16px rgba(0,0,0,0.03); margin-bottom: 25px; }
-        .filters-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end; }
+        .filters-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; align-items: end; }
         .input-control { width: 100%; padding: 12px; border: 2px solid #eef2f7; border-radius: 8px; font-size: 1rem; }
         label { font-size: 0.85rem; font-weight: bold; color: #8e44ad; display: block; margin-bottom: 5px; text-transform: uppercase;}
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
+        
+        /* Estilos de la tabla tipo Boleta */
+        .tabla-contenedor { overflow-x: auto; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; min-width: 700px;}
+        th { background: #f8fafd; color: #004a99; font-size: 0.85rem; padding: 12px; border: 1px solid #e0e6ed; text-align: center;}
+        th.alumno-col { text-align: left; min-width: 200px;}
+        td { padding: 12px; border: 1px solid #e0e6ed; text-align: center; font-size: 0.95rem; }
+        td.alumno-nombre { text-align: left; font-weight: bold; color: #333; }
+        
         .btn-back-clean { display: inline-flex; align-items: center; gap: 5px; color: #666; text-decoration: none; font-weight: bold; margin-bottom: 15px; }
         
         #pdf-header { display: none; border-bottom: 2px solid #8e44ad; padding-bottom: 15px; margin-bottom: 20px; font-family: Arial, sans-serif; }
@@ -27,7 +34,7 @@
         <a href="dashboard-directora.html" class="btn-back-clean">⬅ Volver al Panel</a>
         <div class="profile-text">
             <h1>Supervisión Académica</h1>
-            <p>Control de calificaciones global</p>
+            <p>Boleta Concentrada por Grupo</p>
         </div>
     </div>
 </header>
@@ -36,15 +43,11 @@
     <section class="card">
         <div class="filters-grid">
             <div>
-                <label>Grupo</label>
+                <label>Selecciona el Grupo</label>
                 <select id="filtroGrupo" class="input-control"><option value="">Cargando...</option></select>
             </div>
             <div>
-                <label>Todas las Asignaturas</label>
-                <select id="materiaAsistencia" class="input-control"><option value="">Esperando grupo...</option></select>
-            </div>
-            <div>
-                <label>Periodo</label>
+                <label>Periodo de Evaluación</label>
                 <select id="periodoEvaluacion" class="input-control">
                     <option value="Trimestre 1">Trimestre 1</option>
                     <option value="Trimestre 2">Trimestre 2</option>
@@ -52,7 +55,7 @@
                 </select>
             </div>
             <div>
-                <button id="btn-cargar-lista" class="btn btn-primary" style="width:100%; padding:12px; border-radius:8px; background:#8e44ad; border:none; font-weight:bold;">Ver Reporte</button>
+                <button id="btn-generar-boleta" class="btn btn-primary" style="width:100%; padding:12px; border-radius:8px; background:#8e44ad; border:none; font-weight:bold;">Generar Boleta Completa</button>
             </div>
         </div>
     </section>
@@ -63,19 +66,23 @@
                 <img src="Img/logo.png" style="width:80px;">
                 <div style="text-align:center;">
                     <h2 style="margin:0; color:#8e44ad;">Centro Educativo Amor y Libertad</h2>
-                    <h3 style="margin:5px 0 0 0; color:#333;">Reporte Oficial de Calificaciones</h3>
+                    <h3 style="margin:5px 0 0 0; color:#333;">Boleta Concentrada de Calificaciones</h3>
                 </div>
                 <div style="width:80px;"></div>
             </div>
             <div id="pdf-subtitle" style="text-align:center; margin-top:15px; font-weight:bold; background:#f4f7fa; padding:10px;"></div>
         </div>
 
-        <h3 style="margin-top: 0; color: #8e44ad;" id="titulo-lista">Reporte de Calificaciones</h3>
-        <table>
-            <thead><tr><th>Nombre del Alumno</th><th>Calificación Reportada</th></tr></thead>
-            <tbody id="tabla-calificaciones"></tbody>
-        </table>
-        <button id="btn-exportar-pdf" class="btn" style="width:100%; margin-top:20px; padding:15px; border-radius:8px; background:#004a99; color:white; font-weight:bold; border:none; cursor:pointer;">📄 Descargar Reporte en PDF</button>
+        <h3 style="margin-top: 0; color: #8e44ad;" id="titulo-lista">Boleta de Calificaciones</h3>
+        
+        <div class="tabla-contenedor">
+            <table id="tabla-boleta">
+                <thead id="boleta-head"></thead>
+                <tbody id="boleta-body"></tbody>
+            </table>
+        </div>
+
+        <button id="btn-exportar-pdf" class="btn" style="width:100%; margin-top:20px; padding:15px; border-radius:8px; background:#004a99; color:white; font-weight:bold; border:none; cursor:pointer;">📄 Descargar Boleta en PDF</button>
     </section>
 </main>
 
@@ -85,9 +92,6 @@
     import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const filtroGrupo = document.getElementById('filtroGrupo');
-    const selectMateria = document.getElementById('materiaAsistencia');
-    const tabla = document.getElementById('tabla-calificaciones');
-
     onAuthStateChanged(auth, (user) => { if (user) cargarGrupos(); else window.location.href="login.html"; });
 
     async function cargarGrupos() {
@@ -96,69 +100,88 @@
         snap.forEach(doc => filtroGrupo.innerHTML += `<option value="${doc.data().nombre}">${doc.data().nombre}</option>`);
     }
 
-    filtroGrupo.addEventListener('change', async () => {
-        const grupoSel = filtroGrupo.value;
-        selectMateria.innerHTML = "<option value=''>Cargando TODAS las materias...</option>";
-        if (!grupoSel) return;
-        
-        // La Directora carga las materias de TODOS los maestros de ese grupo
-        const qMaterias = query(collection(db, "materias"), where("grupo", "==", grupoSel));
-        const querySnapshot = await getDocs(qMaterias);
-        selectMateria.innerHTML = "<option value=''>Seleccione asignatura...</option>";
-        
-        querySnapshot.forEach((docSnap) => {
-            const data = docSnap.data();
-            // Le añadimos el correo del maestro para que la directora sepa de quién es
-            selectMateria.innerHTML += `<option value="${data.nombre}">${data.nombre} (Docente: ${data.maestro_email.split('@')[0]})</option>`;
-        });
-    });
-
-    document.getElementById('btn-cargar-lista').addEventListener('click', async () => {
+    document.getElementById('btn-generar-boleta').addEventListener('click', async () => {
         const grupo = filtroGrupo.value; 
-        // El select tiene el nombre y el docente, extraemos solo el nombre de la materia para buscar
-        const materiaSeleccionada = selectMateria.value.split(" (Docente:")[0]; 
         const periodo = document.getElementById('periodoEvaluacion').value;
-        
-        if(!grupo || !materiaSeleccionada) return alert("Selecciona grupo y asignatura.");
+        if(!grupo) return alert("Selecciona un grupo primero.");
         
         document.getElementById('seccion-lista').style.display = 'block'; 
-        document.getElementById('titulo-lista').innerText = `Reporte: ${materiaSeleccionada} - ${periodo}`;
+        document.getElementById('titulo-lista').innerText = `Boleta General: ${grupo} - ${periodo}`;
+        const head = document.getElementById('boleta-head');
+        const body = document.getElementById('boleta-body');
+        
+        head.innerHTML = "<tr><th>Cargando datos...</th></tr>";
+        body.innerHTML = "";
 
         try {
-            const idDocumento = `${grupo}_${materiaSeleccionada}_${periodo}`.replace(/\s+/g, '');
-            const docCalificaciones = await getDocs(query(collection(db, "calificaciones"), where("id_unico", "==", idDocumento)));
-            
-            let notasGuardadas = {};
-            if(!docCalificaciones.empty) notasGuardadas = docCalificaciones.docs[0].data().notas;
+            // 1. Obtener todas las materias del grupo
+            const qMaterias = query(collection(db, "materias"), where("grupo", "==", grupo));
+            const materiasSnap = await getDocs(qMaterias);
+            let listaMaterias = [];
+            materiasSnap.forEach(doc => listaMaterias.push(doc.data().nombre));
 
+            if(listaMaterias.length === 0) {
+                head.innerHTML = "<tr><th>Este grupo no tiene materias asignadas aún.</th></tr>"; return;
+            }
+
+            // 2. Construir la cabecera de la tabla (Alumnos + Materia 1 + Materia 2...)
+            let theadHTML = `<tr><th class="alumno-col">Nombre del Alumno</th>`;
+            listaMaterias.forEach(mat => theadHTML += `<th>${mat}</th>`);
+            theadHTML += `</tr>`;
+            head.innerHTML = theadHTML;
+
+            // 3. Obtener todas las calificaciones de ese grupo en ese periodo
+            const qCalificaciones = query(collection(db, "calificaciones"), where("grupo", "==", grupo), where("periodo", "==", periodo));
+            const calificacionesSnap = await getDocs(qCalificaciones);
+            
+            // Diccionario para acceder rápido: diccionarioNotas[id_alumno][nombre_materia] = nota
+            let diccionarioNotas = {}; 
+            calificacionesSnap.forEach(doc => {
+                const materia = doc.data().materia;
+                const notasPorAlumno = doc.data().notas; // Objeto {idAlumno1: "10", idAlumno2: "B"}
+                for (let idAlumno in notasPorAlumno) {
+                    if (!diccionarioNotas[idAlumno]) diccionarioNotas[idAlumno] = {};
+                    diccionarioNotas[idAlumno][materia] = notasPorAlumno[idAlumno];
+                }
+            });
+
+            // 4. Obtener todos los alumnos del grupo
             const qAlumnos = query(collection(db, "alumnos"), where("grupo", "==", grupo));
             const alumnosSnap = await getDocs(qAlumnos);
             
-            tabla.innerHTML = ""; let cont = 0;
-            
+            let contador = 0;
             alumnosSnap.forEach((docSnap) => {
-                cont++; const data = docSnap.data();
-                let nota = notasGuardadas[docSnap.id];
-                let mostrarNota = nota ? `<span style="font-weight:bold; color:#004a99; font-size:1.1rem;">${nota}</span>` : `<span style="color:#ff4d4d; font-style:italic;">Sin evaluar</span>`;
+                contador++; 
+                const alumno = docSnap.data();
+                const idAlumno = docSnap.id;
 
-                tabla.innerHTML += `
-                    <tr>
-                        <td style="font-weight:bold;">${data.nombre}</td>
-                        <td>${mostrarNota}</td>
-                    </tr>
-                `;
+                let rowHTML = `<tr><td class="alumno-nombre">${alumno.nombre}</td>`;
+                
+                // Recorremos las columnas de materias para buscar si el alumno tiene nota
+                listaMaterias.forEach(mat => {
+                    let nota = "-";
+                    if (diccionarioNotas[idAlumno] && diccionarioNotas[idAlumno][mat]) {
+                        nota = diccionarioNotas[idAlumno][mat];
+                    }
+                    rowHTML += `<td><span style="color:${nota !== '-' ? '#004a99' : '#ff4d4d'}; font-weight:bold;">${nota}</span></td>`;
+                });
+                rowHTML += `</tr>`;
+                body.innerHTML += rowHTML;
             });
-            if(cont === 0) tabla.innerHTML = "<tr><td colspan='2'>No hay alumnos en este grupo.</td></tr>";
+
+            if(contador === 0) body.innerHTML = "<tr><td colspan='100%'>No hay alumnos en este grupo.</td></tr>";
+
         } catch (e) { console.error(e); }
     });
 
     document.getElementById('btn-exportar-pdf').addEventListener('click', () => {
-        document.getElementById('pdf-subtitle').innerText = `Grupo: ${filtroGrupo.value} | Asignatura: ${selectMateria.value} | ${document.getElementById('periodoEvaluacion').value}`;
+        document.getElementById('pdf-subtitle').innerText = `Grupo: ${filtroGrupo.value} | ${document.getElementById('periodoEvaluacion').value}`;
         document.getElementById('pdf-header').style.display = 'block';
         document.getElementById('titulo-lista').style.display = 'none';
         document.getElementById('btn-exportar-pdf').style.display = 'none';
         
-        html2pdf().set({ margin: 15, filename: `Calificaciones_${filtroGrupo.value}.pdf`, image: { type: 'jpeg', quality: 1 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' } 
+        // En landscape (horizontal) para que quepan todas las materias
+        html2pdf().set({ margin: 10, filename: `Boleta_${filtroGrupo.value}.pdf`, image: { type: 'jpeg', quality: 1 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'letter', orientation: 'landscape' } 
         }).from(document.getElementById('seccion-lista')).save().then(() => {
             document.getElementById('pdf-header').style.display = 'none';
             document.getElementById('titulo-lista').style.display = 'block';
