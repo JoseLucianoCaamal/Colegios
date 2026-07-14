@@ -38,8 +38,8 @@
         <h3 style="margin-top:0; color:#004a99;">✨ Nuevo Maestro</h3>
         <label>Nombre Completo del Docente</label>
         <input type="text" id="nombreMaestro" class="input-control" placeholder="Ej: Mtra. Sofía Martínez">
-        <label>Usuario (minúsculas y sin espacios)</label>
-        <input type="text" id="usuarioMaestro" class="input-control" placeholder="Ej: sofia.martinez">
+        <label>Nombre de Usuario</label>
+        <input type="text" id="usuarioMaestro" class="input-control" placeholder="Ej: Mtr.Juan">
         <label>Contraseña Temporal</label>
         <input type="password" id="claveMaestro" class="input-control" placeholder="Mínimo 6 caracteres">
         <button id="btn-registrar" class="btn btn-primary" style="width:100%; padding:12px; border-radius:8px; cursor:pointer; font-weight:bold;">REGISTRAR MAESTRO</button>
@@ -71,7 +71,6 @@
     import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { doc, setDoc, deleteDoc, collection, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // Cargar la lista en vivo y construir los botones
     function cargarLista() {
         const q = query(collection(db, "usuarios"), where("rol", "==", "maestro"));
         onSnapshot(q, (snapshot) => {
@@ -87,15 +86,17 @@
                 const data = docSnap.data();
                 const tr = document.createElement('tr');
                 
+                // Mostrar el nombre original si existe, si no el ID
+                const usuarioVisible = data.usuario_original || docSnap.id;
+
                 tr.innerHTML = `
                     <td style="font-weight:bold;">${data.nombre}</td>
-                    <td style="color:#666;">${docSnap.id}</td>
+                    <td style="color:#004a99; font-weight:bold;">${usuarioVisible}</td>
                     <td style="text-align: center;">
                         <button class="btn-delete">🗑️ Eliminar</button>
                     </td>
                 `;
 
-                // AGREGAMOS LA LÓGICA AL BOTÓN DE BORRAR
                 tr.querySelector('.btn-delete').addEventListener('click', () => {
                     Swal.fire({
                         title: '¿Despedir / Eliminar Maestro?',
@@ -104,8 +105,7 @@
                         showCancelButton: true,
                         confirmButtonColor: '#c62828',
                         cancelButtonColor: '#666',
-                        confirmButtonText: 'Sí, eliminar acceso',
-                        cancelButtonText: 'Cancelar'
+                        confirmButtonText: 'Sí, eliminar acceso'
                     }).then(async (result) => {
                         if (result.isConfirmed) {
                             try {
@@ -123,40 +123,53 @@
         });
     }
     
-    // Inicializamos la lista
     cargarLista();
 
-    // Registro de nuevo maestro
     document.getElementById('btn-registrar').addEventListener('click', async () => {
         const nombre = document.getElementById('nombreMaestro').value.trim();
-        const usuario = document.getElementById('usuarioMaestro').value.trim().toLowerCase().replace(/\s+/g, '');
+        const usuarioOriginal = document.getElementById('usuarioMaestro').value.trim();
+        const usuarioMin = usuarioOriginal.toLowerCase().replace(/\s+/g, '');
         const clave = document.getElementById('claveMaestro').value;
 
-        if (!nombre || !usuario || !clave) return Swal.fire('Campos Vacíos', 'Llena todos los datos.', 'warning');
+        if (!nombre || !usuarioOriginal || !clave) return Swal.fire('Campos Vacíos', 'Llena todos los datos.', 'warning');
         if (clave.length < 6) return Swal.fire('Error', 'La contraseña debe tener mínimo 6 caracteres.', 'error');
 
         Swal.fire({ title: 'Registrando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
         try {
-            const emailCompleto = `${usuario}@amorylibertad.org`;
+            const emailCompleto = `${usuarioMin}@amorylibertad.org`;
             
-            // TRUCO AVANZADO: App Secundaria
             const appSecundaria = initializeApp(auth.app.options, "AppSecundaria");
             const authSecundario = getAuth(appSecundaria);
             
-            await createUserWithEmailAndPassword(authSecundario, emailCompleto, clave);
+            try {
+                // Intentamos crear la cuenta en Auth
+                await createUserWithEmailAndPassword(authSecundario, emailCompleto, clave);
+            } catch (errAuth) {
+                // BYPASS MAGISTRAL: Si ya existe en Auth (porque lo borraste y recreaste), ignoramos el error.
+                if (errAuth.code === 'auth/email-already-in-use') {
+                    console.log("Restaurando maestro eliminado previamente...");
+                } else {
+                    throw errAuth; // Si es otro error, detenemos.
+                }
+            }
             await authSecundario.signOut(); 
             
-            // Guardamos en la base de datos
-            await setDoc(doc(db, "usuarios", usuario), { email: emailCompleto, rol: "maestro", nombre: nombre });
+            // Forzamos guardar/restaurar en la base de datos con el formato que escribieron
+            await setDoc(doc(db, "usuarios", usuarioMin), { 
+                email: emailCompleto, 
+                rol: "maestro", 
+                nombre: nombre,
+                usuario_original: usuarioOriginal 
+            });
 
-            Swal.fire('¡Éxito!', 'Maestro creado. Ya puede iniciar sesión.', 'success');
+            Swal.fire('¡Éxito!', 'Maestro creado y habilitado.', 'success');
             document.getElementById('nombreMaestro').value = '';
             document.getElementById('usuarioMaestro').value = '';
             document.getElementById('claveMaestro').value = '';
 
         } catch (error) {
-            Swal.fire('Error', 'Ese usuario ya existe o hubo un error de red.', 'error');
+            Swal.fire('Error', 'Hubo un error de conexión.', 'error');
         }
     });
 </script>

@@ -15,10 +15,8 @@
         .logout-container { max-width: 1000px; margin: auto; text-align: right; padding: 10px 20px; }
         .btn-logout { background: #ff4d4d; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
         
-        /* Banner especial de suplencia (Cuando a mí me prestan un aula) */
         .banner-suplencia { background: #FF9800; color: #333; padding: 15px; text-align: center; font-weight: bold; font-size: 1.1rem; display: none; }
         
-        /* PANTALLA COMPLETA DE BLOQUEO (Cuando YO presto mi aula) */
         .pantalla-bloqueo {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0, 38, 77, 0.95);
@@ -27,7 +25,6 @@
             color: white; text-align: center; backdrop-filter: blur(8px);
         }
         
-        /* DISEÑO DEL INTERRUPTOR (SWITCH) */
         .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
@@ -51,7 +48,7 @@
     
     <div style="display: flex; align-items: center; gap: 15px; margin-top: 40px; background: rgba(255,255,255,0.1); padding: 15px 30px; border-radius: 50px;">
         <span style="font-size: 1.2rem; font-weight: bold;">Préstamo Activo</span>
-        <!-- EL SWITCH MÁGICO -->
+        <!-- EL SWITCH -->
         <label class="switch">
             <input type="checkbox" id="toggle-recuperar" checked>
             <span class="slider"></span>
@@ -79,7 +76,6 @@
     <!-- VISTA 2: NORMAL -->
     <div id="vista-normal" class="grid-options" style="display: none;">
         
-        <!-- Tarjeta dinámica de suplencia (Solo aparece si a MI me prestaron un aula) -->
         <div class="option-card" id="card-suplencia-disponible" style="display:none; background:#fff8e1; border-color:#FF9800;">
             <span class="option-icon">🤝</span><h3 style="color:#f57f17;">Clases Extra</h3>
             <p style="color: #666; font-size: 0.8rem; margin-bottom: 15px;">Entrar al aula de <b id="text-suplir-a"></b></p>
@@ -120,25 +116,22 @@
         
         const modoSuplente = localStorage.getItem('supliendo_a');
 
-        // LÓGICA DE VISUALIZACIÓN
         if (modoSuplente) {
-            // ESTOY ACTUANDO COMO SUPLENTE AHORITA MISMO
             document.getElementById('saludo-maestro').innerText = `Hola, ${myData.nombre || 'Maestro(a)'}`;
             document.getElementById('banner-suplencia').style.display = 'block';
             document.getElementById('nombre-suplido').innerText = localStorage.getItem('supliendo_nombre');
             document.getElementById('vista-normal').style.display = 'grid';
             
         } else if (myData.delegado_a) {
-            // PRESTÉ MI AULA, PANTALLA DE BLOQUEO ACTIVA
             document.getElementById('saludo-maestro').innerText = `Hola, ${myData.nombre || 'Maestro(a)'}`;
             document.getElementById('vista-bloqueada').style.display = 'flex';
-            document.getElementById('nombre-mi-suplente').innerText = myData.delegado_a;
+            
+            // Mostrar nombre real del suplente si existe
+            document.getElementById('nombre-mi-suplente').innerText = myData.delegado_nombre || myData.delegado_a;
         } else {
-            // MODO NORMAL
             document.getElementById('saludo-maestro').innerText = `Hola, ${myData.nombre || 'Maestro(a)'}`;
             document.getElementById('vista-normal').style.display = 'grid';
 
-            // Buscar si alguien me prestó su aula
             const qSuplente = query(collection(db, "usuarios"), where("delegado_a", "==", miEmail));
             const suplenteSnap = await getDocs(qSuplente);
             
@@ -161,17 +154,22 @@
         if (!e.target.checked) {
             Swal.fire({ title: 'Recuperando Aula...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             
-            // Borra al delegado de la base de datos
-            await updateDoc(doc(db, "usuarios", miId), { delegado_a: deleteField() });
+            // Borra al delegado y a su nombre de la base de datos
+            await updateDoc(doc(db, "usuarios", miId), { 
+                delegado_a: deleteField(),
+                delegado_nombre: deleteField() 
+            });
             
-            Swal.fire('¡Aula Recuperada!', 'El suplente ya no tiene acceso. Bienvenido de vuelta.', 'success').then(() => location.reload());
+            Swal.fire('¡Aula Recuperada!', 'El suplente ya no tiene acceso. Bienvenido de vuelta.', 'success').then(() => {
+                window.location.href = window.location.href; // Recarga forzada
+            });
         }
     });
 
     document.getElementById('btn-salir-suplencia').addEventListener('click', () => {
         localStorage.removeItem('supliendo_a');
         localStorage.removeItem('supliendo_nombre');
-        location.reload();
+        window.location.href = window.location.href;
     });
 
     document.getElementById('btn-prestar-aula').addEventListener('click', async () => {
@@ -198,8 +196,18 @@
         });
 
         if (suplenteEmail) {
-            await updateDoc(doc(db, "usuarios", miId), { delegado_a: suplenteEmail });
-            Swal.fire('¡Listo!', 'Le has dado acceso a tu aula.', 'success').then(() => location.reload());
+            // Obtenemos el nombre del maestro seleccionado desde el Select
+            const selectEl = Swal.getPopup().querySelector('select');
+            const suplenteNombre = selectEl.options[selectEl.selectedIndex].text;
+
+            await updateDoc(doc(db, "usuarios", miId), { 
+                delegado_a: suplenteEmail,
+                delegado_nombre: suplenteNombre 
+            });
+            
+            Swal.fire('¡Listo!', 'Le has dado acceso a tu aula.', 'success').then(() => {
+                window.location.href = window.location.href;
+            });
         }
     });
 
