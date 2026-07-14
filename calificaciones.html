@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <title>Calificaciones - Amor y Libertad</title>
     <link rel="stylesheet" href="css/styles.css">
+    <!-- SWEETALERT2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         .container { max-width: 900px; margin: 30px auto; padding: 0 20px; }
         .card { padding: 30px; border-radius: 20px; background: #ffffff; border: 1px solid #eef2f7; box-shadow: 0 8px 16px rgba(0,0,0,0.03); margin-bottom: 25px; }
@@ -50,7 +52,7 @@
                 </select>
             </div>
             <div>
-                <button id="btn-cargar-lista" class="btn btn-primary" style="width:100%; padding:12px; border-radius:8px; background:#4CAF50; border:none; font-weight:bold;">Evaluar Alumnos</button>
+                <button id="btn-cargar-lista" class="btn btn-primary" style="width:100%; padding:12px; border-radius:8px; background:#4CAF50; border:none; font-weight:bold; cursor:pointer;">Evaluar Alumnos</button>
             </div>
         </div>
     </section>
@@ -106,7 +108,11 @@
 
     document.getElementById('btn-cargar-lista').addEventListener('click', async () => {
         const grupo = filtroGrupo.value; const materia = selectMateria.value; const periodo = document.getElementById('periodoEvaluacion').value;
-        if(!grupo || !materia) return alert("Selecciona grupo y asignatura.");
+        
+        if(!grupo || !materia) {
+            Swal.fire('Cuidado', 'Selecciona el grupo y la asignatura.', 'warning');
+            return;
+        }
         
         document.getElementById('seccion-lista').style.display = 'block'; 
         alumnosActuales = [];
@@ -127,7 +133,6 @@
                 alumnosActuales.push(idAlumno);
                 let notaPrevia = notasGuardadas[idAlumno] || "";
 
-                // AHORA ES TIPO TEXTO (acepta letras y números)
                 tabla.innerHTML += `
                     <tr>
                         <td style="font-weight:bold; font-size:1.05rem;">${data.nombre}</td>
@@ -151,9 +156,19 @@
             await setDoc(doc(db, "calificaciones", idDocumento), { 
                 id_unico: idDocumento, grupo, materia, periodo, maestro_email: maestroActual, notas 
             });
-            alert("✅ ¡Calificaciones guardadas exitosamente!");
+            
+            // MENSAJE ANIMADO
+            Swal.fire({
+                icon: 'success',
+                title: '¡Excelente!',
+                text: 'Las calificaciones han sido guardadas.',
+                confirmButtonColor: '#004a99'
+            });
+
             document.getElementById('seccion-lista').style.display = 'none';
-        } catch (e) { alert("Error al guardar."); }
+        } catch (e) { 
+            Swal.fire('Error', 'Hubo un fallo al guardar las notas.', 'error');
+        }
     });
 </script>
 </body>

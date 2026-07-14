@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <title>Mantenimiento - Amor y Libertad</title>
     <link rel="stylesheet" href="css/styles.css">
+    <!-- LIBRERÍA SWEETALERT2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         .container { max-width: 700px; margin: 50px auto; padding: 0 20px; }
         .card { padding: 40px; border-radius: 20px; background: #ffffff; border: 1px solid #eef2f7; box-shadow: 0 8px 16px rgba(0,0,0,0.05); text-align: center;}
@@ -24,19 +26,12 @@
         
         <div class="alert-box">
             <strong>¡Atención Directora!</strong><br>
-            Estas herramientas están diseñadas para ejecutarse al finalizar el ciclo escolar. Borrarán permanentemente los datos seleccionados de la base de datos para preparar el sistema para el nuevo año. <b>Esta acción no se puede deshacer.</b>
+            Estas herramientas están diseñadas para ejecutarse al finalizar el ciclo escolar. Borrarán permanentemente los datos de la base de datos. <b>Esta acción no se puede deshacer.</b>
         </div>
         
-        <!-- Botón Borrar Calificaciones -->
         <button id="btn-limpiar-calif" class="btn-danger">🗑️ Borrar Todas las Calificaciones</button>
-        <p id="estado-calif" style="color:#4CAF50; font-weight:bold; display:none;"></p>
-
         <hr style="border: 1px solid #eee; margin: 30px 0;">
-
-        <!-- Botón Borrar Fichas -->
         <button id="btn-limpiar-fichas" class="btn-danger" style="background:#e65100;">🗑️ Borrar Todas las Fichas Descriptivas</button>
-        <p id="estado-fichas" style="color:#4CAF50; font-weight:bold; display:none;"></p>
-
     </section>
 </main>
 
@@ -49,56 +44,51 @@
         if (!user) window.location.href = "login.html";
     });
 
-    // Limpiar Calificaciones
-    document.getElementById('btn-limpiar-calif').addEventListener('click', async () => {
-        const confirmacion = prompt('Para confirmar que deseas borrar TODAS las calificaciones de la escuela, escribe la palabra: CONFIRMAR');
-        
-        if (confirmacion === "CONFIRMAR") {
-            const estado = document.getElementById('estado-calif');
-            estado.style.display = 'block';
-            estado.style.color = '#FF9800';
-            estado.innerText = "⏳ Borrando base de datos de calificaciones...";
+    // Función unificada y profesional con SweetAlert
+    async function ejecutarMantenimiento(coleccionData, nombreVisible) {
+        const { value: confirmacion } = await Swal.fire({
+            title: 'Seguridad del Sistema',
+            html: `Para borrar <b>${nombreVisible}</b>, escribe la palabra:<br><br><b style="color:red; font-size:1.2rem;">CONFIRMAR</b>`,
+            input: 'text',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#c62828',
+            cancelButtonColor: '#666',
+            confirmButtonText: 'Sí, borrar datos',
+            cancelButtonText: 'Cancelar',
+            inputValidator: (value) => {
+                if (value !== 'CONFIRMAR') {
+                    return 'Debes escribir CONFIRMAR en mayúsculas.';
+                }
+            }
+        });
+
+        if (confirmacion === 'CONFIRMAR') {
+            Swal.fire({
+                title: 'Borrando datos...',
+                text: 'Por favor no cierres esta ventana.',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
 
             try {
-                const querySnapshot = await getDocs(collection(db, "calificaciones"));
+                const querySnapshot = await getDocs(collection(db, coleccionData));
                 for (let i = 0; i < querySnapshot.docs.length; i++) {
-                    await deleteDoc(doc(db, "calificaciones", querySnapshot.docs[i].id));
+                    await deleteDoc(doc(db, coleccionData, querySnapshot.docs[i].id));
                 }
-                estado.style.color = '#4CAF50';
-                estado.innerText = "✅ Se han borrado todas las calificaciones correctamente.";
+                Swal.fire('¡Sistema Limpio!', `Se han borrado ${nombreVisible} exitosamente.`, 'success');
             } catch (error) {
-                estado.style.color = '#c62828';
-                estado.innerText = "❌ Hubo un error en el proceso.";
+                Swal.fire('Error', 'Hubo un problema de conexión al borrar los datos.', 'error');
             }
-        } else if (confirmacion !== null) {
-            alert("Palabra incorrecta. Operación cancelada por seguridad.");
         }
+    }
+
+    document.getElementById('btn-limpiar-calif').addEventListener('click', () => {
+        ejecutarMantenimiento("calificaciones", "TODAS las calificaciones");
     });
 
-    // Limpiar Fichas Descriptivas
-    document.getElementById('btn-limpiar-fichas').addEventListener('click', async () => {
-        const confirmacion = prompt('Para confirmar que deseas borrar TODAS las fichas descriptivas, escribe la palabra: CONFIRMAR');
-        
-        if (confirmacion === "CONFIRMAR") {
-            const estado = document.getElementById('estado-fichas');
-            estado.style.display = 'block';
-            estado.style.color = '#FF9800';
-            estado.innerText = "⏳ Borrando base de datos de fichas...";
-
-            try {
-                const querySnapshot = await getDocs(collection(db, "fichas"));
-                for (let i = 0; i < querySnapshot.docs.length; i++) {
-                    await deleteDoc(doc(db, "fichas", querySnapshot.docs[i].id));
-                }
-                estado.style.color = '#4CAF50';
-                estado.innerText = "✅ Se han borrado todas las fichas descriptivas correctamente.";
-            } catch (error) {
-                estado.style.color = '#c62828';
-                estado.innerText = "❌ Hubo un error en el proceso.";
-            }
-        } else if (confirmacion !== null) {
-            alert("Palabra incorrecta. Operación cancelada por seguridad.");
-        }
+    document.getElementById('btn-limpiar-fichas').addEventListener('click', () => {
+        ejecutarMantenimiento("fichas", "TODAS las fichas descriptivas");
     });
 </script>
 </body>

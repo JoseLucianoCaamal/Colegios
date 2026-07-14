@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <title>Fichas Descriptivas - Amor y Libertad</title>
     <link rel="stylesheet" href="css/styles.css">
+    <!-- SWEETALERT2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         .container { max-width: 900px; margin: 30px auto; padding: 0 20px; }
         .card { padding: 30px; border-radius: 20px; background: #ffffff; border: 1px solid #eef2f7; box-shadow: 0 8px 16px rgba(0,0,0,0.03); margin-bottom: 25px; }
@@ -104,7 +106,6 @@
         areaRedaccion.style.display = 'block';
 
         try {
-            // Verifica si el maestro ya le había escrito una ficha antes
             const docFicha = await getDocs(query(collection(db, "fichas"), where("id_alumno", "==", idAlumno)));
             if (!docFicha.empty) {
                 textoFicha.value = docFicha.docs[0].data().texto;
@@ -117,7 +118,10 @@
     document.getElementById('btn-guardar-ficha').addEventListener('click', async () => {
         const idAlumno = filtroAlumno.value;
         const texto = textoFicha.value.trim();
-        if(!texto) return alert("La ficha no puede estar vacía.");
+        if(!texto) {
+            Swal.fire('Atención', 'La ficha no puede estar vacía.', 'warning');
+            return;
+        }
 
         try {
             await setDoc(doc(db, "fichas", idAlumno), {
@@ -128,13 +132,20 @@
                 texto: texto,
                 ultima_actualizacion: new Date()
             });
-            alert("✅ ¡Ficha guardada exitosamente! Ya está disponible para la Directora.");
+            
+            // ANIMACIÓN PROFESIONAL DE ÉXITO
+            Swal.fire({
+                icon: 'success',
+                title: '¡Ficha Guardada!',
+                text: 'El documento ya está disponible para la Directora.',
+                confirmButtonColor: '#004a99'
+            });
+
             textoFicha.value = "";
             areaRedaccion.style.display = 'none';
             filtroAlumno.value = "";
         } catch (error) { 
-            alert("Error al guardar en la base de datos."); 
-            console.error(error);
+            Swal.fire('Error', 'Hubo un problema al guardar en la base de datos.', 'error');
         }
     });
 </script>

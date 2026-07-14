@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <title>Materias - Amor y Libertad</title>
     <link rel="stylesheet" href="css/styles.css">
+    <!-- SWEETALERT2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         .grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 1000px; margin: 20px auto; padding: 0 20px; }
         .card { padding: 30px; border-radius: 20px; background: #ffffff; border: 1px solid #e0e6ed; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
@@ -38,7 +40,7 @@
             <option value="">Cargando grupos oficiales...</option>
         </select>
         
-        <button id="btn-registrar-materia" class="btn btn-primary" style="width:100%; padding:12px; border-radius:8px;">Guardar Materia</button>
+        <button id="btn-registrar-materia" class="btn btn-primary" style="width:100%; padding:12px; border-radius:8px; cursor:pointer;">Guardar Materia</button>
     </section>
 
     <section class="card">
@@ -80,19 +82,32 @@
     document.getElementById('btn-registrar-materia').addEventListener('click', async () => {
         const nombre = document.getElementById('nombreMateria').value;
         const grupo = document.getElementById('grupoMateria').value;
-        if (!nombre || !grupo) return alert("Completa ambos campos");
+        
+        if (!nombre || !grupo) {
+            Swal.fire('Faltan datos', 'Completa ambos campos para continuar.', 'warning');
+            return;
+        }
 
         try {
-            // Guardamos la materia amarrada al correo del maestro
             await addDoc(collection(db, "materias"), { nombre, grupo, maestro_email: maestroActual });
-            alert("Materia registrada con éxito"); location.reload();
-        } catch (error) { alert("Error al guardar."); }
+            
+            Swal.fire({
+                title: '¡Materia registrada!',
+                text: 'La asignatura fue vinculada a tu cuenta.',
+                icon: 'success',
+                confirmButtonColor: '#004a99'
+            }).then(() => {
+                location.reload();
+            });
+
+        } catch (error) { 
+            Swal.fire('Error', 'Ocurrió un error al guardar.', 'error');
+        }
     });
 
     async function cargarMisMaterias() {
         const lista = document.getElementById('lista-materias');
         try {
-            // Solo trae las materias que le pertenecen a este maestro
             const q = query(collection(db, "materias"), where("maestro_email", "==", maestroActual));
             const querySnapshot = await getDocs(q);
             lista.innerHTML = "";
@@ -104,9 +119,26 @@
                     <td><span style="background:#eef2f7; padding:4px 8px; border-radius:4px;">${data.grupo}</span></td>
                     <td><button class="btn-delete">Borrar</button></td>
                 `;
-                row.querySelector('.btn-delete').addEventListener('click', async () => {
-                    if(confirm("¿Borrar materia?")) { await deleteDoc(doc(db, "materias", docSnap.id)); location.reload(); }
+                
+                // BORRADO CON ALERTA PROFESIONAL
+                row.querySelector('.btn-delete').addEventListener('click', () => {
+                    Swal.fire({
+                        title: '¿Eliminar materia?',
+                        text: "Esta acción no se puede deshacer.",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#ff4d4d',
+                        cancelButtonColor: '#666',
+                        confirmButtonText: 'Sí, borrar',
+                        cancelButtonText: 'Cancelar'
+                    }).then(async (result) => {
+                        if (result.isConfirmed) {
+                            await deleteDoc(doc(db, "materias", docSnap.id));
+                            location.reload();
+                        }
+                    });
                 });
+
                 lista.appendChild(row);
             });
         } catch (error) {}
