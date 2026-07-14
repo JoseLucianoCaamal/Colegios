@@ -63,7 +63,7 @@
     onAuthStateChanged(auth, (user) => {
         if (!user) window.location.href = "login.html";
         else {
-            maestroActual = user.email;
+            maestroActual = localStorage.getItem('supliendo_a') || user.email;
             cargarGruposOficiales();
             cargarMisMaterias();
         }

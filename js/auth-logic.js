@@ -1,5 +1,5 @@
 import { auth, db } from './firebase-config.js';
-import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 export const iniciarSesion = async (e) => {
@@ -8,12 +8,10 @@ export const iniciarSesion = async (e) => {
     const inputEmail = document.getElementById('email') || document.getElementById('usuario') || document.getElementById('user');
     const inputPassword = document.getElementById('password') || document.getElementById('pass') || document.getElementById('clave');
     
-    if (!inputEmail || !inputPassword) {
-        Swal.fire('Error de Interfaz', 'No se encontraron las cajas de texto en tu HTML.', 'error');
-        return;
-    }
+    if (!inputEmail || !inputPassword) return;
 
-    const emailUsuario = inputEmail.value.trim();
+    // Convertimos a minúsculas automáticamente para evitar errores de mayúsculas
+    const emailUsuario = inputEmail.value.trim().toLowerCase();
     const password = inputPassword.value;
     
     if (!emailUsuario || !password) {
@@ -23,7 +21,6 @@ export const iniciarSesion = async (e) => {
     
     const emailCompleto = emailUsuario.includes('@') ? emailUsuario : `${emailUsuario}@amorylibertad.org`;
 
-    // Ponemos una pantalla de carga para que la app se sienta profesional
     Swal.fire({
         title: 'Verificando datos...',
         allowOutsideClick: false,
@@ -31,6 +28,9 @@ export const iniciarSesion = async (e) => {
     });
 
     try {
+        // MAGIA: Forzar que la sesión se quede guardada en el dispositivo
+        await setPersistence(auth, browserLocalPersistence);
+
         const q = query(collection(db, "usuarios"), where("email", "==", emailCompleto));
         const querySnapshot = await getDocs(q);
 
@@ -45,9 +45,9 @@ export const iniciarSesion = async (e) => {
                 else { Swal.fire('Error', 'Rol no reconocido.', 'error'); auth.signOut(); }
             });
         } else {
-            Swal.fire('Usuario no encontrado', 'El usuario ingresado no existe en nuestra base de datos.', 'error');
+            Swal.fire('Usuario no encontrado', 'El usuario ingresado no existe.', 'error');
         }
     } catch (error) {
-        Swal.fire('Error de Acceso', 'La contraseña es incorrecta o hubo un problema de red.', 'error');
+        Swal.fire('Error de Acceso', 'La contraseña es incorrecta.', 'error');
     }
 };
