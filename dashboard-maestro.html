@@ -2,7 +2,9 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel de Maestros - Amor y Libertad</title>
+    <link rel="icon" type="image/png" href="Img/logo.png">
     <link rel="stylesheet" href="css/styles.css">
     <style>
         .grid-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; max-width: 900px; margin: 40px auto; padding: 0 20px; }
@@ -20,7 +22,8 @@
     <div class="profile-info">
         <div class="profile-logo"><img src="Img/logo.png" alt="Logo"></div>
         <div class="profile-text">
-            <h1>Hola, Maestro(a)</h1>
+            <!-- AQUÍ CAMBIARÁ EL NOMBRE DINÁMICAMENTE -->
+            <h1 id="saludo-maestro">Cargando perfil...</h1>
             <p>Panel de Control Docente</p>
         </div>
     </div>
@@ -33,41 +36,51 @@
 <main>
     <div class="grid-options">
         <div class="option-card">
-            <span class="option-icon">🧒</span>
-            <h3>Directorio</h3>
+            <span class="option-icon">🧒</span><h3>Directorio</h3>
             <a href="ver-alumnos.html" class="btn btn-primary">ENTRAR</a>
         </div>
-        
-        <!-- NUEVA CARPETA DOCUMENTOS -->
         <div class="option-card">
-            <span class="option-icon">📁</span>
-            <h3>Documentos</h3>
+            <span class="option-icon">📁</span><h3>Documentos</h3>
             <p style="color: #666; font-size: 0.8rem; margin-bottom: 15px;">Listas, Calificaciones y Fichas.</p>
             <a href="documentos-maestro.html" class="btn btn-primary" style="background:#004a99; border:none;">ABRIR CARPETA</a>
         </div>
-
         <div class="option-card">
-            <span class="option-icon">📚</span>
-            <h3>Mis Materias</h3>
+            <span class="option-icon">📚</span><h3>Mis Materias</h3>
             <a href="materias.html" class="btn btn-primary">ENTRAR</a>
         </div>
         <div class="option-card">
-            <span class="option-icon">📸</span>
-            <h3>Subir Fotos</h3>
+            <span class="option-icon">📸</span><h3>Subir Fotos</h3>
             <a href="fotos.html" class="btn btn-primary">ENTRAR</a>
         </div>
         <div class="option-card">
-            <span class="option-icon">🔒</span>
-            <h3>Seguridad</h3>
+            <span class="option-icon">🔒</span><h3>Seguridad</h3>
             <a href="cambiar-password.html" class="btn btn-primary">CAMBIAR CLAVE</a>
         </div>
     </div>
 </main>
 
 <script type="module">
-    import { auth } from './js/firebase-config.js';
+    import { auth, db } from './js/firebase-config.js';
     import { signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    onAuthStateChanged(auth, (user) => { if (!user) window.location.href = "login.html"; });
+    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    onAuthStateChanged(auth, async (user) => { 
+        if (!user) {
+            window.location.href = "login.html"; 
+        } else {
+            // Buscamos el nombre real del maestro
+            const idUsuario = user.email.split('@')[0];
+            const docRef = doc(db, "usuarios", idUsuario);
+            const docSnap = await getDoc(docRef);
+            
+            if (docSnap.exists() && docSnap.data().nombre) {
+                document.getElementById('saludo-maestro').innerText = `Hola, ${docSnap.data().nombre}`;
+            } else {
+                document.getElementById('saludo-maestro').innerText = `Hola, Maestro(a)`;
+            }
+        }
+    });
+
     document.getElementById('btn-logout').addEventListener('click', () => {
         signOut(auth).then(() => window.location.href = "login.html");
     });

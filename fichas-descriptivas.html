@@ -2,14 +2,15 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fichas Descriptivas - Amor y Libertad</title>
+    <link rel="icon" type="image/png" href="Img/logo.png">
     <link rel="stylesheet" href="css/styles.css">
-    <!-- SWEETALERT2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         .container { max-width: 900px; margin: 30px auto; padding: 0 20px; }
         .card { padding: 30px; border-radius: 20px; background: #ffffff; border: 1px solid #eef2f7; box-shadow: 0 8px 16px rgba(0,0,0,0.03); margin-bottom: 25px; }
-        .filters-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; align-items: end; }
+        .filters-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end; }
         .input-control { width: 100%; padding: 12px; border: 2px solid #eef2f7; border-radius: 8px; font-size: 1rem; outline:none;}
         .input-control:focus {border-color: #FF9800;}
         label { font-size: 0.85rem; font-weight: bold; color: #8898aa; display: block; margin-bottom: 5px; text-transform: uppercase;}
@@ -59,7 +60,7 @@
 <script type="module">
     import { db, auth } from './js/firebase-config.js';
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { collection, query, where, getDocs, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { collection, query, where, getDocs, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const filtroGrupo = document.getElementById('filtroGrupo');
     const filtroAlumno = document.getElementById('filtroAlumno');
@@ -67,11 +68,22 @@
     const textoFicha = document.getElementById('textoFicha');
     
     let maestroActual = null;
+    let nombreMaestroReal = "Docente Titular";
     let nombreAlumnoActual = "";
 
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
         if (!user) window.location.href = "login.html";
-        else { maestroActual = user.email; cargarGrupos(); }
+        else { 
+            maestroActual = user.email;
+            
+            // BUSCAMOS SU NOMBRE REAL PARA FIRMAR EL DOCUMENTO
+            const idDocente = user.email.split('@')[0];
+            const docSnap = await getDoc(doc(db, "usuarios", idDocente));
+            if (docSnap.exists() && docSnap.data().nombre) {
+                nombreMaestroReal = docSnap.data().nombre;
+            }
+            cargarGrupos(); 
+        }
     });
 
     async function cargarGrupos() {
@@ -102,7 +114,7 @@
         
         nombreAlumnoActual = filtroAlumno.options[filtroAlumno.selectedIndex].text;
         document.getElementById('nombre-alumno-ui').innerText = nombreAlumnoActual;
-        textoFicha.value = "Cargando archivo previo...";
+        textoFicha.value = "Cargando...";
         areaRedaccion.style.display = 'block';
 
         try {
@@ -129,15 +141,15 @@
                 nombre_alumno: nombreAlumnoActual,
                 grupo: filtroGrupo.value,
                 maestro_email: maestroActual,
+                maestro_nombre: nombreMaestroReal, // AQUÍ SE GUARDA SU NOMBRE REAL
                 texto: texto,
                 ultima_actualizacion: new Date()
             });
             
-            // ANIMACIÓN PROFESIONAL DE ÉXITO
             Swal.fire({
                 icon: 'success',
                 title: '¡Ficha Guardada!',
-                text: 'El documento ya está disponible para la Directora.',
+                text: `Firmado por: ${nombreMaestroReal}. Ya está disponible para la Directora.`,
                 confirmButtonColor: '#004a99'
             });
 

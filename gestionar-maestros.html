@@ -2,30 +2,27 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- ESTA ES LA LÍNEA MÁGICA PARA CELULARES -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
     <title>Gestionar Maestros - Amor y Libertad</title>
+    <link rel="icon" type="image/png" href="Img/logo.png">
     <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        .grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 1000px; margin: 20px auto; padding: 0 20px; }
+        .grid-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; max-width: 1000px; margin: 20px auto; padding: 0 20px; }
         .card { padding: 30px; border-radius: 20px; background: #ffffff; border: 1px solid #e0e6ed; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .btn-back { display: inline-block; margin-bottom: 10px; color: var(--primary); text-decoration: none; font-weight: bold; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-        .btn-delete { background: #ff4d4d; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; }
-        
-        @media (max-width: 768px) {
-            .grid-layout { grid-template-columns: 1fr; }
-        }
+        .btn-back-clean { display: inline-flex; align-items: center; gap: 5px; margin-bottom: 15px; color: #666; text-decoration: none; font-weight: bold; }
+        .input-control { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; outline: none; transition: 0.3s;}
+        .input-control:focus { border-color: #004a99; }
+        label { font-size: 0.85rem; font-weight: bold; color: #8898aa; display: block; margin-bottom: 5px; text-transform: uppercase;}
     </style>
 </head>
 <body>
 
-<!-- TU CABECERA ORIGINAL RECUPERADA -->
 <header class="profile-header">
     <div class="cover-photo"><img src="Img/logo2.png" alt="Portada"></div>
     <div class="profile-info">
-        <a href="dashboard-directora.html" class="btn-back">← Regresar al Dashboard</a>
-        <div class="profile-logo"><img src="Img/logo.png" alt="Logo"></div>
+        <a href="dashboard-directora.html" class="btn-back-clean">⬅ Regresar al Dashboard</a>
         <div class="profile-text">
             <h1>Gestionar Maestros</h1>
             <p>Panel Administrativo</p>
@@ -34,76 +31,77 @@
 </header>
 
 <main class="grid-layout">
-    <!-- Formulario de Registro -->
     <section class="card">
-        <h3 style="margin-top: 0; color: #004a99;">✨ Nuevo Maestro</h3>
-        <input type="text" id="nuevoUsuario" placeholder="Usuario (ej: maestro.juan)" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
-        <input type="password" id="nuevaPass" placeholder="Clave temporal" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
-        <button id="btn-registrar" class="btn btn-primary" style="width: 100%; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold;">Registrar Maestro</button>
+        <h3 style="margin-top:0; color:#004a99;">✨ Nuevo Maestro</h3>
+        
+        <label>Nombre Completo del Docente</label>
+        <input type="text" id="nombreMaestro" class="input-control" placeholder="Ej: Maestra María José López">
+        
+        <label>Nombre de Usuario</label>
+        <input type="text" id="usuarioMaestro" class="input-control" placeholder="Ej: maria.lopez">
+        
+        <label>Contraseña Temporal</label>
+        <input type="password" id="claveMaestro" class="input-control" placeholder="Mínimo 6 caracteres">
+        
+        <button id="btn-registrar" class="btn btn-primary" style="width:100%; padding:12px; border-radius:8px; cursor:pointer; font-weight:bold;">REGISTRAR MAESTRO</button>
     </section>
 
-    <!-- Lista -->
     <section class="card">
-        <h3>Maestros Registrados</h3>
-        <table>
-            <thead><tr><th>Usuario</th><th>Acción</th></tr></thead>
-            <tbody id="lista-maestros">
-                <!-- Aquí aparecerán los maestros -->
-            </tbody>
-        </table>
+        <h3 style="margin-top:0; color:#004a99;">📋 Maestros Registrados</h3>
+        <p style="color:#666; font-size:0.9rem;">Los maestros gestionan sus propias contraseñas tras el primer inicio de sesión.</p>
     </section>
 </main>
 
 <script type="module">
     import { db, auth } from './js/firebase-config.js';
     import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { collection, getDocs, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     document.getElementById('btn-registrar').addEventListener('click', async () => {
-        const usuarioInput = document.getElementById('nuevoUsuario').value;
-        const pass = document.getElementById('nuevaPass').value;
+        const nombre = document.getElementById('nombreMaestro').value.trim();
+        const usuario = document.getElementById('usuarioMaestro').value.trim().toLowerCase();
+        const clave = document.getElementById('claveMaestro').value;
 
-        if (!usuarioInput || !pass) { alert("Rellena todos los campos"); return; }
-        const emailCompleto = `${usuarioInput}@amorylibertad.org`;
+        if (!nombre || !usuario || !clave) {
+            Swal.fire('Campos Vacíos', 'Por favor llena todos los datos del maestro.', 'warning');
+            return;
+        }
+
+        if (clave.length < 6) {
+            Swal.fire('Contraseña Corta', 'La contraseña debe tener al menos 6 caracteres.', 'error');
+            return;
+        }
+
+        Swal.fire({ title: 'Registrando Maestro...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
         try {
-            await createUserWithEmailAndPassword(auth, emailCompleto, pass);
-            await setDoc(doc(db, "usuarios", usuarioInput), {
-                usuario: usuarioInput,
+            const emailCompleto = `${usuario}@amorylibertad.org`;
+            
+            // 1. Creamos la cuenta en Firebase
+            await createUserWithEmailAndPassword(auth, emailCompleto, clave);
+            
+            // 2. Guardamos su NOMBRE REAL en la base de datos
+            await setDoc(doc(db, "usuarios", usuario), {
+                email: emailCompleto,
                 rol: "maestro",
-                email: emailCompleto
+                nombre: nombre
             });
-            alert("¡Registrado con éxito!");
-            location.reload(); 
+
+            Swal.fire({
+                icon: 'success',
+                title: '¡Maestro Registrado!',
+                text: 'Por protocolos de seguridad, el sistema cerrará esta sesión para aplicar los permisos. Vuelve a ingresar con tu cuenta de Directora.',
+                confirmButtonColor: '#004a99',
+                confirmButtonText: 'Entendido'
+            }).then(() => {
+                window.location.href = "login.html";
+            });
+
         } catch (error) {
-            alert("Error: " + error.message);
+            Swal.fire('Error al registrar', 'Ese usuario ya existe o hubo un fallo de conexión.', 'error');
+            console.error(error);
         }
     });
-
-    async function cargarMaestros() {
-        const lista = document.getElementById('lista-maestros');
-        try {
-            const querySnapshot = await getDocs(collection(db, "usuarios"));
-            lista.innerHTML = "";
-            querySnapshot.forEach((docSnap) => {
-                const data = docSnap.data();
-                if(data.rol === "maestro") {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `<td>${data.usuario}</td><td><button class="btn-delete">Eliminar</button></td>`;
-                    row.querySelector('.btn-delete').addEventListener('click', async () => {
-                        if(confirm("¿Borrar a este maestro?")) {
-                            await deleteDoc(doc(db, "usuarios", data.usuario));
-                            location.reload();
-                        }
-                    });
-                    lista.appendChild(row);
-                }
-            });
-        } catch (error) {
-            console.error("Error al cargar:", error);
-        }
-    }
-    cargarMaestros();
 </script>
 </body>
 </html>
