@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Mantenimiento - Amor y Libertad</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .container { max-width: 700px; margin: 50px auto; padding: 0 20px; }
+        .card { padding: 40px; border-radius: 20px; background: #ffffff; border: 1px solid #eef2f7; box-shadow: 0 8px 16px rgba(0,0,0,0.05); text-align: center;}
+        .btn-back-clean { display: inline-flex; align-items: center; gap: 5px; color: #666; text-decoration: none; font-weight: bold; margin-bottom: 20px; }
+        .btn-danger { background: #c62828; color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; font-size: 1.1rem; cursor: pointer; width: 100%; transition: 0.3s; margin-bottom: 15px;}
+        .btn-danger:hover { background: #b71c1c; transform: scale(1.02);}
+        .alert-box { background: #ffebee; border: 1px solid #ffcdd2; color: #c62828; padding: 15px; border-radius: 8px; margin-bottom: 30px; text-align: left; font-size: 0.95rem; line-height: 1.5;}
+    </style>
+</head>
+<body>
+
+<main class="container">
+    <a href="dashboard-directora.html" class="btn-back-clean">⬅ Volver al Panel</a>
+    
+    <section class="card">
+        <span style="font-size: 4rem; display:block; margin-bottom:10px;">⚠️</span>
+        <h2 style="color:#c62828; margin-top:0;">Limpieza General del Sistema</h2>
+        
+        <div class="alert-box">
+            <strong>¡Atención Directora!</strong><br>
+            Estas herramientas están diseñadas para ejecutarse al finalizar el ciclo escolar. Borrarán permanentemente los datos seleccionados de la base de datos para preparar el sistema para el nuevo año. <b>Esta acción no se puede deshacer.</b>
+        </div>
+        
+        <!-- Botón Borrar Calificaciones -->
+        <button id="btn-limpiar-calif" class="btn-danger">🗑️ Borrar Todas las Calificaciones</button>
+        <p id="estado-calif" style="color:#4CAF50; font-weight:bold; display:none;"></p>
+
+        <hr style="border: 1px solid #eee; margin: 30px 0;">
+
+        <!-- Botón Borrar Fichas -->
+        <button id="btn-limpiar-fichas" class="btn-danger" style="background:#e65100;">🗑️ Borrar Todas las Fichas Descriptivas</button>
+        <p id="estado-fichas" style="color:#4CAF50; font-weight:bold; display:none;"></p>
+
+    </section>
+</main>
+
+<script type="module">
+    import { db, auth } from './js/firebase-config.js';
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { collection, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    onAuthStateChanged(auth, (user) => {
+        if (!user) window.location.href = "login.html";
+    });
+
+    // Limpiar Calificaciones
+    document.getElementById('btn-limpiar-calif').addEventListener('click', async () => {
+        const confirmacion = prompt('Para confirmar que deseas borrar TODAS las calificaciones de la escuela, escribe la palabra: CONFIRMAR');
+        
+        if (confirmacion === "CONFIRMAR") {
+            const estado = document.getElementById('estado-calif');
+            estado.style.display = 'block';
+            estado.style.color = '#FF9800';
+            estado.innerText = "⏳ Borrando base de datos de calificaciones...";
+
+            try {
+                const querySnapshot = await getDocs(collection(db, "calificaciones"));
+                for (let i = 0; i < querySnapshot.docs.length; i++) {
+                    await deleteDoc(doc(db, "calificaciones", querySnapshot.docs[i].id));
+                }
+                estado.style.color = '#4CAF50';
+                estado.innerText = "✅ Se han borrado todas las calificaciones correctamente.";
+            } catch (error) {
+                estado.style.color = '#c62828';
+                estado.innerText = "❌ Hubo un error en el proceso.";
+            }
+        } else if (confirmacion !== null) {
+            alert("Palabra incorrecta. Operación cancelada por seguridad.");
+        }
+    });
+
+    // Limpiar Fichas Descriptivas
+    document.getElementById('btn-limpiar-fichas').addEventListener('click', async () => {
+        const confirmacion = prompt('Para confirmar que deseas borrar TODAS las fichas descriptivas, escribe la palabra: CONFIRMAR');
+        
+        if (confirmacion === "CONFIRMAR") {
+            const estado = document.getElementById('estado-fichas');
+            estado.style.display = 'block';
+            estado.style.color = '#FF9800';
+            estado.innerText = "⏳ Borrando base de datos de fichas...";
+
+            try {
+                const querySnapshot = await getDocs(collection(db, "fichas"));
+                for (let i = 0; i < querySnapshot.docs.length; i++) {
+                    await deleteDoc(doc(db, "fichas", querySnapshot.docs[i].id));
+                }
+                estado.style.color = '#4CAF50';
+                estado.innerText = "✅ Se han borrado todas las fichas descriptivas correctamente.";
+            } catch (error) {
+                estado.style.color = '#c62828';
+                estado.innerText = "❌ Hubo un error en el proceso.";
+            }
+        } else if (confirmacion !== null) {
+            alert("Palabra incorrecta. Operación cancelada por seguridad.");
+        }
+    });
+</script>
+</body>
+</html>
