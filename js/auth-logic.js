@@ -1,6 +1,6 @@
 import { auth, db } from './firebase-config.js';
 import { signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { doc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 export const iniciarSesion = async (e) => {
     if (e && typeof e.preventDefault === 'function') { e.preventDefault(); }
@@ -18,7 +18,7 @@ export const iniciarSesion = async (e) => {
         return;
     }
     
-    // Auth SIEMPRE usa minúsculas
+    // Auth SIEMPRE necesita minúsculas para funcionar
     let emailParaAuth = usuarioEscrito.includes('@') ? usuarioEscrito : `${usuarioEscrito}@amorylibertad.org`;
     emailParaAuth = emailParaAuth.toLowerCase();
 
@@ -29,26 +29,34 @@ export const iniciarSesion = async (e) => {
     });
 
     try {
-        // FORZAR PERSISTENCIA (Para que no se cierre en celulares)
         await setPersistence(auth, browserLocalPersistence);
         
-        // 1. Iniciar sesión en el servidor de Auth
-        const userCredential = await signInWithEmailAndPassword(auth, emailParaAuth, password);
-        const idUsuarioMinusculas = userCredential.user.email.split('@')[0];
+        // 1. Iniciar sesión en el servidor de contraseñas (Auth)
+        await signInWithEmailAndPassword(auth, emailParaAuth, password);
 
-        // 2. Buscar en la Base de Datos (Primero en minúsculas)
-        let docRef = doc(db, "usuarios", idUsuarioMinusculas);
-        let docSnap = await getDoc(docRef);
+        // 2. BUSCADOR INTELIGENTE EN LA BASE DE DATOS
+        let userData = null;
 
-        // Si no lo encuentra, buscamos exactamente como lo escribió el usuario (¡Esto salva a RecepcionCEAL!)
-        if (!docSnap.exists()) {
-            docRef = doc(db, "usuarios", usuarioEscrito);
-            docSnap = await getDoc(docRef);
+        // Intento A: Búsqueda rápida por correo en minúsculas
+        const q = query(collection(db, "usuarios"), where("email", "==", emailParaAuth));
+        const querySnapshot = await getDocs(q);
+        
+        if (!querySnapshot.empty) {
+            userData = querySnapshot.docs[0].data();
+        } else {
+            // Intento B: Si lo anterior falló por culpa de las mayúsculas (Ej: RecepcionCEAL o id_directora)
+            // Hacemos un escaneo profundo de todos los usuarios
+            const allUsersSnap = await getDocs(collection(db, "usuarios"));
+            allUsersSnap.forEach((documento) => {
+                const data = documento.data();
+                if (data.email && data.email.toLowerCase() === emailParaAuth) {
+                    userData = data;
+                }
+            });
         }
 
         // 3. Redirección
-        if (docSnap.exists()) {
-            const userData = docSnap.data();
+        if (userData) {
             Swal.fire({ icon: 'success', title: '¡Acceso Concedido!', showConfirmButton: false, timer: 1200 }).then(() => {
                 if (userData.rol === "directora") window.location.href = "dashboard-directora.html";
                 else if (userData.rol === "maestro") window.location.href = "dashboard-maestro.html";
@@ -56,7 +64,7 @@ export const iniciarSesion = async (e) => {
                 else { Swal.fire('Error', 'Rol no reconocido.', 'error'); auth.signOut(); }
             });
         } else {
-            Swal.fire('Error de Base de Datos', 'Tu usuario no tiene un rol asignado.', 'error');
+            Swal.fire('Error de Base de Datos', 'Tu usuario no tiene un rol asignado en el sistema.', 'error');
             auth.signOut();
         }
     } catch (error) {

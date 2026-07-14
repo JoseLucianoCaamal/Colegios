@@ -40,7 +40,6 @@
     <button id="btn-salir-suplencia" style="margin-left:15px; padding:5px 15px; border-radius:20px; border:none; background:#333; color:white; cursor:pointer; font-weight:bold;">Salir del Modo</button>
 </div>
 
-<!-- VISTA 1: AULA PRESTADA A OTRO (PANTALLA DE BLOQUEO TOTAL) -->
 <div id="vista-bloqueada" class="pantalla-bloqueo" style="display: none;">
     <span style="font-size: 5rem; margin-bottom: 20px;">🛑</span>
     <h2 style="font-size: 2.5rem; margin: 0 0 10px 0;">Aula Virtual Cedida</h2>
@@ -48,7 +47,6 @@
     
     <div style="display: flex; align-items: center; gap: 15px; margin-top: 40px; background: rgba(255,255,255,0.1); padding: 15px 30px; border-radius: 50px;">
         <span style="font-size: 1.2rem; font-weight: bold;">Préstamo Activo</span>
-        <!-- EL SWITCH -->
         <label class="switch">
             <input type="checkbox" id="toggle-recuperar" checked>
             <span class="slider"></span>
@@ -73,7 +71,6 @@
 </div>
 
 <main>
-    <!-- VISTA 2: NORMAL -->
     <div id="vista-normal" class="grid-options" style="display: none;">
         
         <div class="option-card" id="card-suplencia-disponible" style="display:none; background:#fff8e1; border-color:#FF9800;">
@@ -87,11 +84,17 @@
         <div class="option-card"><span class="option-icon">📚</span><h3>Mis Materias</h3><a href="materias.html" class="btn btn-primary">ENTRAR</a></div>
         <div class="option-card"><span class="option-icon">📸</span><h3>Subir Fotos</h3><a href="fotos.html" class="btn btn-primary">ENTRAR</a></div>
         
-        <!-- BOTÓN PARA PRESTAR AULA -->
         <div class="option-card">
             <span class="option-icon">🔀</span><h3>Prestar Aula</h3>
             <p style="color: #666; font-size: 0.8rem; margin-bottom: 15px;">Dar acceso temporal a un suplente.</p>
             <button id="btn-prestar-aula" class="btn btn-primary" style="background:#607d8b; border:none; cursor:pointer; width:100%;">ASIGNAR SUPLENTE</button>
+        </div>
+
+        <!-- NUEVA OPCIÓN: LIMPIAR ASISTENCIAS -->
+        <div class="option-card">
+            <span class="option-icon">🧹</span><h3 style="color:#e65100;">Mantenimiento</h3>
+            <p style="color: #666; font-size: 0.8rem; margin-bottom: 15px;">Borrar historiales antiguos de pase de lista.</p>
+            <a href="limpiar-asistencia.html" class="btn btn-primary" style="background:#e65100; border:none;">LIMPIAR LISTAS</a>
         </div>
 
         <div class="option-card"><span class="option-icon">🔒</span><h3>Seguridad</h3><a href="cambiar-password.html" class="btn btn-primary">CAMBIAR CLAVE</a></div>
@@ -125,8 +128,6 @@
         } else if (myData.delegado_a) {
             document.getElementById('saludo-maestro').innerText = `Hola, ${myData.nombre || 'Maestro(a)'}`;
             document.getElementById('vista-bloqueada').style.display = 'flex';
-            
-            // Mostrar nombre real del suplente si existe
             document.getElementById('nombre-mi-suplente').innerText = myData.delegado_nombre || myData.delegado_a;
         } else {
             document.getElementById('saludo-maestro').innerText = `Hola, ${myData.nombre || 'Maestro(a)'}`;
@@ -149,19 +150,17 @@
         }
     });
 
-    // CUANDO SE APAGA EL SWITCH
     document.getElementById('toggle-recuperar').addEventListener('change', async (e) => {
         if (!e.target.checked) {
             Swal.fire({ title: 'Recuperando Aula...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             
-            // Borra al delegado y a su nombre de la base de datos
             await updateDoc(doc(db, "usuarios", miId), { 
                 delegado_a: deleteField(),
                 delegado_nombre: deleteField() 
             });
             
             Swal.fire('¡Aula Recuperada!', 'El suplente ya no tiene acceso. Bienvenido de vuelta.', 'success').then(() => {
-                window.location.href = window.location.href; // Recarga forzada
+                window.location.href = window.location.href; 
             });
         }
     });
@@ -196,7 +195,6 @@
         });
 
         if (suplenteEmail) {
-            // Obtenemos el nombre del maestro seleccionado desde el Select
             const selectEl = Swal.getPopup().querySelector('select');
             const suplenteNombre = selectEl.options[selectEl.selectedIndex].text;
 

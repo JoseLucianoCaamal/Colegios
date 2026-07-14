@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Limpiar Asistencia - Amor y Libertad</title>
+    <link rel="icon" type="image/png" href="Img/logo.png">
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .container { max-width: 800px; margin: 30px auto; padding: 0 20px; }
+        .card { padding: 30px; border-radius: 20px; background: #ffffff; border: 1px solid #eef2f7; box-shadow: 0 8px 16px rgba(0,0,0,0.03); }
+        .filters-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; align-items: end; margin-bottom: 20px;}
+        .input-control { width: 100%; padding: 12px; border: 2px solid #eef2f7; border-radius: 8px; font-size: 1rem; outline:none; transition:0.3s;}
+        .input-control:focus {border-color: #004a99;}
+        label { font-size: 0.85rem; font-weight: bold; color: #8898aa; display: block; margin-bottom: 5px; text-transform: uppercase;}
+        .btn-back-clean { display: inline-flex; align-items: center; gap: 5px; color: #666; text-decoration: none; font-weight: bold; margin-bottom: 15px; }
+        .alert-box { background: #fff8e1; border: 1px solid #ffecb3; color: #f57f17; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: left; font-size: 0.95rem; line-height: 1.5;}
+    </style>
+</head>
+<body>
+
+<header class="profile-header">
+    <div class="cover-photo"><img src="Img/logo2.png" alt="Portada"></div>
+    <div class="profile-info">
+        <a href="dashboard-maestro.html" class="btn-back-clean">⬅ Volver al Panel</a>
+        <div class="profile-text">
+            <h1>Limpiar Asistencias</h1>
+            <p>Mantenimiento de Pases de Lista</p>
+        </div>
+    </div>
+</header>
+
+<main class="container">
+    <section class="card">
+        <div class="alert-box">
+            <strong>💡 Recomendación:</strong><br>
+            Usa esta herramienta al final de cada mes o trimestre para borrar el historial antiguo de asistencia de tus materias y evitar saturar el sistema.
+        </div>
+
+        <div class="filters-grid">
+            <div>
+                <label>Selecciona el Grupo</label>
+                <select id="filtroGrupo" class="input-control"><option value="">Cargando...</option></select>
+            </div>
+            <div>
+                <label>Selecciona tu Asignatura</label>
+                <select id="materiaAsistencia" class="input-control"><option value="">Esperando grupo...</option></select>
+            </div>
+        </div>
+
+        <button id="btn-borrar-historial" class="btn btn-primary" style="width:100%; padding:15px; border-radius:8px; background:#e65100; border:none; font-weight:bold; font-size:1.1rem; cursor:pointer;">
+            🗑️ Borrar Todo el Historial de esta Materia
+        </button>
+    </section>
+</main>
+
+<script type="module">
+    import { db, auth } from './js/firebase-config.js';
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { collection, query, where, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const filtroGrupo = document.getElementById('filtroGrupo');
+    const selectMateria = document.getElementById('materiaAsistencia');
+    let maestroActual = null;
+
+    onAuthStateChanged(auth, (user) => {
+        if (!user) window.location.href = "login.html";
+        else { 
+            maestroActual = localStorage.getItem('supliendo_a') || user.email; 
+            cargarGrupos(); 
+        }
+    });
+
+    async function cargarGrupos() {
+        const snap = await getDocs(collection(db, "grupos"));
+        filtroGrupo.innerHTML = '<option value="">Seleccione grupo...</option>';
+        snap.forEach(doc => filtroGrupo.innerHTML += `<option value="${doc.data().nombre}">${doc.data().nombre}</option>`);
+    }
+
+    filtroGrupo.addEventListener('change', async () => {
+        const grupoSel = filtroGrupo.value;
+        selectMateria.innerHTML = "<option value=''>Cargando tus materias...</option>";
+        if (!grupoSel) return;
+        
+        const qMaterias = query(collection(db, "materias"), where("maestro_email", "==", maestroActual));
+        const querySnapshot = await getDocs(qMaterias);
+        selectMateria.innerHTML = "<option value=''>Seleccione asignatura...</option>";
+        let cont = 0;
+        querySnapshot.forEach((docSnap) => {
+            if(docSnap.data().grupo === grupoSel) {
+                cont++; selectMateria.innerHTML += `<option value="${docSnap.data().nombre}">${docSnap.data().nombre}</option>`;
+            }
+        });
+        if (cont === 0) selectMateria.innerHTML = "<option value=''>No tienes materias aquí</option>";
+    });
+
+    document.getElementById('btn-borrar-historial').addEventListener('click', async () => {
+        const grupo = filtroGrupo.value;
+        const materia = selectMateria.value;
+
+        if(!grupo || !materia) {
+            Swal.fire('Aviso', 'Selecciona un grupo y una materia.', 'warning');
+            return;
+        }
+
+        const { value: confirmacion } = await Swal.fire({
+            title: '¿Estás seguro?',
+            html: `Se borrará <b>TODO el historial de asistencia</b> de <b>${materia}</b> en <b>${grupo}</b>.<br><br>Escribe <b style="color:red;">CONFIRMAR</b> para proceder.`,
+            input: 'text',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#c62828',
+            cancelButtonText: 'Cancelar',
+            confirmButtonText: 'Sí, borrar historial',
+            inputValidator: (value) => {
+                if (value !== 'CONFIRMAR') return 'Debes escribir CONFIRMAR en mayúsculas.';
+            }
+        });
+
+        if (confirmacion === 'CONFIRMAR') {
+            Swal.fire({ title: 'Borrando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+            try {
+                const qAsist = query(collection(db, "asistencias"), where("grupo", "==", grupo), where("materia", "==", materia));
+                const snap = await getDocs(qAsist);
+                
+                if(snap.empty) {
+                    Swal.fire('Información', 'No hay registros de asistencia para esta materia.', 'info');
+                    return;
+                }
+
+                for(let i=0; i<snap.docs.length; i++) {
+                    await deleteDoc(doc(db, "asistencias", snap.docs[i].id));
+                }
+
+                Swal.fire('¡Limpio!', 'El historial ha sido borrado exitosamente.', 'success');
+                selectMateria.value = "";
+            } catch(error) {
+                Swal.fire('Error', 'Hubo un problema al borrar la base de datos.', 'error');
+            }
+        }
+    });
+</script>
+</body>
+</html>
