@@ -1,16 +1,22 @@
-// Cambiamos a v2 para forzar la actualización
-const CACHE_NAME = 'colegio-v4.5'; 
+// Cambiamos la versión para forzar la actualización en todos los celulares
+const CACHE_NAME = 'colegio-v5.0'; 
 const ASSETS = [
   '/Colegios/',
   '/Colegios/index.html',
-  '/Colegios/fotos.html',
+  '/Colegios/login.html',
+  '/Colegios/dashboard-directora.html',
+  '/Colegios/dashboard-maestro.html',
+  '/Colegios/dashboard-recepcion.html',
   '/Colegios/gestionar-maestros.html',
+  '/Colegios/fotos.html',
+  '/Colegios/galeria-publica.html', // <-- Archivo nuevo
+  '/Colegios/limpiar-asistencia.html', // <-- Archivo nuevo
   '/Colegios/css/styles.css',
   '/Colegios/js/app.js',
+  '/Colegios/js/auth-logic.js', // <-- Lógica de sesión reparada
   '/Colegios/manifest.json',
   '/Colegios/Img/logo.png',
-  '/Colegios/Img/logo2.png',
-  '/Colegios/Img/Enero-2025.pdf'
+  '/Colegios/Img/logo2.png'
 ];
 
 // Instalar y forzar que tome el control inmediatamente
