@@ -150,17 +150,21 @@
         }
     });
 
+    // CUANDO SE APAGA EL SWITCH
     document.getElementById('toggle-recuperar').addEventListener('change', async (e) => {
         if (!e.target.checked) {
             Swal.fire({ title: 'Recuperando Aula...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             
+            // Borra al delegado y a su nombre de la base de datos
             await updateDoc(doc(db, "usuarios", miId), { 
                 delegado_a: deleteField(),
                 delegado_nombre: deleteField() 
             });
             
             Swal.fire('¡Aula Recuperada!', 'El suplente ya no tiene acceso. Bienvenido de vuelta.', 'success').then(() => {
-                window.location.href = window.location.href; 
+                // MAGIA: Desaparece la pantalla roja y muestra tu panel al instante
+                document.getElementById('vista-bloqueada').style.display = 'none';
+                document.getElementById('vista-normal').style.display = 'grid';
             });
         }
     });
