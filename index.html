@@ -4,176 +4,211 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Centro Educativo Amor y Libertad</title>
+    <!-- ÍCONO REPARADO PARA TODAS LAS PESTAÑAS -->
     <link rel="icon" type="image/png" href="Img/logo.png">
-    <link rel="apple-touch-icon" href="Img/logo.png">
-    <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="css/styles.css">
+    
     <style>
-        /* ESTILO EXCLUSIVO PARA EL NUEVO BOTÓN DE LOGIN */
-        .btn-login-nav {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: #004a99; /* Azul institucional */
-            color: #ffffff !important; /* Forzamos el texto a blanco */
-            padding: 10px 24px;
-            border-radius: 30px; /* Forma redonda tipo píldora */
-            font-weight: bold;
-            font-size: 1rem;
-            text-decoration: none;
-            box-shadow: 0 4px 10px rgba(0, 74, 153, 0.3);
-            transition: all 0.3s ease;
-        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f4f7fa; color: #333;}
         
-        .btn-login-nav:hover {
-            background: #003366; /* Azul más oscuro al pasar el mouse */
-            transform: translateY(-2px); /* Pequeño salto animado */
-            box-shadow: 0 6px 15px rgba(0, 74, 153, 0.4);
-        }
+        /* HEADER Y BANNER */
+        .hero-section { width: 100%; height: 280px; background: url('Img/logo2.png') center/cover no-repeat; position: relative;}
+        .logo-container { text-align: center; margin-top: -65px; position: relative; z-index: 10; }
+        .logo-container img { width: 130px; height: 130px; background: white; border-radius: 50%; padding: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);}
+        .school-title { font-size: 1.6rem; color: #000; margin: 15px 0 5px 0; font-weight: bold;}
+        
+        /* NAVEGACIÓN Y MENÚ */
+        .nav-links { display: flex; gap: 25px; justify-content: center; padding: 20px; background: white; align-items: center; flex-wrap: wrap; box-shadow: 0 2px 5px rgba(0,0,0,0.05);}
+        .nav-links a { text-decoration: none; color: #555; font-weight: bold; font-size: 0.9rem; text-transform: uppercase; transition: color 0.3s;}
+        .nav-links a:hover { color: #004a99; }
+        .btn-login { background: #004a99; color: white !important; padding: 10px 25px; border-radius: 20px; display: flex; align-items: center; gap: 8px; transition: 0.3s;}
+        .btn-login:hover { background: #003366; transform: scale(1.05);}
 
-        .btn-login-nav svg {
-            width: 20px;
-            height: 20px;
-        }
+        /* CAJA DE AVISO DINÁMICO */
+        #caja-aviso-publico { display: none; padding: 18px 25px; border-radius: 8px; margin: 25px auto; max-width: 800px; font-size: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: 0.3s;}
+        #caja-aviso-publico h4 { margin: 0 0 8px 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;}
+        #texto-aviso-publico { font-weight: bold; }
+
+        /* TARJETAS (CAJITAS) GENERALES */
+        .section-title { text-align: center; margin-top: 40px; color: #003366; font-size: 2.2rem;}
+        .section-subtitle { text-align: center; color: #666; margin-bottom: 40px; font-size: 1.1rem;}
+        
+        .niveles-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; max-width: 1000px; margin: 0 auto 60px auto; padding: 0 20px;}
+        
+        .nivel-card { background: white; padding: 40px 25px; border-radius: 15px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.04); transition: transform 0.3s, box-shadow 0.3s; border: 1px solid #eef2f7; text-decoration: none; display: block; color: inherit;}
+        .nivel-card:hover { transform: translateY(-8px); box-shadow: 0 10px 20px rgba(0,0,0,0.08); cursor: pointer;}
+        .nivel-card:hover h3 { color: #FF9800; transition: 0.3s;}
+        
+        .nivel-icon { font-size: 3.5rem; margin-bottom: 20px; display: block;}
+        .nivel-card h3 { color: #004a99; margin-top: 0; font-size: 1.5rem; transition: 0.3s;}
+        .nivel-card p { font-size: 0.95rem; color: #666; line-height: 1.6; margin-bottom: 0;}
+
+        /* SECCIÓN DE CONTACTO */
+        .contacto-section { background: #ffffff; padding: 50px 0; border-top: 1px solid #eef2f7; }
+        
+        /* FOOTER */
+        footer { background: #003366; color: white; text-align: center; padding: 20px; font-size: 0.9rem; }
+
+        /* BOTÓN FLOTANTE WHATSAPP */
+        .whatsapp-float { position: fixed; bottom: 30px; right: 30px; background-color: #25d366; color: white; border-radius: 50%; width: 60px; height: 60px; display: flex; justify-content: center; align-items: center; font-size: 35px; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3); z-index: 1000; transition: transform 0.3s ease; text-decoration: none;}
+        .whatsapp-float:hover { transform: scale(1.1); }
+        .whatsapp-float svg { width: 35px; height: 35px; fill: white; }
     </style>
 </head>
 <body>
-
-<!-- =========================================
-     CABECERA TIPO PERFIL
-     ========================================= -->
-<header class="profile-header">
-    <div class="cover-photo">
-        <img src="Img/logo2.png" alt="Portada Amor y Libertad">
-    </div>
     
-    <div class="profile-info">
-        <div class="profile-logo">
-            <img src="Img/logo.png" alt="Logo Amor y Libertad">
-        </div>
-        <div class="profile-text">
-            <h1>Centro Educativo Amor y Libertad</h1>
-        </div>
-    </div>
-</header>
-
-<!-- =========================================
-     BARRA DE NAVEGACIÓN
-     ========================================= -->
-<nav>
-    <a href="#">INICIO</a>
-    <a href="Img/Enero-2025.pdf" target="_blank">CALENDARIO</a>
-    <a href="galeria-publica.html">FOTOS</a>
-    <a href="#contacto">CONTACTO</a>
+    <!-- BANNER SUPERIOR -->
+    <div class="hero-section"></div>
     
-    <!-- AQUÍ ESTÁ EL BOTÓN DE LOGIN MEJORADO -->
-    <a href="login.html" class="btn-login-nav">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-            <circle cx="12" cy="7" r="4"></circle>
-        </svg>
-        LOGIN
-    </a>
-
-    <a href="#" id="btn-instalar">📲 Instalar App</a>
-</nav>
-
-<!-- =========================================
-     CONTENIDO PRINCIPAL
-     ========================================= -->
-<main class="container">
-    
-    <!-- SECCIÓN: PIZARRA DE AVISOS -->
-    <div class="avisos-card">
-        <h3>📌 Aviso Importante</h3>
-        <p>Inscripciones abiertas para el ciclo escolar 2026-2027. ¡Aprovecha los descuentos por inscripción temprana!</p>
+    <div class="logo-container">
+        <img src="Img/logo.png" alt="Logo Amor y Libertad">
+        <h1 class="school-title">Centro Educativo Amor y Libertad</h1>
     </div>
 
-    <!-- SECCIÓN: NIVELES EDUCATIVOS -->
-    <div class="section-title">
-        <h2>Niveles Educativos</h2>
-        <p>Formación integral desde los primeros pasos hasta la juventud.</p>
+    <!-- MENÚ DE NAVEGACIÓN -->
+    <nav class="nav-links">
+        <a href="index.html">INICIO</a>
+        <a href="#" id="btn-calendario-publico" target="_blank">CALENDARIO</a>
+        <a href="galeria-publica.html">FOTOS</a>
+        <a href="#contacto">CONTACTO</a>
+        <a href="login.html" class="btn-login">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/></svg> 
+            LOGIN
+        </a>
+    </nav>
+
+    <!-- CAJA DE AVISO -->
+    <div id="caja-aviso-publico">
+        <h4 id="titulo-aviso-publico">📌 Aviso Importante</h4>
+        <span id="texto-aviso-publico">Cargando aviso de dirección...</span>
     </div>
-    <div class="contact-grid">
-        <div class="modern-card">
-            <div class="card-icon">🖍️</div>
+
+    <!-- NIVELES EDUCATIVOS -->
+    <h2 class="section-title">Niveles Educativos</h2>
+    <p class="section-subtitle">Formación integral desde los primeros pasos hasta la juventud.</p>
+
+    <div class="niveles-grid">
+        <div class="nivel-card">
+            <span class="nivel-icon">🖍️</span>
             <h3>Preescolar</h3>
             <p>Desarrollo cognitivo y motriz en un ambiente seguro y divertido lleno de valores.</p>
         </div>
-        <div class="modern-card">
-            <div class="card-icon">🎒</div>
+        <div class="nivel-card">
+            <span class="nivel-icon">🎒</span>
             <h3>Primaria</h3>
             <p>Enfoque académico sólido para formar líderes críticos y empáticos.</p>
         </div>
-        <div class="modern-card">
-            <div class="card-icon">🔬</div>
+        <div class="nivel-card">
+            <span class="nivel-icon">🔬</span>
             <h3>Secundaria</h3>
             <p>Preparación integral y actividades extracurriculares para un futuro seguro.</p>
         </div>
     </div>
 
-    <!-- SECCIÓN: CONTACTO -->
-    <div class="section-title" id="contacto">
-        <h2>Ponte en Contacto</h2>
-        <p>Estamos aquí para resolver tus dudas y acompañarte en el proceso de inscripción.</p>
-    </div>
-    
-    <div class="contact-grid">
-        <div class="contact-card modern-card">
-            <div class="card-icon">📞</div>
-            <h3>Llámanos</h3>
-            <p>Lunes a Viernes<br>8:00 am - 2:00 pm</p>
-            <a href="tel:+529994850016" class="btn btn-outline">999 485 0016</a>
-        </div>
+    <!-- SECCIÓN DE CONTACTO (AHORA CON CAJITAS COMO BOTONES) -->
+    <section id="contacto" class="contacto-section">
+        <h2 class="section-title" style="margin-top: 0;">Contáctanos</h2>
+        <p class="section-subtitle">Toca cualquiera de las opciones para comunicarte con nosotros.</p>
         
-        <!-- Tarjeta de Email -->
-        <div class="contact-card modern-card">
-            <div class="card-icon">✉️</div>
-            <h3>Escríbenos</h3>
-            <p>Respondemos en<br>menos de 24 horas</p>
-            <a href="mailto:jessica.torres@amorylibertad.org" class="btn btn-outline">Enviar Correo</a>
+        <div class="niveles-grid" style="margin-bottom: 0;">
+            <!-- Tarjeta Ubicación -->
+            <a href="https://www.google.com/maps/search/?api=1&query=Centro+Educativo+Amor+y+Libertad+Merida+Yucatan" target="_blank" class="nivel-card">
+                <span class="nivel-icon">📍</span>
+                <h3>Ubicación</h3>
+                <p>C. 20 Col, entre Calle 29 B, San Juan Bautista, 97236 Mérida, Yuc.</p>
+            </a>
+
+            <!-- Tarjeta Teléfono -->
+            <a href="tel:+529994850016" class="nivel-card">
+                <span class="nivel-icon">📞</span>
+                <h3>Llámanos</h3>
+                <p style="font-weight: bold; font-size: 1.1rem; color: #333;">999 485 0016</p>
+                <p style="font-size: 0.85rem; margin-top: 5px;">Lun a Vie: 7:00 a.m. - 3:00 p.m.</p>
+            </a>
+
+            <!-- Tarjeta Correo -->
+            <a href="mailto:emailceal2016@hotmail.com" class="nivel-card">
+                <span class="nivel-icon">✉️</span>
+                <h3>Escríbenos</h3>
+                <p style="word-break: break-all;">emailceal2016@hotmail.com</p>
+            </a>
         </div>
-        
-        <!-- Tarjeta de Ubicación -->
-        <div class="contact-card modern-card location-card">
-            <div class="card-icon">📍</div>
-            <h3>Visítanos</h3>
-            <p>Mérida, Yucatán<br>Instalaciones del plantel</p>
-            <a href="https://maps.app.goo.gl/ymZTUxwyRJFXyYYV9" target="_blank" class="btn btn-primary">Abrir en Maps</a>
-        </div>
-    </div>
-</main>
+    </section>
 
-<!-- =========================================
-     BOTÓN FLOTANTE WHATSAPP
-     ========================================= -->
-<a href="https://wa.me/529994850016?text=Hola,%20me%20gustaría%20recibir%20más%20información%20sobre%20las%20inscripciones." class="whatsapp-float" target="_blank">
-    <!-- Icono SVG de WhatsApp -->
-    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path fill="white" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/>
-    </svg>
-</a>
+    <!-- FOOTER -->
+    <footer>
+        <p>&copy; 2026 Centro Educativo Amor y Libertad. Todos los derechos reservados.</p>
+    </footer>
 
-<script type="module">
-    import { auth, db } from './js/firebase-config.js';
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    <!-- BOTÓN FLOTANTE DE WHATSAPP -->
+    <a href="https://wa.me/529994850016" target="_blank" class="whatsapp-float" title="Contáctanos por WhatsApp">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+        </svg>
+    </a>
 
-    // DETECTOR DE SESIÓN ACTIVA
-    onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            // Si detecta que ya hay un usuario guardado, busca su rol y lo teletransporta
-            const idUsuario = user.email.split('@')[0];
-            const docSnap = await getDoc(doc(db, "usuarios", idUsuario));
-            
-            if (docSnap.exists()) {
-                const rol = docSnap.data().rol;
-                if (rol === "directora") window.location.href = "dashboard-directora.html";
-                else if (rol === "maestro") window.location.href = "dashboard-maestro.html";
-                else if (rol === "recepcion") window.location.href = "dashboard-recepcion.html";
+    <!-- SCRIPT MÁGICO: DESCARGA LOS DATOS QUE PUSO LA DIRECTORA -->
+    <script type="module">
+        import { db } from './js/firebase-config.js';
+        import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        async function cargarConfiguracion() {
+            try {
+                const configSnap = await getDoc(doc(db, "web_config", "inicio"));
+                
+                if (configSnap.exists()) {
+                    const data = configSnap.data();
+
+                    // 1. INYECTAR EL ENLACE DEL CALENDARIO AL BOTÓN DEL MENÚ
+                    const btnCalendario = document.getElementById('btn-calendario-publico');
+                    if (btnCalendario) {
+                        if (data.calendario_url) {
+                            btnCalendario.href = data.calendario_url;
+                        } else {
+                            btnCalendario.onclick = (e) => {
+                                e.preventDefault();
+                                alert("El calendario de este mes se publicará muy pronto.");
+                            };
+                        }
+                    }
+
+                    // 2. DARLE ESTILO AL AVISO SEGÚN LA ELECCIÓN DE LA DIRECTORA
+                    const cajaAviso = document.getElementById('caja-aviso-publico');
+                    const tituloAviso = document.getElementById('titulo-aviso-publico');
+                    const textoAviso = document.getElementById('texto-aviso-publico');
+
+                    if (cajaAviso) {
+                        if (data.aviso_color === "oculto" || !data.aviso_texto || data.aviso_texto.trim() === "") {
+                            cajaAviso.style.display = "none";
+                        } else {
+                            textoAviso.innerText = data.aviso_texto;
+                            cajaAviso.style.display = "block";
+                            
+                            // Diseños de plantilla
+                            if (data.aviso_color === "rojo") {
+                                cajaAviso.style.background = "#fff5f5";
+                                cajaAviso.style.color = "#c62828";
+                                cajaAviso.style.borderLeft = "6px solid #c62828";
+                                tituloAviso.innerHTML = "🔴 Aviso Urgente";
+                            } else if (data.aviso_color === "azul") {
+                                cajaAviso.style.background = "#e3f2fd";
+                                cajaAviso.style.color = "#0d47a1";
+                                cajaAviso.style.borderLeft = "6px solid #0d47a1";
+                                tituloAviso.innerHTML = "📌 Aviso Informativo";
+                            } else if (data.aviso_color === "verde") {
+                                cajaAviso.style.background = "#e8f5e9";
+                                cajaAviso.style.color = "#2e7d32";
+                                cajaAviso.style.borderLeft = "6px solid #2e7d32";
+                                tituloAviso.innerHTML = "🟢 Buenas Noticias";
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.log("No se pudo cargar la configuración web o no existe aún.");
             }
         }
-    });
-</script>
+
+        cargarConfiguracion();
+    </script>
 </body>
 </html>
