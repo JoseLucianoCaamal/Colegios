@@ -3,32 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fotos - Amor y Libertad</title>
+    <title>Galería de Fotos - Amor y Libertad</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="stylesheet" href="css/styles.css">
+    
+    <!-- LIBRERÍAS EXTERNAS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
+
     <style>
-        body { background: #f4f7f6; padding-bottom: 50px; }
-        .container-gallery { max-width: 1100px; margin: auto; padding: 0 20px; }
-        .card { padding: 20px; border-radius: 15px; background: #ffffff; border: 1px solid #e0e6ed; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .btn-back-clean { display: inline-flex; align-items: center; gap: 5px; margin-bottom: 15px; color: #666; text-decoration: none; font-weight: bold; transition: 0.3s; }
-        .btn-back-clean:hover { color: #004a99; }
+        .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
+        .card { padding: 30px; border-radius: 20px; background: #ffffff; border: 1px solid #eef2f7; box-shadow: 0 8px 16px rgba(0,0,0,0.03); margin-bottom: 25px; }
+        .filters-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; align-items: end; }
+        .input-control { width: 100%; padding: 12px; border: 2px solid #eef2f7; border-radius: 8px; font-size: 1rem; outline:none;}
+        .input-control:focus {border-color: #FF9800;}
+        label { font-size: 0.85rem; font-weight: bold; color: #8898aa; display: block; margin-bottom: 5px; text-transform: uppercase;}
+        .btn-back-clean { display: inline-flex; align-items: center; gap: 5px; color: #666; text-decoration: none; font-weight: bold; margin-bottom: 15px; }
         
-        /* Controles de subida y filtros */
-        .controls-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end; }
-        .input-control { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; }
-        label { font-size: 0.85rem; font-weight: bold; color: #555; display: block; margin-bottom: 5px; }
-        
-        /* Cuadrícula de fotos */
-        .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; margin-top: 20px; }
-        .photo-item { position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); background: #000; aspect-ratio: 4/3; }
-        .photo-item img { width: 100%; height: 100%; object-fit: cover; opacity: 0.9; transition: transform 0.3s; }
-        .photo-item:hover img { transform: scale(1.05); opacity: 1; }
-        
-        /* Detalles sobre la foto */
-        .photo-info { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.8)); color: white; padding: 15px 10px 10px; font-size: 0.85rem; }
-        
-        /* Botón eliminar superpuesto */
-        .btn-delete-photo { position: absolute; top: 10px; right: 10px; background: rgba(255, 77, 77, 0.9); color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; font-weight: bold; opacity: 0; transition: 0.3s; }
-        .photo-item:hover .btn-delete-photo { opacity: 1; } /* Solo aparece al pasar el ratón */
+        /* GALERÍA GRID */
+        .photo-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-top: 20px; }
+        .photo-item { position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: transform 0.3s;}
+        .photo-item:hover { transform: scale(1.03); }
+        .photo-item img { width: 100%; height: 200px; object-fit: cover; display: block; }
+        .photo-info { position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.7); color: white; padding: 8px; font-size: 0.8rem; box-sizing: border-box;}
+        .btn-delete-photo { position: absolute; top: 5px; right: 5px; background: #ff4d4d; color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
@@ -36,109 +34,168 @@
 <header class="profile-header">
     <div class="cover-photo"><img src="Img/logo2.png" alt="Portada"></div>
     <div class="profile-info">
-        <!-- Le agregamos el ID btn-regresar -->
-        <a href="dashboard-maestro.html" id="btn-regresar" class="btn-back-clean">⬅ Volver al Panel</a>
-        <div class="profile-logo"><img src="Img/logo.png" alt="Logo"></div>
+        <a href="dashboard-maestro.html" class="btn-back-clean">⬅ Volver al Panel</a>
         <div class="profile-text">
             <h1>Galería Escolar</h1>
-            <p>Evidencias y Actividades</p>
+            <p>Sube y administra evidencias fotográficas</p>
         </div>
     </div>
 </header>
 
-<main class="container-gallery">
-    <!-- Le agregamos el ID panel-subida a esta sección -->
-    <section class="card" id="panel-subida">
-        <h3 style="margin-top:0; color:#004a99;">☁ Subir Nueva Foto</h3>
-        <div class="controls-grid">
+<main class="container">
+    <section class="card">
+        <div class="filters-grid">
             <div>
-                <label>Álbum / Evento</label>
-                <input type="text" id="album" class="input-control" placeholder="Ej: Día de la Primavera">
+                <label>Selecciona el Grupo</label>
+                <select id="filtroGrupo" class="input-control"><option value="">Cargando...</option></select>
             </div>
             <div>
-                <label>Fecha de la actividad</label>
-                <input type="date" id="fechaActividad" class="input-control">
-            </div>
-            <div>
-                <label>Seleccionar Archivo</label>
-                <input type="file" id="archivoFoto" class="input-control" accept="image/*">
-            </div>
-            <div>
-                <button class="btn btn-primary" style="width:100%; padding:10px; border-radius:8px;">Subir Foto</button>
+                <button id="btn-subir-foto" class="btn" style="width:100%; padding:14px; border-radius:8px; background:#4CAF50; color:white; font-weight:bold; font-size:1.1rem; border:none; cursor:pointer;" disabled>
+                    📸 Subir Nueva Foto
+                </button>
             </div>
         </div>
     </section>
 
-    <!-- Filtros de búsqueda (Esto sí lo ven los papás) -->
-    <section class="card" style="background: #f8fafd; border-color: #cce0ff;">
-        <div class="controls-grid">
-            <div>
-                <label>Filtrar por Álbum</label>
-                <select class="input-control">
-                    <option value="Todos">Todos los álbumes</option>
-                    <option value="Día de la Primavera">Día de la Primavera</option>
-                    <option value="Honores a la Bandera">Honores a la Bandera</option>
-                </select>
-            </div>
-            <div>
-                <label>Filtrar por Fecha</label>
-                <input type="date" class="input-control">
-            </div>
-            <div>
-                <button class="btn" style="background:#fff; border:1px solid #004a99; color:#004a99; width:100%; padding:10px; border-radius:8px; font-weight:bold;">Buscar</button>
-            </div>
+    <section class="card">
+        <h3 style="margin-top:0; color:#004a99;">Evidencias del Grupo</h3>
+        <div id="galeria" class="photo-gallery">
+            <p style="grid-column: 1 / -1; text-align: center; color: #666;">Selecciona un grupo para ver las fotos.</p>
         </div>
     </section>
-
-    <!-- Cuadrícula de la Galería -->
-    <div class="photo-grid">
-        <!-- Foto 1 -->
-        <div class="photo-item">
-            <img src="Img/logo2.png" alt="Actividad escolar">
-            <div class="photo-info">
-                <strong>Día de la Primavera</strong><br>
-                12/08/2026
-            </div>
-            <button class="btn-delete-photo">🗑 Eliminar</button>
-        </div>
-
-        <!-- Foto 2 -->
-        <div class="photo-item">
-            <img src="Img/logo.png" alt="Actividad escolar">
-            <div class="photo-info">
-                <strong>Honores a la Bandera</strong><br>
-                05/08/2026
-            </div>
-            <button class="btn-delete-photo">🗑 Eliminar</button>
-        </div>
-    </div>
 </main>
 
 <script type="module">
-    import { auth } from './js/firebase-config.js';
+    import { db, auth } from './js/firebase-config.js';
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { collection, query, where, getDocs, addDoc, deleteDoc, doc, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // GUARDIA DE SEGURIDAD
+    const filtroGrupo = document.getElementById('filtroGrupo');
+    const galeria = document.getElementById('galeria');
+    const btnSubir = document.getElementById('btn-subir-foto');
+    
+    let maestroActual = null;
+
     onAuthStateChanged(auth, (user) => {
-        const panelSubida = document.getElementById('panel-subida');
-        const btnRegresar = document.getElementById('btn-regresar');
-        const botonesBorrar = document.querySelectorAll('.btn-delete-photo');
-
-        if (!user) {
-            // MODO VISITANTE (Padres): Ocultamos cosas de administración
-            if (panelSubida) panelSubida.style.display = 'none';
-            if (btnRegresar) btnRegresar.style.display = 'none';
-            // Desaparecemos los botones de basura de las fotos
-            botonesBorrar.forEach(btn => btn.style.display = 'none');
-        } else {
-            // MODO MAESTRO/DIRECTORA: Todo es visible
-            if (panelSubida) panelSubida.style.display = 'block';
-            if (btnRegresar) btnRegresar.style.display = 'inline-flex';
-            // Nos aseguramos que los botones de basura puedan aparecer al hacer hover
-            botonesBorrar.forEach(btn => btn.style.display = '');
+        if (!user) window.location.href = "login.html";
+        else { 
+            // Soporte para suplentes
+            maestroActual = localStorage.getItem('supliendo_a') || user.email;
+            cargarGrupos(); 
         }
     });
-</script>
 
+    async function cargarGrupos() {
+        const snap = await getDocs(collection(db, "grupos"));
+        filtroGrupo.innerHTML = '<option value="">Seleccione grupo...</option>';
+        snap.forEach(doc => filtroGrupo.innerHTML += `<option value="${doc.data().nombre}">${doc.data().nombre}</option>`);
+    }
+
+    filtroGrupo.addEventListener('change', () => {
+        if(filtroGrupo.value) {
+            btnSubir.disabled = false;
+            cargarFotos();
+        } else {
+            btnSubir.disabled = true;
+            galeria.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: #666;">Selecciona un grupo para ver las fotos.</p>';
+        }
+    });
+
+    async function cargarFotos() {
+        const grupoSel = filtroGrupo.value;
+        galeria.innerHTML = '<p style="grid-column: 1 / -1; text-align: center;">Cargando imágenes... ⏳</p>';
+        
+        try {
+            const qFotos = query(collection(db, "fotos"), where("grupo", "==", grupoSel));
+            const snap = await getDocs(qFotos);
+            
+            galeria.innerHTML = '';
+            let contador = 0;
+
+            snap.forEach((docSnap) => {
+                contador++;
+                const data = docSnap.data();
+                const fechaFormat = data.fecha ? data.fecha.toDate().toLocaleDateString() : 'Sin fecha';
+                
+                const div = document.createElement('div');
+                div.className = 'photo-item';
+                div.innerHTML = `
+                    <button class="btn-delete-photo" title="Borrar foto">X</button>
+                    <a href="${data.url}" target="_blank">
+                        <img src="${data.url}" alt="Evidencia">
+                    </a>
+                    <div class="photo-info">${fechaFormat}</div>
+                `;
+
+                // Botón de eliminar de Firestore
+                div.querySelector('.btn-delete-photo').addEventListener('click', async () => {
+                    const { isConfirmed } = await Swal.fire({
+                        title: '¿Borrar imagen?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#ff4d4d',
+                        confirmButtonText: 'Sí, borrar'
+                    });
+
+                    if(isConfirmed) {
+                        await deleteDoc(doc(db, "fotos", docSnap.id));
+                        cargarFotos(); // Recargar galería
+                    }
+                });
+
+                galeria.appendChild(div);
+            });
+
+            if(contador === 0) {
+                galeria.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: #666;">No hay fotos para este grupo.</p>';
+            }
+
+        } catch(e) {
+            galeria.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: #ff4d4d;">Error al cargar las fotos.</p>';
+        }
+    }
+
+    // ==========================================
+    // WIDGET DE CLOUDINARY
+    // ==========================================
+    var myWidget = cloudinary.createUploadWidget({
+        cloudName: 'eaeuplpl', // Pon aquí el nombre de tu nube
+        uploadPreset: 'colegio_fotos', // Pon aquí el nombre de tu preset (ej: colegio_fotos)
+        sources: ['local', 'camera'],
+        multiple: true,
+        maxFileSize: 5000000, // Máximo 5MB por foto
+        language: "es",
+        text: {
+            es: {
+                menu: { files: "Mis Archivos", camera: "Cámara" },
+                local: { browse: "Seleccionar", dd_title_single: "Arrastra la foto aquí" }
+            }
+        }
+    }, async (error, result) => { 
+        if (!error && result && result.event === "success") { 
+            // Cuando la foto sube a Cloudinary con éxito, guardamos la URL en Firestore
+            const urlSegura = result.info.secure_url;
+            
+            try {
+                await addDoc(collection(db, "fotos"), {
+                    url: urlSegura,
+                    grupo: filtroGrupo.value,
+                    maestro_email: maestroActual,
+                    fecha: new Date()
+                });
+                
+                // Recargamos la galería para mostrar la nueva foto
+                cargarFotos();
+            } catch(e) {
+                console.error("Error al guardar enlace en BD", e);
+            }
+        }
+    });
+
+    document.getElementById('btn-subir-foto').addEventListener('click', () => {
+        myWidget.open();
+    });
+
+</script>
 </body>
 </html>
