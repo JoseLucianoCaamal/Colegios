@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel de Maestros - Amor y Libertad</title>
-    <link rel="icon" type="image/png" href="Img/logo.png">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="stylesheet" href="css/styles.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
@@ -23,6 +23,7 @@
             z-index: 9999;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             color: white; text-align: center; backdrop-filter: blur(8px);
+            transition: opacity 0.4s ease;
         }
         
         .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
@@ -149,26 +150,35 @@
         }
     });
 
-    // MAGIA DE LA INTERFAZ: Cuando se apaga el interruptor, quitamos el bloqueo al instante
+    // LA MAGIA: Al apagar el interruptor (cambia a gris)
     document.getElementById('toggle-recuperar').addEventListener('change', async (e) => {
         if (!e.target.checked) {
-            Swal.fire({ title: 'Recuperando Aula...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            Swal.fire({ title: 'Procesando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             
             try {
-                // Borramos los permisos en la base de datos
                 await updateDoc(doc(db, "usuarios", miId), { 
                     delegado_a: deleteField(),
                     delegado_nombre: deleteField() 
                 });
                 
-                Swal.fire('¡Aula Recuperada!', 'El suplente ya no tiene acceso. Bienvenido de vuelta.', 'success').then(() => {
-                    // Acción instantánea: Ocultamos el bloqueo y mostramos el menú
-                    document.getElementById('vista-bloqueada').style.display = 'none';
-                    document.getElementById('vista-normal').style.display = 'grid';
+                // 1. Ocultar la alerta de carga al instante
+                Swal.close();
+                
+                // 2. Desaparecer la pantalla azul bloqueadora inmediatamente
+                document.getElementById('vista-bloqueada').style.display = 'none';
+                document.getElementById('vista-normal').style.display = 'grid';
+                
+                // 3. Mostrar un aviso de éxito que se quita solo en 1.5 segundos
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Aula Recuperada!',
+                    showConfirmButton: false,
+                    timer: 1500
                 });
+
             } catch (error) {
-                Swal.fire('Error', 'Hubo un problema de conexión al intentar recuperar el aula.', 'error');
-                e.target.checked = true; // Si falla, regresamos el switch a encendido
+                Swal.fire('Error', 'Hubo un problema de red.', 'error');
+                e.target.checked = true; // Si hay error, el switch regresa a verde
             }
         }
     });
