@@ -7,7 +7,6 @@
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     
     <style>
-        /* ESTILOS INDEPENDIENTES PARA QUE SE VEA PERFECTO EN CUALQUIER DISPOSITIVO */
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7fa; margin: 0; padding: 0; color: #333;}
         
         .hero-banner { background: #004a99; color: white; padding: 40px 20px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 30px;}
@@ -21,12 +20,13 @@
         .input-control:focus { border-color: #004a99; }
         label { font-size: 0.9rem; font-weight: bold; color: #666; display: block; margin-bottom: 8px; text-transform: uppercase;}
         
-        /* CUADRÍCULA DE FOTOS PÚBLICA */
+        /* CUADRÍCULA DE FOTOS */
         .photo-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
         .photo-item { border-radius: 12px; overflow: hidden; background: white; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: transform 0.3s; display: flex; flex-direction: column;}
         .photo-item:hover { transform: translateY(-5px); box-shadow: 0 8px 16px rgba(0,0,0,0.15);}
         .photo-item img { width: 100%; height: 250px; object-fit: cover; display: block; border-bottom: 4px solid #FF9800;}
         .info { padding: 15px; font-size: 0.9rem; background: #ffffff; text-align: center; font-weight: bold; color: #004a99;}
+        .tag-seccion { display: block; font-size: 0.75rem; color: #8898aa; margin-top: 5px; font-weight: normal; }
         
         .btn-volver { display: inline-block; margin-top: 20px; background: rgba(255,255,255,0.2); color: white; padding: 8px 20px; border-radius: 20px; text-decoration: none; font-weight: bold; transition: 0.3s;}
         .btn-volver:hover { background: rgba(255,255,255,0.4); }
@@ -43,21 +43,20 @@
 
     <div class="container">
         <section class="card">
-            <label>Selecciona un Álbum o Evento</label>
+            <label>Filtrar por Álbum o Evento</label>
             <select id="filtroSeccion" class="input-control">
-                <option value="">Buscando álbumes disponibles...</option>
+                <option value="TODAS">Cargando fotografías...</option>
             </select>
         </section>
 
         <div id="galeria" class="photo-gallery">
-            <div class="loader-text" style="grid-column: 1 / -1;">👈 Por favor selecciona un evento arriba para ver las fotografías.</div>
+            <div class="loader-text" style="grid-column: 1 / -1;">Descargando recuerdos... ⏳</div>
         </div>
     </div>
 
-    <!-- SCRIPT INDEPENDIENTE SIN RESTRICCIONES -->
     <script type="module">
         import { db } from './js/firebase-config.js';
-        import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { collection, query, where, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const filtroSeccion = document.getElementById('filtroSeccion');
         const galeria = document.getElementById('galeria');
@@ -65,7 +64,6 @@
         // 1. CARGAR TODOS LOS EVENTOS EN EL SELECTOR
         async function inicializarGaleria() {
             try {
-                // Como cambiaste las reglas a "allow read: if true", esto funcionará perfecto
                 const snap = await getDocs(collection(db, "fotos"));
                 const seccionesUnicas = new Set();
                 
@@ -75,41 +73,40 @@
                     }
                 });
 
-                filtroSeccion.innerHTML = '<option value="">Elige un evento para explorar...</option>';
+                filtroSeccion.innerHTML = '<option value="TODAS">Ver Todas las Fotografías</option>';
                 
                 seccionesUnicas.forEach(seccion => {
                     filtroSeccion.innerHTML += `<option value="${seccion}">${seccion}</option>`;
                 });
 
                 if (seccionesUnicas.size === 0) {
-                    filtroSeccion.innerHTML = '<option value="">Aún no hay fotos subidas.</option>';
+                    filtroSeccion.innerHTML = '<option value="TODAS">Aún no hay fotos subidas.</option>';
                 }
+
+                // MOSTRAR TODAS LAS FOTOS AL INICIAR
+                cargarFotos("TODAS");
 
             } catch (error) {
                 console.error("Error al cargar la galería:", error);
-                filtroSeccion.innerHTML = '<option value="">Error de conexión. Intenta recargar.</option>';
+                filtroSeccion.innerHTML = '<option value="TODAS">Error de conexión.</option>';
+                galeria.innerHTML = '<div class="loader-text" style="grid-column: 1 / -1; color: #c62828;">Ocurrió un error al cargar. Inténtalo de nuevo.</div>';
             }
         }
         
-        inicializarGaleria();
-
-        // 2. MOSTRAR LAS FOTOS DEL EVENTO SELECCIONADO
-        filtroSeccion.addEventListener('change', async () => {
-            const seccionElegida = filtroSeccion.value;
-            
-            if (!seccionElegida) {
-                galeria.innerHTML = '<div class="loader-text" style="grid-column: 1 / -1;">👈 Por favor selecciona un evento arriba para ver las fotografías.</div>';
-                galeria.style.display = 'block';
-                return;
-            }
-
-            galeria.style.display = 'grid'; // Reactivamos el grid
+        // 2. FUNCIÓN PARA DIBUJAR LAS FOTOS
+        async function cargarFotos(seccionElegida) {
             galeria.innerHTML = '<div class="loader-text" style="grid-column: 1 / -1;">Descargando recuerdos... ⏳</div>';
             
             try {
-                const q = query(collection(db, "fotos"), where("seccion", "==", seccionElegida));
-                const snap = await getDocs(q);
-                
+                let qFotos;
+                // Si la opción es "TODAS", traemos la colección completa. Si no, filtramos.
+                if (seccionElegida === "TODAS") {
+                    qFotos = query(collection(db, "fotos"));
+                } else {
+                    qFotos = query(collection(db, "fotos"), where("seccion", "==", seccionElegida));
+                }
+
+                const snap = await getDocs(qFotos);
                 galeria.innerHTML = "";
                 let contador = 0;
 
@@ -117,19 +114,20 @@
                     contador++;
                     const data = doc.data();
                     
-                    // Convertimos la fecha si está disponible
                     let fechaTexto = "Fotografía reciente";
                     if (data.fecha && data.fecha.toDate) {
                         fechaTexto = data.fecha.toDate().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' });
                     }
 
-                    // Renderizamos la foto en HTML
                     galeria.innerHTML += `
                         <div class="photo-item">
                             <a href="${data.url}" target="_blank" title="Haz clic para ver en grande">
                                 <img src="${data.url}" alt="Recuerdo escolar">
                             </a>
-                            <div class="info">${fechaTexto}</div>
+                            <div class="info">
+                                ${fechaTexto}
+                                <span class="tag-seccion">Álbum: ${data.seccion}</span>
+                            </div>
                         </div>
                     `;
                 });
@@ -139,9 +137,17 @@
                 }
 
             } catch (error) {
-                galeria.innerHTML = '<div class="loader-text" style="grid-column: 1 / -1; color: #c62828;">Ocurrió un error al cargar. Inténtalo de nuevo.</div>';
+                galeria.innerHTML = '<div class="loader-text" style="grid-column: 1 / -1; color: #c62828;">Ocurrió un error al cargar las fotos.</div>';
             }
+        }
+
+        // DETECTAR CAMBIO EN EL SELECTOR
+        filtroSeccion.addEventListener('change', () => {
+            cargarFotos(filtroSeccion.value);
         });
+
+        // ARRANCAR EL SISTEMA
+        inicializarGaleria();
     </script>
 </body>
 </html>
