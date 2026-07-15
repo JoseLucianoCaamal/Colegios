@@ -43,13 +43,13 @@
     </div>
 
     <main class="grid-options">
-        <!-- OPCIONES ADMINISTRATIVAS ESTÁNDAR -->
+        <!-- OPCIONES ADMINISTRATIVAS ESTÁNDAR CORREGIDAS -->
         <div class="option-card"><span class="option-icon">👩‍🏫</span><h3 style="margin:0;">Maestros</h3><a href="gestionar-maestros.html" class="btn-primary">Gestionar</a></div>
         <div class="option-card"><span class="option-icon">📚</span><h3 style="margin:0;">Grupos</h3><a href="gestionar-grupos.html" class="btn-primary">Gestionar</a></div>
-        <div class="option-card"><span class="option-icon">👧</span><h3 style="margin:0;">Alumnos</h3><a href="registro-alumnos.html" class="btn-primary">Registro</a></div>
+        <div class="option-card"><span class="option-icon">📑</span><h3 style="margin:0;">Fichas</h3><a href="descargar-fichas.html" class="btn-primary">Descargar Fichas</a></div>
         <div class="option-card"><span class="option-icon">📊</span><h3 style="margin:0;">Supervisión</h3><a href="supervision.html" class="btn-primary">Calificaciones</a></div>
 
-        <!-- NUEVO: CONTROL DEL AVISO PRINCIPAL -->
+        <!-- CONTROL DEL AVISO PRINCIPAL -->
         <div class="option-card" style="grid-column: 1 / -1; background: #e3f2fd; border-color: #2196F3; text-align: left;">
             <h3 style="color: #0d47a1; margin-top: 0;">📢 Modificar Aviso Principal</h3>
             <p style="font-size: 0.9rem; color: #555;">Escribe el anuncio que verán todos los padres y alumnos al entrar a la página web oficial.</p>
@@ -63,10 +63,16 @@
                 <option value="oculto">👻 Ocultar Aviso (No mostrar nada en la página)</option>
             </select>
             
+            <!-- CAJA DE PREVISUALIZACIÓN EN TIEMPO REAL -->
+            <div id="preview-container" style="display: none; padding: 15px 20px; border-radius: 8px; margin-bottom: 15px; transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                <h4 id="preview-titulo" style="margin: 0 0 8px 0; font-size: 1.05rem; display: flex; align-items: center; gap: 8px;">📌 Aviso Informativo</h4>
+                <span id="preview-texto" style="font-weight: bold; font-size: 0.95rem;"></span>
+            </div>
+            
             <button id="btn-guardar-aviso" class="btn-primary" style="background: #0d47a1;">💾 Guardar y Publicar Aviso</button>
         </div>
 
-        <!-- NUEVO: CONTROL DEL CALENDARIO -->
+        <!-- CONTROL DEL CALENDARIO -->
         <div class="option-card" style="grid-column: 1 / -1; background: #fce4ec; border-color: #03a9f4; text-align: left;">
             <h3 style="color: #01579b; margin-top: 0;">📅 Actualizar Calendario Escolar</h3>
             <p style="font-size: 0.9rem; color: #555;">Sube el PDF o la imagen del mes. Esto actualizará el botón "Calendario" del menú público.</p>
@@ -88,14 +94,54 @@
             }
         });
 
-        // 1. GUARDAR AVISO
+        // --- LÓGICA DE PREVISUALIZACIÓN EN TIEMPO REAL ---
+        const inputAviso = document.getElementById('inputAviso');
+        const colorAviso = document.getElementById('colorAviso');
+        const previewContainer = document.getElementById('preview-container');
+        const previewTitulo = document.getElementById('preview-titulo');
+        const previewTexto = document.getElementById('preview-texto');
+
+        function actualizarPrevisualizacion() {
+            const texto = inputAviso.value.trim();
+            const color = colorAviso.value;
+
+            if (color === "oculto" || texto === "") {
+                previewContainer.style.display = "none";
+                return;
+            }
+
+            previewContainer.style.display = "block";
+            previewTexto.innerText = texto;
+
+            if (color === "rojo") {
+                previewContainer.style.background = "#fff5f5";
+                previewContainer.style.color = "#c62828";
+                previewContainer.style.borderLeft = "6px solid #c62828";
+                previewTitulo.innerHTML = "🔴 Aviso Urgente";
+            } else if (color === "azul") {
+                previewContainer.style.background = "#e3f2fd";
+                previewContainer.style.color = "#0d47a1";
+                previewContainer.style.borderLeft = "6px solid #0d47a1";
+                previewTitulo.innerHTML = "📌 Aviso Informativo";
+            } else if (color === "verde") {
+                previewContainer.style.background = "#e8f5e9";
+                previewContainer.style.color = "#2e7d32";
+                previewContainer.style.borderLeft = "6px solid #2e7d32";
+                previewTitulo.innerHTML = "🟢 Buenas Noticias";
+            }
+        }
+
+        inputAviso.addEventListener('input', actualizarPrevisualizacion);
+        colorAviso.addEventListener('change', actualizarPrevisualizacion);
+
+
+        // --- GUARDAR AVISO EN FIREBASE ---
         document.getElementById('btn-guardar-aviso').addEventListener('click', async () => {
-            const texto = document.getElementById('inputAviso').value.trim();
-            const color = document.getElementById('colorAviso').value;
+            const texto = inputAviso.value.trim();
+            const color = colorAviso.value;
             
             Swal.fire({ title: 'Guardando...', didOpen: () => Swal.showLoading() });
             try {
-                // Usamos merge: true para no borrar el link del calendario
                 await setDoc(doc(db, "web_config", "inicio"), { aviso_texto: texto, aviso_color: color }, { merge: true });
                 Swal.fire('¡Publicado!', 'El aviso ya es visible en la página principal.', 'success');
             } catch (e) {
@@ -103,7 +149,7 @@
             }
         });
 
-        // 2. SUBIR CALENDARIO A CLOUDINARY
+        // --- SUBIR CALENDARIO A CLOUDINARY ---
         var widgetCalendario = cloudinary.createUploadWidget({
             cloudName: 'eaeuplpl', 
             uploadPreset: 'colegio_fotos', 
@@ -125,7 +171,7 @@
 
         document.getElementById('btn-subir-calendario').addEventListener('click', () => widgetCalendario.open());
 
-        // LOGOUT
+        // --- LOGOUT ---
         document.getElementById('btn-logout').addEventListener('click', () => {
             signOut(auth).then(() => window.location.href = "login.html");
         });

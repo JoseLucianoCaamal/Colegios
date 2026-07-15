@@ -7,6 +7,11 @@
     <!-- ÍCONO REPARADO PARA TODAS LAS PESTAÑAS -->
     <link rel="icon" type="image/png" href="Img/logo.png">
     
+    <!-- LIBRERÍA AOS (ANIMACIONES SCROLL) - ESTILOS -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    
+
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f4f7fa; color: #333;}
         
@@ -59,13 +64,13 @@
     <!-- BANNER SUPERIOR -->
     <div class="hero-section"></div>
     
-    <div class="logo-container">
+    <div class="logo-container" data-aos="zoom-in" data-aos-duration="1000">
         <img src="Img/logo.png" alt="Logo Amor y Libertad">
         <h1 class="school-title">Centro Educativo Amor y Libertad</h1>
     </div>
 
     <!-- MENÚ DE NAVEGACIÓN -->
-    <nav class="nav-links">
+    <nav class="nav-links" data-aos="fade-down" data-aos-duration="800" data-aos-delay="200">
         <a href="index.html">INICIO</a>
         <a href="#" id="btn-calendario-publico" target="_blank">CALENDARIO</a>
         <a href="galeria-publica.html">FOTOS</a>
@@ -77,27 +82,27 @@
     </nav>
 
     <!-- CAJA DE AVISO -->
-    <div id="caja-aviso-publico">
+    <div id="caja-aviso-publico" data-aos="fade-up" data-aos-duration="800">
         <h4 id="titulo-aviso-publico">📌 Aviso Importante</h4>
         <span id="texto-aviso-publico">Cargando aviso de dirección...</span>
     </div>
 
     <!-- NIVELES EDUCATIVOS -->
-    <h2 class="section-title">Niveles Educativos</h2>
-    <p class="section-subtitle">Formación integral desde los primeros pasos hasta la juventud.</p>
+    <h2 class="section-title" data-aos="fade-up">Niveles Educativos</h2>
+    <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100">Formación integral desde los primeros pasos hasta la juventud.</p>
 
     <div class="niveles-grid">
-        <div class="nivel-card">
+        <div class="nivel-card" data-aos="fade-up" data-aos-delay="100">
             <span class="nivel-icon">🖍️</span>
             <h3>Preescolar</h3>
             <p>Desarrollo cognitivo y motriz en un ambiente seguro y divertido lleno de valores.</p>
         </div>
-        <div class="nivel-card">
+        <div class="nivel-card" data-aos="fade-up" data-aos-delay="250">
             <span class="nivel-icon">🎒</span>
             <h3>Primaria</h3>
             <p>Enfoque académico sólido para formar líderes críticos y empáticos.</p>
         </div>
-        <div class="nivel-card">
+        <div class="nivel-card" data-aos="fade-up" data-aos-delay="400">
             <span class="nivel-icon">🔬</span>
             <h3>Secundaria</h3>
             <p>Preparación integral y actividades extracurriculares para un futuro seguro.</p>
@@ -106,19 +111,19 @@
 
     <!-- SECCIÓN DE CONTACTO (AHORA CON CAJITAS COMO BOTONES) -->
     <section id="contacto" class="contacto-section">
-        <h2 class="section-title" style="margin-top: 0;">Contáctanos</h2>
-        <p class="section-subtitle">Toca cualquiera de las opciones para comunicarte con nosotros.</p>
+        <h2 class="section-title" style="margin-top: 0;" data-aos="fade-up">Contáctanos</h2>
+        <p class="section-subtitle" data-aos="fade-up" data-aos-delay="100">Toca cualquiera de las opciones para comunicarte con nosotros.</p>
         
         <div class="niveles-grid" style="margin-bottom: 0;">
             <!-- Tarjeta Ubicación -->
-            <a href="https://www.google.com/maps/search/?api=1&query=Centro+Educativo+Amor+y+Libertad+Merida+Yucatan" target="_blank" class="nivel-card">
+            <a href="https://www.google.com/maps/search/?api=1&query=Centro+Educativo+Amor+y+Libertad+Merida+Yucatan" target="_blank" class="nivel-card" data-aos="zoom-in-up" data-aos-delay="100">
                 <span class="nivel-icon">📍</span>
                 <h3>Ubicación</h3>
                 <p>C. 20 Col, entre Calle 29 B, San Juan Bautista, 97236 Mérida, Yuc.</p>
             </a>
 
             <!-- Tarjeta Teléfono -->
-            <a href="tel:+529994850016" class="nivel-card">
+            <a href="tel:+529994850016" class="nivel-card" data-aos="zoom-in-up" data-aos-delay="250">
                 <span class="nivel-icon">📞</span>
                 <h3>Llámanos</h3>
                 <p style="font-weight: bold; font-size: 1.1rem; color: #333;">999 485 0016</p>
@@ -126,7 +131,7 @@
             </a>
 
             <!-- Tarjeta Correo -->
-            <a href="mailto:emailceal2016@hotmail.com" class="nivel-card">
+            <a href="mailto:emailceal2016@hotmail.com" class="nivel-card" data-aos="zoom-in-up" data-aos-delay="400">
                 <span class="nivel-icon">✉️</span>
                 <h3>Escríbenos</h3>
                 <p style="word-break: break-all;">emailceal2016@hotmail.com</p>
@@ -140,11 +145,22 @@
     </footer>
 
     <!-- BOTÓN FLOTANTE DE WHATSAPP -->
-    <a href="https://wa.me/529994850016" target="_blank" class="whatsapp-float" title="Contáctanos por WhatsApp">
+    <a href="https://wa.me/529994850016" target="_blank" class="whatsapp-float" title="Contáctanos por WhatsApp" data-aos="zoom-in" data-aos-delay="800">
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
         </svg>
     </a>
+
+    <!-- LIBRERÍA AOS PARA ANIMACIONES JS -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        // Inicializamos las animaciones
+        AOS.init({
+            duration: 800, // Duración de la animación
+            once: true, // Se anima solo la primera vez que haces scroll
+            offset: 100 // Empieza a animarse cuando está un poco antes de llegar
+        });
+    </script>
 
     <!-- SCRIPT MÁGICO: DESCARGA LOS DATOS QUE PUSO LA DIRECTORA -->
     <script type="module">
