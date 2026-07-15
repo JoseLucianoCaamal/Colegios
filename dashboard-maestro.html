@@ -90,7 +90,6 @@
             <button id="btn-prestar-aula" class="btn btn-primary" style="background:#607d8b; border:none; cursor:pointer; width:100%;">ASIGNAR SUPLENTE</button>
         </div>
 
-        <!-- NUEVA OPCIÓN: LIMPIAR ASISTENCIAS -->
         <div class="option-card">
             <span class="option-icon">🧹</span><h3 style="color:#e65100;">Mantenimiento</h3>
             <p style="color: #666; font-size: 0.8rem; margin-bottom: 15px;">Borrar historiales antiguos de pase de lista.</p>
@@ -150,22 +149,27 @@
         }
     });
 
-    // CUANDO SE APAGA EL SWITCH
+    // MAGIA DE LA INTERFAZ: Cuando se apaga el interruptor, quitamos el bloqueo al instante
     document.getElementById('toggle-recuperar').addEventListener('change', async (e) => {
         if (!e.target.checked) {
             Swal.fire({ title: 'Recuperando Aula...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             
-            // Borra al delegado y a su nombre de la base de datos
-            await updateDoc(doc(db, "usuarios", miId), { 
-                delegado_a: deleteField(),
-                delegado_nombre: deleteField() 
-            });
-            
-            Swal.fire('¡Aula Recuperada!', 'El suplente ya no tiene acceso. Bienvenido de vuelta.', 'success').then(() => {
-                // MAGIA: Desaparece la pantalla roja y muestra tu panel al instante
-                document.getElementById('vista-bloqueada').style.display = 'none';
-                document.getElementById('vista-normal').style.display = 'grid';
-            });
+            try {
+                // Borramos los permisos en la base de datos
+                await updateDoc(doc(db, "usuarios", miId), { 
+                    delegado_a: deleteField(),
+                    delegado_nombre: deleteField() 
+                });
+                
+                Swal.fire('¡Aula Recuperada!', 'El suplente ya no tiene acceso. Bienvenido de vuelta.', 'success').then(() => {
+                    // Acción instantánea: Ocultamos el bloqueo y mostramos el menú
+                    document.getElementById('vista-bloqueada').style.display = 'none';
+                    document.getElementById('vista-normal').style.display = 'grid';
+                });
+            } catch (error) {
+                Swal.fire('Error', 'Hubo un problema de conexión al intentar recuperar el aula.', 'error');
+                e.target.checked = true; // Si falla, regresamos el switch a encendido
+            }
         }
     });
 
