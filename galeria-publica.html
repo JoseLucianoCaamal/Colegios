@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galería Pública - Amor y Libertad</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    
+    <style>
+        /* ESTILOS INDEPENDIENTES PARA QUE SE VEA PERFECTO EN CUALQUIER DISPOSITIVO */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7fa; margin: 0; padding: 0; color: #333;}
+        
+        .hero-banner { background: #004a99; color: white; padding: 40px 20px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 30px;}
+        .hero-banner h1 { margin: 0; font-size: 2.2rem; letter-spacing: 1px;}
+        .hero-banner p { margin: 10px 0 0 0; font-size: 1.1rem; opacity: 0.9;}
+        
+        .container { max-width: 1000px; margin: auto; padding: 0 20px 40px 20px; }
+        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 30px; border: 1px solid #eef2f7;}
+        
+        .input-control { width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 1.1rem; color: #333; outline: none; transition: 0.3s; cursor: pointer; box-sizing: border-box;}
+        .input-control:focus { border-color: #004a99; }
+        label { font-size: 0.9rem; font-weight: bold; color: #666; display: block; margin-bottom: 8px; text-transform: uppercase;}
+        
+        /* CUADRÍCULA DE FOTOS PÚBLICA */
+        .photo-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+        .photo-item { border-radius: 12px; overflow: hidden; background: white; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: transform 0.3s; display: flex; flex-direction: column;}
+        .photo-item:hover { transform: translateY(-5px); box-shadow: 0 8px 16px rgba(0,0,0,0.15);}
+        .photo-item img { width: 100%; height: 250px; object-fit: cover; display: block; border-bottom: 4px solid #FF9800;}
+        .info { padding: 15px; font-size: 0.9rem; background: #ffffff; text-align: center; font-weight: bold; color: #004a99;}
+        
+        .btn-volver { display: inline-block; margin-top: 20px; background: rgba(255,255,255,0.2); color: white; padding: 8px 20px; border-radius: 20px; text-decoration: none; font-weight: bold; transition: 0.3s;}
+        .btn-volver:hover { background: rgba(255,255,255,0.4); }
+        .loader-text { text-align: center; color: #666; font-size: 1.2rem; padding: 40px 0; font-weight: bold;}
+    </style>
+</head>
+<body>
+
+    <header class="hero-banner">
+        <h1>📸 Galería Escolar</h1>
+        <p>Revive los mejores momentos de nuestros alumnos</p>
+        <a href="index.html" class="btn-volver">⬅ Volver al Inicio</a>
+    </header>
+
+    <div class="container">
+        <section class="card">
+            <label>Selecciona un Álbum o Evento</label>
+            <select id="filtroSeccion" class="input-control">
+                <option value="">Buscando álbumes disponibles...</option>
+            </select>
+        </section>
+
+        <div id="galeria" class="photo-gallery">
+            <div class="loader-text" style="grid-column: 1 / -1;">👈 Por favor selecciona un evento arriba para ver las fotografías.</div>
+        </div>
+    </div>
+
+    <!-- SCRIPT INDEPENDIENTE SIN RESTRICCIONES -->
+    <script type="module">
+        import { db } from './js/firebase-config.js';
+        import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const filtroSeccion = document.getElementById('filtroSeccion');
+        const galeria = document.getElementById('galeria');
+
+        // 1. CARGAR TODOS LOS EVENTOS EN EL SELECTOR
+        async function inicializarGaleria() {
+            try {
+                // Como cambiaste las reglas a "allow read: if true", esto funcionará perfecto
+                const snap = await getDocs(collection(db, "fotos"));
+                const seccionesUnicas = new Set();
+                
+                snap.forEach(doc => {
+                    if (doc.data().seccion) {
+                        seccionesUnicas.add(doc.data().seccion);
+                    }
+                });
+
+                filtroSeccion.innerHTML = '<option value="">Elige un evento para explorar...</option>';
+                
+                seccionesUnicas.forEach(seccion => {
+                    filtroSeccion.innerHTML += `<option value="${seccion}">${seccion}</option>`;
+                });
+
+                if (seccionesUnicas.size === 0) {
+                    filtroSeccion.innerHTML = '<option value="">Aún no hay fotos subidas.</option>';
+                }
+
+            } catch (error) {
+                console.error("Error al cargar la galería:", error);
+                filtroSeccion.innerHTML = '<option value="">Error de conexión. Intenta recargar.</option>';
+            }
+        }
+        
+        inicializarGaleria();
+
+        // 2. MOSTRAR LAS FOTOS DEL EVENTO SELECCIONADO
+        filtroSeccion.addEventListener('change', async () => {
+            const seccionElegida = filtroSeccion.value;
+            
+            if (!seccionElegida) {
+                galeria.innerHTML = '<div class="loader-text" style="grid-column: 1 / -1;">👈 Por favor selecciona un evento arriba para ver las fotografías.</div>';
+                galeria.style.display = 'block';
+                return;
+            }
+
+            galeria.style.display = 'grid'; // Reactivamos el grid
+            galeria.innerHTML = '<div class="loader-text" style="grid-column: 1 / -1;">Descargando recuerdos... ⏳</div>';
+            
+            try {
+                const q = query(collection(db, "fotos"), where("seccion", "==", seccionElegida));
+                const snap = await getDocs(q);
+                
+                galeria.innerHTML = "";
+                let contador = 0;
+
+                snap.forEach(doc => {
+                    contador++;
+                    const data = doc.data();
+                    
+                    // Convertimos la fecha si está disponible
+                    let fechaTexto = "Fotografía reciente";
+                    if (data.fecha && data.fecha.toDate) {
+                        fechaTexto = data.fecha.toDate().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' });
+                    }
+
+                    // Renderizamos la foto en HTML
+                    galeria.innerHTML += `
+                        <div class="photo-item">
+                            <a href="${data.url}" target="_blank" title="Haz clic para ver en grande">
+                                <img src="${data.url}" alt="Recuerdo escolar">
+                            </a>
+                            <div class="info">${fechaTexto}</div>
+                        </div>
+                    `;
+                });
+
+                if (contador === 0) {
+                    galeria.innerHTML = '<div class="loader-text" style="grid-column: 1 / -1;">No encontramos fotos en este álbum.</div>';
+                }
+
+            } catch (error) {
+                galeria.innerHTML = '<div class="loader-text" style="grid-column: 1 / -1; color: #c62828;">Ocurrió un error al cargar. Inténtalo de nuevo.</div>';
+            }
+        });
+    </script>
+</body>
+</html>
