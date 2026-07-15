@@ -1,5 +1,5 @@
 {
-  "name": "Educativo Amor y Libertad",
+  "name": "Centro Educativo Amor y Libertad",
   "short_name": "CEAL",
   "start_url": "./index.html",
   "display": "standalone",
@@ -7,14 +7,16 @@
   "theme_color": "#004a99",
   "icons": [
     {
-      "src": "Img/logo.png",
+      "src": "./Img/logo.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "Img/logo.png",
+      "src": "./Img/logo.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
