@@ -20,17 +20,23 @@
         .input-control:focus { border-color: #004a99; }
         label { font-size: 0.9rem; font-weight: bold; color: #666; display: block; margin-bottom: 8px; text-transform: uppercase;}
         
-        /* CUADRÍCULA DE FOTOS */
-        .photo-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
-        .photo-item { border-radius: 12px; overflow: hidden; background: white; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: transform 0.3s; display: flex; flex-direction: column;}
-        .photo-item:hover { transform: translateY(-5px); box-shadow: 0 8px 16px rgba(0,0,0,0.15);}
-        .photo-item img { width: 100%; height: 250px; object-fit: cover; display: block; border-bottom: 4px solid #FF9800;}
-        .info { padding: 15px; font-size: 0.9rem; background: #ffffff; text-align: center; font-weight: bold; color: #004a99;}
-        .tag-seccion { display: block; font-size: 0.75rem; color: #8898aa; margin-top: 5px; font-weight: normal; }
+        /* CUADRÍCULA COMPACTA (2 FOTOS POR FILA EN CELULAR) */
+        .photo-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
+        
+        .photo-item { position: relative; border-radius: 10px; overflow: hidden; background: white; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: transform 0.3s; display: flex; flex-direction: column;}
+        .photo-item:hover { transform: translateY(-3px); box-shadow: 0 6px 12px rgba(0,0,0,0.15);}
+        .photo-item img { width: 100%; height: 150px; object-fit: cover; display: block; border-bottom: 3px solid #FF9800;}
+        
+        .info { padding: 10px; font-size: 0.8rem; background: #ffffff; text-align: center; font-weight: bold; color: #004a99; flex-grow: 1; display: flex; flex-direction: column; justify-content: center;}
+        .tag-seccion { display: block; font-size: 0.7rem; color: #8898aa; margin-top: 4px; font-weight: normal; }
+        
+        /* BOTÓN DE DESCARGA (FLOTANTE) */
+        .btn-descarga { position: absolute; bottom: 65px; right: 8px; background: rgba(0, 74, 153, 0.9); color: white; text-decoration: none; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; box-shadow: 0 2px 5px rgba(0,0,0,0.3); transition: 0.3s; z-index: 10;}
+        .btn-descarga:hover { background: #FF9800; transform: scale(1.1); }
         
         .btn-volver { display: inline-block; margin-top: 20px; background: rgba(255,255,255,0.2); color: white; padding: 8px 20px; border-radius: 20px; text-decoration: none; font-weight: bold; transition: 0.3s;}
         .btn-volver:hover { background: rgba(255,255,255,0.4); }
-        .loader-text { text-align: center; color: #666; font-size: 1.2rem; padding: 40px 0; font-weight: bold;}
+        .loader-text { text-align: center; color: #666; font-size: 1.1rem; padding: 40px 0; font-weight: bold;}
     </style>
 </head>
 <body>
@@ -56,25 +62,21 @@
 
     <script type="module">
         import { db } from './js/firebase-config.js';
-        import { collection, query, where, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const filtroSeccion = document.getElementById('filtroSeccion');
         const galeria = document.getElementById('galeria');
 
-        // 1. CARGAR TODOS LOS EVENTOS EN EL SELECTOR
         async function inicializarGaleria() {
             try {
                 const snap = await getDocs(collection(db, "fotos"));
                 const seccionesUnicas = new Set();
                 
                 snap.forEach(doc => {
-                    if (doc.data().seccion) {
-                        seccionesUnicas.add(doc.data().seccion);
-                    }
+                    if (doc.data().seccion) seccionesUnicas.add(doc.data().seccion);
                 });
 
                 filtroSeccion.innerHTML = '<option value="TODAS">Ver Todas las Fotografías</option>';
-                
                 seccionesUnicas.forEach(seccion => {
                     filtroSeccion.innerHTML += `<option value="${seccion}">${seccion}</option>`;
                 });
@@ -83,7 +85,6 @@
                     filtroSeccion.innerHTML = '<option value="TODAS">Aún no hay fotos subidas.</option>';
                 }
 
-                // MOSTRAR TODAS LAS FOTOS AL INICIAR
                 cargarFotos("TODAS");
 
             } catch (error) {
@@ -93,18 +94,13 @@
             }
         }
         
-        // 2. FUNCIÓN PARA DIBUJAR LAS FOTOS
         async function cargarFotos(seccionElegida) {
             galeria.innerHTML = '<div class="loader-text" style="grid-column: 1 / -1;">Descargando recuerdos... ⏳</div>';
             
             try {
-                let qFotos;
-                // Si la opción es "TODAS", traemos la colección completa. Si no, filtramos.
-                if (seccionElegida === "TODAS") {
-                    qFotos = query(collection(db, "fotos"));
-                } else {
-                    qFotos = query(collection(db, "fotos"), where("seccion", "==", seccionElegida));
-                }
+                let qFotos = (seccionElegida === "TODAS") 
+                    ? query(collection(db, "fotos")) 
+                    : query(collection(db, "fotos"), where("seccion", "==", seccionElegida));
 
                 const snap = await getDocs(qFotos);
                 galeria.innerHTML = "";
@@ -114,19 +110,23 @@
                     contador++;
                     const data = doc.data();
                     
-                    let fechaTexto = "Fotografía reciente";
+                    let fechaTexto = "Reciente";
                     if (data.fecha && data.fecha.toDate) {
-                        fechaTexto = data.fecha.toDate().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' });
+                        fechaTexto = data.fecha.toDate().toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
                     }
+
+                    // TRUCO CLOUDINARY PARA FORZAR DESCARGA
+                    const urlDescarga = data.url.replace('/upload/', '/upload/fl_attachment/');
 
                     galeria.innerHTML += `
                         <div class="photo-item">
+                            <a href="${urlDescarga}" class="btn-descarga" title="Descargar Foto">⬇️</a>
                             <a href="${data.url}" target="_blank" title="Haz clic para ver en grande">
-                                <img src="${data.url}" alt="Recuerdo escolar">
+                                <img src="${data.url}" loading="lazy" alt="Recuerdo escolar">
                             </a>
                             <div class="info">
                                 ${fechaTexto}
-                                <span class="tag-seccion">Álbum: ${data.seccion}</span>
+                                <span class="tag-seccion">${data.seccion}</span>
                             </div>
                         </div>
                     `;
@@ -141,12 +141,7 @@
             }
         }
 
-        // DETECTAR CAMBIO EN EL SELECTOR
-        filtroSeccion.addEventListener('change', () => {
-            cargarFotos(filtroSeccion.value);
-        });
-
-        // ARRANCAR EL SISTEMA
+        filtroSeccion.addEventListener('change', () => cargarFotos(filtroSeccion.value));
         inicializarGaleria();
     </script>
 </body>
