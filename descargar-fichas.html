@@ -24,8 +24,8 @@
         td { padding: 15px; text-align: left; border-bottom: 1px solid #f4f7fa; }
         .btn-back-clean { display: inline-flex; align-items: center; gap: 5px; color: #666; text-decoration: none; font-weight: bold; margin-bottom: 15px; }
         
-        /* ESTILOS PARA LA PLANTILLA DEL PDF */
-        #plantilla-pdf { display: none; width: 800px; background: white; padding: 40px; color: #333; font-family: 'Arial', sans-serif; box-sizing: border-box;}
+        /* ESTILOS PARA LA PLANTILLA DEL PDF (solo para el contenido que clonaremos) */
+        .plantilla-pdf-base { width: 800px; background: white; padding: 40px; color: #333; font-family: 'Arial', sans-serif; box-sizing: border-box;}
         .pdf-header { text-align: center; border-bottom: 3px solid #004a99; padding-bottom: 20px; margin-bottom: 30px; }
         .pdf-header img { width: 120px; margin-bottom: 10px; }
         .pdf-header h1 { color: #004a99; font-size: 24px; margin: 0; }
@@ -34,6 +34,8 @@
         .pdf-info-box p { margin: 8px 0; font-size: 14px; font-weight: bold; color:#004a99;}
         .pdf-info-box span { font-weight: normal; color:#333;}
         .pdf-body { line-height: 1.8; font-size: 14px; text-align: justify; white-space: pre-wrap; }
+        /* Evitar que elementos importantes se dividan mal entre páginas */
+        .pdf-body, .pdf-info-box { break-inside: avoid; page-break-inside: avoid; -webkit-column-break-inside: avoid; }
     </style>
 </head>
 <body>
@@ -92,19 +94,21 @@
     </section>
 </main>
 
-<div id="plantilla-pdf">
-    <div class="pdf-header">
-        <img src="Img/logo.png" alt="Logo">
-        <h1>Centro Educativo Amor y Libertad</h1>
-        <h2>Documento Oficial: Ficha Descriptiva</h2>
+<!-- Template base (oculto en DOM, pero lo clonaremos al generar PDFs) -->
+<div id="plantilla-pdf" style="display:none;">
+    <div class="plantilla-pdf-base">
+        <div class="pdf-header">
+            <img src="Img/logo.png" alt="Logo">
+            <h1>Centro Educativo Amor y Libertad</h1>
+            <h2>Documento Oficial: Ficha Descriptiva</h2>
+        </div>
+        <div class="pdf-info-box">
+            <p>ALUMNO: <span class="pdf-nombre"></span></p>
+            <p>GRUPO: <span class="pdf-grupo"></span></p>
+            <p>DOCENTE EVALUADOR: <span class="pdf-maestro"></span></p>
+        </div>
+        <div class="pdf-body pdf-texto"></div>
     </div>
-    <div class="pdf-info-box">
-        <p>ALUMNO: <span id="pdf-nombre"></span></p>
-        <p>GRUPO: <span id="pdf-grupo"></span></p>
-        <!-- AHORA USAMOS EL NOMBRE REAL -->
-        <p>DOCENTE EVALUADOR: <span id="pdf-maestro"></span></p>
-    </div>
-    <div class="pdf-body" id="pdf-texto"></div>
 </div>
 
 <script type="module">
@@ -123,7 +127,46 @@
         const snap = await getDocs(collection(db, "grupos"));
         const filtroGrupo = document.getElementById('filtroGrupo');
         filtroGrupo.innerHTML = '<option value="">Seleccione grupo...</option>';
-        snap.forEach(doc => filtroGrupo.innerHTML += `<option value="${doc.data().nombre}">${doc.data().nombre}</option>`);
+        snap.forEach(d => filtroGrupo.innerHTML += `<option value="${d.data().nombre}">${d.data().nombre}</option>`);
+    }
+
+    // Helper para convertir fecha de Firestore u otros formatos
+    function formatoFechaSegura(fechaValor) {
+        if (!fechaValor) return "Reciente";
+        try {
+            if (typeof fechaValor.toDate === 'function') {
+                return fechaValor.toDate().toLocaleDateString('es-MX');
+            } else {
+                return new Date(fechaValor).toLocaleDateString('es-MX');
+            }
+        } catch (e) {
+            return "Reciente";
+        }
+    }
+
+    // Crea un clone visible off-screen para que html2pdf lo renderice correctamente
+    function createPrintableClone(data, nombreDelProfesor) {
+        const plantilla = document.getElementById('plantilla-pdf');
+        const clone = plantilla.firstElementChild.cloneNode(true); // .plantilla-pdf-base
+        // rellenar campos en el clone
+        clone.querySelector('.pdf-nombre').innerText = data.nombre_alumno || '';
+        clone.querySelector('.pdf-grupo').innerText = data.grupo || '';
+        clone.querySelector('.pdf-maestro').innerText = nombreDelProfesor || '';
+        clone.querySelector('.pdf-texto').innerText = data.texto || '';
+
+        // Mostrar el clone fuera de la pantalla para render correcto
+        clone.style.display = 'block';
+        clone.style.position = 'absolute';
+        clone.style.left = '-9999px';
+        clone.style.top = '0';
+        clone.style.width = '800px';
+        document.body.appendChild(clone);
+        return clone;
+    }
+
+    // Remueve el clone del DOM
+    function removeClone(clone) {
+        if (clone && clone.parentNode) clone.parentNode.removeChild(clone);
     }
 
     document.getElementById('btn-buscar').addEventListener('click', async () => {
@@ -149,16 +192,13 @@
                 fichasActuales.push(data); 
 
                 // Si el maestro antiguo no tenía nombre guardado, usamos su correo como respaldo
-                const nombreDelProfesor = data.maestro_nombre || data.maestro_email.split('@')[0];
+                const nombreDelProfesor = data.maestro_nombre || (data.maestro_email ? data.maestro_email.split('@')[0] : 'Docente');
 
                 const row = document.createElement('tr');
-                let fechaFormato = "Reciente";
-                if(data.ultima_actualizacion) {
-                    fechaFormato = data.ultima_actualizacion.toDate().toLocaleDateString('es-MX');
-                }
+                let fechaFormato = formatoFechaSegura(data.ultima_actualizacion);
 
                 row.innerHTML = `
-                    <td style="font-weight:bold;">${data.nombre_alumno}</td>
+                    <td style="font-weight:bold;">${data.nombre_alumno || ''}</td>
                     <td style="color:#666;">${nombreDelProfesor}</td>
                     <td>${fechaFormato}</td>
                     <td style="text-align: center;">
@@ -167,8 +207,8 @@
                     </td>
                 `;
 
-                row.querySelector('.btn-ver-pdf').addEventListener('click', () => {
-                    generarPDFIndividual(data, nombreDelProfesor);
+                row.querySelector('.btn-ver-pdf').addEventListener('click', async () => {
+                    await generarPDFIndividual(data, nombreDelProfesor);
                 });
 
                 row.querySelector('.btn-delete').addEventListener('click', () => {
@@ -199,7 +239,70 @@
             }
 
         } catch (error) {
+            console.error(error);
             tabla.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Error al cargar los datos.</td></tr>";
+        }
+    });
+
+    async function generarPDFIndividual(data, nombreDelProfesor) {
+        const clone = createPrintableClone(data, nombreDelProfesor);
+        try {
+            // breve espera para asegurar que imágenes se carguen
+            await new Promise(r => setTimeout(r, 300));
+            const opciones = {
+                margin: 15,
+                filename: `${data.nombre_alumno || 'ficha'} ${data.grupo || ''}.pdf`,
+                image: { type: 'jpeg', quality: 1 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
+            };
+            await html2pdf().set(opciones).from(clone).save();
+        } catch (e) {
+            console.error('Error generando PDF:', e);
+            Swal.fire('Error', 'No se pudo generar el PDF.', 'error');
+        } finally {
+            removeClone(clone);
+        }
+    }
+
+    document.getElementById('btn-descargar-zip').addEventListener('click', async () => {
+        const grupo = document.getElementById('filtroGrupo').value;
+        const btnZip = document.getElementById('btn-descargar-zip');
+        if (!grupo) return Swal.fire('Aviso', 'Selecciona un grupo.', 'warning');
+
+        btnZip.disabled = true;
+        Swal.fire({ title: 'Generando Archivos', text: 'Esto puede tardar unos segundos...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+        const zip = new JSZip();
+        const carpeta = zip.folder(`Fichas_PDF_${grupo.replace(/\s+/g, '_')}`);
+
+        const opcionesPDF = {
+            margin: 15, image: { type: 'jpeg', quality: 1 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
+        };
+
+        try {
+            for (let i = 0; i < fichasActuales.length; i++) {
+                const data = fichasActuales[i];
+                const nombreDelProfesor = data.maestro_nombre || (data.maestro_email ? data.maestro_email.split('@')[0] : 'Docente');
+
+                const clone = createPrintableClone(data, nombreDelProfesor);
+                // esperar para carga de imágenes
+                await new Promise(r => setTimeout(r, 250));
+
+                const pdfBlob = await html2pdf().set(opcionesPDF).from(clone).output('blob');
+                carpeta.file(`${(data.nombre_alumno||'alumno')} ${data.grupo||''}.pdf`, pdfBlob);
+                removeClone(clone);
+            }
+
+            const contenidoZip = await zip.generateAsync({type:"blob"});
+            saveAs(contenidoZip, `Fichas_Completas_${grupo.replace(/\s+/g, '_')}.zip`);
+            Swal.fire('¡Listo!', 'El archivo ZIP se ha descargado.', 'success');
+            btnZip.disabled = false;
+
+        } catch (error) {
+            console.error(error);
+            Swal.fire('Error', 'Hubo un fallo al crear los PDFs.', 'error');
+            btnZip.disabled = false;
         }
     });
 
@@ -225,73 +328,9 @@
                 Swal.fire('¡Eliminado!', 'Todas las fichas han sido borradas.', 'success');
                 document.getElementById('btn-buscar').click(); 
             } catch (error) {
+                console.error(error);
                 Swal.fire('Error', 'Ocurrió un problema.', 'error');
             }
-        }
-    });
-
-    function generarPDFIndividual(data, nombreDelProfesor) {
-        document.getElementById('pdf-nombre').innerText = data.nombre_alumno;
-        document.getElementById('pdf-grupo').innerText = data.grupo;
-        document.getElementById('pdf-maestro').innerText = nombreDelProfesor;
-        document.getElementById('pdf-texto').innerText = data.texto;
-
-        const plantilla = document.getElementById('plantilla-pdf');
-        plantilla.style.display = 'block';
-        
-        html2pdf().set({
-            margin: 15,
-            filename: `${data.nombre_alumno} ${data.grupo}.pdf`, 
-            image: { type: 'jpeg', quality: 1 },
-            html2canvas: { scale: 2 },
-            jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
-        }).from(plantilla).save().then(() => {
-            plantilla.style.display = 'none';
-        });
-    }
-
-    document.getElementById('btn-descargar-zip').addEventListener('click', async () => {
-        const grupo = document.getElementById('filtroGrupo').value;
-        const btnZip = document.getElementById('btn-descargar-zip');
-        
-        btnZip.disabled = true;
-        Swal.fire({ title: 'Generando Archivos', text: 'Esto puede tardar unos segundos...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
-        const zip = new JSZip();
-        const carpeta = zip.folder(`Fichas_PDF_${grupo.replace(/\s+/g, '_')}`);
-        const plantilla = document.getElementById('plantilla-pdf');
-
-        const opcionesPDF = {
-            margin: 15, image: { type: 'jpeg', quality: 1 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
-        };
-
-        try {
-            plantilla.style.display = 'block';
-
-            for (let i = 0; i < fichasActuales.length; i++) {
-                const data = fichasActuales[i];
-                const nombreDelProfesor = data.maestro_nombre || data.maestro_email.split('@')[0];
-                
-                document.getElementById('pdf-nombre').innerText = data.nombre_alumno;
-                document.getElementById('pdf-grupo').innerText = data.grupo;
-                document.getElementById('pdf-maestro').innerText = nombreDelProfesor;
-                document.getElementById('pdf-texto').innerText = data.texto;
-
-                const pdfBlob = await html2pdf().set(opcionesPDF).from(plantilla).output('blob');
-                carpeta.file(`${data.nombre_alumno} ${data.grupo}.pdf`, pdfBlob);
-            }
-
-            const contenidoZip = await zip.generateAsync({type:"blob"});
-            saveAs(contenidoZip, `Fichas_Completas_${grupo.replace(/\s+/g, '_')}.zip`);
-            
-            Swal.fire('¡Listo!', 'El archivo ZIP se ha descargado.', 'success');
-            btnZip.disabled = false;
-
-        } catch (error) {
-            Swal.fire('Error', 'Hubo un fallo al crear los PDFs.', 'error');
-            btnZip.disabled = false;
-        } finally {
-            plantilla.style.display = 'none';
         }
     });
 </script>

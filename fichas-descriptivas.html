@@ -60,7 +60,9 @@
 <script type="module">
     import { db, auth } from './js/firebase-config.js';
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { collection, query, where, getDocs, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { collection, getDocs, doc, setDoc, getDoc, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    // Si quieres usar serverTimestamp en el futuro:
+    // import { serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const filtroGrupo = document.getElementById('filtroGrupo');
     const filtroAlumno = document.getElementById('filtroAlumno');
@@ -74,14 +76,21 @@
     onAuthStateChanged(auth, async (user) => {
         if (!user) window.location.href = "login.html";
         else { 
+            // Si hay un profesor al que se está supliendo, maestroActual lo recoge
             maestroActual = localStorage.getItem('supliendo_a') || user.email;
             
-            // BUSCAMOS SU NOMBRE REAL PARA FIRMAR EL DOCUMENTO
-            const idDocente = user.email.split('@')[0];
-            const docSnap = await getDoc(doc(db, "usuarios", idDocente));
-            if (docSnap.exists() && docSnap.data().nombre) {
-                nombreMaestroReal = docSnap.data().nombre;
+            // BUSCAMOS SU NOMBRE REAL PARA FIRMAR EL DOCUMENTO (ahora usamos maestroActual)
+            const idDocente = maestroActual.split('@')[0];
+            try {
+                const docSnap = await getDoc(doc(db, "usuarios", idDocente));
+                if (docSnap.exists() && docSnap.data().nombre) {
+                    nombreMaestroReal = docSnap.data().nombre;
+                }
+            } catch (e) {
+                // si falla la búsqueda, mantenemos el fallback
+                console.warn('No se pudo obtener nombre docente:', e);
             }
+
             cargarGrupos(); 
         }
     });
@@ -89,7 +98,7 @@
     async function cargarGrupos() {
         const snap = await getDocs(collection(db, "grupos"));
         filtroGrupo.innerHTML = '<option value="">Seleccione grupo...</option>';
-        snap.forEach(doc => filtroGrupo.innerHTML += `<option value="${doc.data().nombre}">${doc.data().nombre}</option>`);
+        snap.forEach(d => filtroGrupo.innerHTML += `<option value="${d.data().nombre}">${d.data().nombre}</option>`);
     }
 
     filtroGrupo.addEventListener('change', async () => {
@@ -118,9 +127,12 @@
         areaRedaccion.style.display = 'block';
 
         try {
-            const docFicha = await getDocs(query(collection(db, "fichas"), where("id_alumno", "==", idAlumno)));
-            if (!docFicha.empty) {
-                textoFicha.value = docFicha.docs[0].data().texto;
+            // Cuando usas setDoc(doc(db,"fichas", idAlumno)) podemos leer directamente con getDoc
+            const fichaRef = doc(db, "fichas", idAlumno);
+            const fichaSnap = await getDoc(fichaRef);
+            if (fichaSnap.exists()) {
+                const data = fichaSnap.data();
+                textoFicha.value = data.texto || "";
             } else {
                 textoFicha.value = "";
             }
@@ -143,6 +155,7 @@
                 maestro_email: maestroActual,
                 maestro_nombre: nombreMaestroReal, // AQUÍ SE GUARDA SU NOMBRE REAL
                 texto: texto,
+                // Recomendado en el futuro: ultima_actualizacion: serverTimestamp()
                 ultima_actualizacion: new Date()
             });
             
@@ -157,6 +170,7 @@
             areaRedaccion.style.display = 'none';
             filtroAlumno.value = "";
         } catch (error) { 
+            console.error(error);
             Swal.fire('Error', 'Hubo un problema al guardar en la base de datos.', 'error');
         }
     });
