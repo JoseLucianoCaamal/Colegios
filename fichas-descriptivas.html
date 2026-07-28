@@ -60,24 +60,26 @@
 <script type="module">
     import { db, auth } from './js/firebase-config.js';
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { collection, getDocs, doc, setDoc, getDoc, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { collection, query, where, getDocs, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    // Si quieres usar serverTimestamp en el futuro:
+    // import { serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // Declaraciones únicas (NO repetir estas variables en otra parte del archivo)
     const filtroGrupo = document.getElementById('filtroGrupo');
     const filtroAlumno = document.getElementById('filtroAlumno');
     const areaRedaccion = document.getElementById('area-redaccion');
     const textoFicha = document.getElementById('textoFicha');
-
+    
     let maestroActual = null;
     let nombreMaestroReal = "Docente Titular";
     let nombreAlumnoActual = "";
 
     onAuthStateChanged(auth, async (user) => {
         if (!user) window.location.href = "login.html";
-        else {
+        else { 
+            // Usamos maestroActual que respeta localStorage 'supliendo_a' si aplica
             maestroActual = localStorage.getItem('supliendo_a') || user.email;
-
-            // Usar maestroActual para buscar nombre en usuarios/
+            
+            // BUSCAMOS SU NOMBRE REAL PARA FIRMAR EL DOCUMENTO (ahora usamos maestroActual)
             const idDocente = maestroActual.split('@')[0];
             try {
                 const docSnap = await getDoc(doc(db, "usuarios", idDocente));
@@ -85,10 +87,10 @@
                     nombreMaestroReal = docSnap.data().nombre;
                 }
             } catch (e) {
-                console.warn('Error al obtener nombre docente:', e);
+                console.warn('No se pudo obtener nombre docente:', e);
             }
 
-            cargarGrupos();
+            cargarGrupos(); 
         }
     });
 
@@ -103,11 +105,11 @@
         filtroAlumno.innerHTML = "<option value=''>Cargando alumnos...</option>";
         areaRedaccion.style.display = 'none';
         if (!grupoSel) { filtroAlumno.disabled = true; return; }
-
+        
         filtroAlumno.disabled = false;
         const qAlumnos = query(collection(db, "alumnos"), where("grupo", "==", grupoSel));
         const snap = await getDocs(qAlumnos);
-
+        
         filtroAlumno.innerHTML = "<option value=''>Selecciona un alumno...</option>";
         snap.forEach((docSnap) => {
             filtroAlumno.innerHTML += `<option value="${docSnap.id}">${docSnap.data().nombre}</option>`;
@@ -117,7 +119,7 @@
     filtroAlumno.addEventListener('change', async () => {
         const idAlumno = filtroAlumno.value;
         if (!idAlumno) { areaRedaccion.style.display = 'none'; return; }
-
+        
         nombreAlumnoActual = filtroAlumno.options[filtroAlumno.selectedIndex].text;
         document.getElementById('nombre-alumno-ui').innerText = nombreAlumnoActual;
         textoFicha.value = "Cargando...";
@@ -132,10 +134,7 @@
             } else {
                 textoFicha.value = "";
             }
-        } catch (e) {
-            console.warn('Error al leer ficha:', e);
-            textoFicha.value = "";
-        }
+        } catch (e) { textoFicha.value = ""; }
     });
 
     document.getElementById('btn-guardar-ficha').addEventListener('click', async () => {
@@ -152,10 +151,16 @@
                 nombre_alumno: nombreAlumnoActual,
                 grupo: filtroGrupo.value,
                 maestro_email: maestroActual,
-                maestro_nombre: nombreMaestroReal,
+                maestro_nombre: nombreMaestroReal, // AQUÍ SE GUARDA SU NOMBRE REAL
                 texto: texto,
                 ultima_actualizacion: new Date()
             });
+            
+            // Limpieza explícita tras guardar
+            textoFicha.value = "";
+            textoFicha.dispatchEvent(new Event('input'));
+            areaRedaccion.style.display = 'none';
+            filtroAlumno.value = "";
 
             Swal.fire({
                 icon: 'success',
@@ -164,11 +169,8 @@
                 confirmButtonColor: '#004a99'
             });
 
-            textoFicha.value = "";
-            areaRedaccion.style.display = 'none';
-            filtroAlumno.value = "";
-        } catch (error) {
-            console.error('Error al guardar ficha:', error);
+        } catch (error) { 
+            console.error('Error guardando ficha:', error);
             Swal.fire('Error', 'Hubo un problema al guardar en la base de datos.', 'error');
         }
     });

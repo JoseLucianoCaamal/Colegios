@@ -38,7 +38,7 @@
     <a href="galeria-publica.html">FOTOS</a>
     <a href="#contacto">CONTACTO</a>
     
-    <!-- AQUÍ ESTÁ EL BOTÓN DE LOGIN MEJORADO -->
+    <!-- BOTÓN LOGIN -->
     <a href="login.html" class="btn-login-nav">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -117,12 +117,13 @@
 </main>
 
 <!-- =========================================
-     BOTÓN FLOTANTE WHATSAPP
+     BOTÓN FLOTANTE WHATSAPP (SVG corregido)
      ========================================= -->
-<a href="https://wa.me/529994850016?text=Hola,%20me%20gustaría%20recibir%20más%20información%20sobre%20las%20inscripciones." class="whatsapp-float" target="_blank" rel="noopener noreferrer" aria-label="Enviar mensaje por WhatsApp">
-    <!-- Icono SVG de WhatsApp -->
-    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
-        <path fill="white" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-..."></path>
+<a href="https://wa.me/529994850016?text=Hola,%20me%20gustaría%20recibir%20más%20información%20sobre%20las%20inscripciones." class="whatsapp-float" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">
+    <!-- Icono SVG de WhatsApp (ruta válida) -->
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" width="48" height="48">
+        <path fill="#25D366" d="M12 .5C5.648.5.5 5.648.5 12c0 2.108.586 4.065 1.6 5.77L.5 23.5l5.935-1.625A11.447 11.447 0 0 0 12 23.5C18.352 23.5 23.5 18.352 23.5 12S18.352.5 12 .5z"/>
+        <path fill="#FFF" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.786-1.48-1.756-1.653-2.054-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.52.149-.173.198-.297.298-.496.099-.198.05-.372-.025-.52-.075-.149-.67-1.612-.917-2.206-.242-.579-.487-.5-.67-.51l-.57-.01c-.197 0-.52.075-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.077 4.487 0 .001.001 0 .001.001.282.121.563.18.8.18.308 0 .597-.05.822-.147.249-.103 1.558-.726 1.78-1.432.223-.706.223-1.31.156-1.432-.067-.124-.246-.198-.543-.347z"/>
     </svg>
 </a>
 
@@ -138,7 +139,6 @@
     onAuthStateChanged(auth, async (user) => {
         try {
             if (user && user.email) {
-                // Si detecta que ya hay un usuario guardado, busca su rol y lo teletransporta
                 const idUsuario = user.email.split('@')[0];
                 const docSnap = await getDoc(doc(db, "usuarios", idUsuario));
                 
@@ -155,4 +155,4 @@
     });
 </script>
 </body>
-</html>>
+</html>
