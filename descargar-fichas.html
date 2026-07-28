@@ -175,19 +175,58 @@
       .replace(/'/g, '&#039;');
   }
 
-  function createPrintableClone(data, nombreDelProfesor) {
+function createPrintableClone(data, nombreDelProfesor) {
     const plantilla = document.getElementById('plantilla-pdf');
-    const clone = plantilla.firstElementChild.cloneNode(true);
+    const clone = plantilla.firstElementChild.cloneNode(true); // .plantilla-pdf-base
 
+    // Rellenar campos
     clone.querySelector('.pdf-nombre').innerText = data.nombre_alumno || '(Nombre no disponible)';
     clone.querySelector('.pdf-grupo').innerText = data.grupo || '(Grupo no disponible)';
     clone.querySelector('.pdf-maestro').innerText = nombreDelProfesor || (data.maestro_nombre || '(Docente no disponible)');
 
+    // Texto del profesor (escape + saltos)
     const pdfTextoEl = clone.querySelector('.pdf-texto');
-    const safeTexto = escapeHtml(data.texto || '');
+    const safeTexto = (data.texto || '')
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;');
     pdfTextoEl.innerHTML = safeTexto.replace(/\n/g, '<br/>');
     pdfTextoEl.style.whiteSpace = 'pre-wrap';
+    pdfTextoEl.style.color = '#333';
 
+    // Forzamos estilos en todo el clone para evitar que elementos posicionados lo tapen
+    // (solo aplicamos dentro del clone, no tocamos el DOM global)
+    const all = clone.querySelectorAll('*');
+    all.forEach(el => {
+        // Reset posicionamiento que pueda causar overlays inesperados
+        // Conserva inline positioning si ya hay alguno razonable
+        const computed = window.getComputedStyle(el);
+        // Si el elemento está absolutamente posicionado, déjalo, pero asegura zIndex bajo
+        if (computed.position === 'absolute' || computed.position === 'fixed') {
+            el.style.zIndex = el.style.zIndex || '0';
+        } else {
+            el.style.position = el.style.position || 'static';
+            el.style.zIndex = el.style.zIndex || '0';
+        }
+        // Forzar visibilidad
+        el.style.visibility = 'visible';
+        // Asegurar color legible
+        if (!el.style.color) el.style.color = '#333';
+        // Evitar que elementos con background-blend o mezcla tapen texto
+        el.style.background = el.style.background || 'transparent';
+    });
+
+    // Elevamos específicamente las cajas que deben ir encima
+    const infoBox = clone.querySelector('.pdf-info-box');
+    if (infoBox) {
+        infoBox.style.position = 'relative';
+        infoBox.style.zIndex = '20';
+        infoBox.style.background = infoBox.style.background || '#f8fafd';
+    }
+    pdfTextoEl.style.position = 'relative';
+    pdfTextoEl.style.zIndex = '30';
+
+    // Estilos para que sea renderizable pero no visible al usuario
     clone.style.display = 'block';
     clone.style.position = 'relative';
     clone.style.visibility = 'visible';
@@ -198,7 +237,7 @@
     const container = document.getElementById('pdf-clones-container');
     container.appendChild(clone);
     return clone;
-  }
+}
   
   function removeClone(clone) {
   try {
