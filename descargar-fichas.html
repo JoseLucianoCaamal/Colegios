@@ -7,11 +7,11 @@
   <link rel="icon" type="image/png" href="Img/logo.png">
   <link rel="stylesheet" href="css/styles.css">
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <!-- IMPORTANTE: Se eliminó html2canvas suelto para evitar conflictos con el bundle de html2pdf -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <style>
     .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
@@ -32,10 +32,17 @@
     .pdf-info-box { background: #f8fafd; padding: 20px; border-radius: 10px; border: 1px solid #e0e6ed; margin-bottom: 30px; }
     .pdf-info-box p { margin: 8px 0; font-size: 14px; font-weight: bold; color:#004a99;}
     .pdf-info-box span { font-weight: normal; color:#333;}
-    .pdf-body { line-height: 1.8; font-size: 14px; text-align: justify; white-space: pre-wrap; }
+    .pdf-body { line-height: 1.8; font-size: 14px; text-align: justify; white-space: pre-wrap; color: #333; }
     .pdf-body, .pdf-info-box { break-inside: avoid; page-break-inside: avoid; -webkit-column-break-inside: avoid; }
 
-    #pdf-clones-container { position: fixed; left: 0; top: 0; pointer-events: none; width: 0; height: 0; overflow: hidden; z-index: 9999; }
+    /* CORRECCIÓN CSS: Se movió fuera de la pantalla en lugar de hacerlo invisible/0px */
+    #pdf-clones-container { 
+        position: absolute; 
+        left: -10000px; 
+        top: 0; 
+        width: 800px; 
+        z-index: -1; 
+    }
   </style>
 </head>
 <body>
@@ -57,7 +64,7 @@
     <select id="filtroGrupo" class="input-control">
       <option value="">Cargando grupos...</option>
     </select>
-    <button id="btn-buscar" class="btn btn-primary" style="width: 100%; padding: 12px; border-radius: 8px; font-weight: bold; background:#004a99; border:none; cursor:pointer;">Buscar Fichas</button>
+    <button id="btn-buscar" class="btn btn-primary" style="width: 100%; padding: 12px; border-radius: 8px; font-weight: bold; background:#004a99; border:none; cursor:pointer; color: white;">Buscar Fichas</button>
   </section>
 
   <section class="card" id="seccion-resultados" style="display: none;">
@@ -166,199 +173,80 @@
     });
   }
 
-  function escapeHtml(str) {
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
-  }
-
-function createPrintableClone(data, nombreDelProfesor) {
+  // CORRECCIÓN JS: Simplificamos enormemente esta función para evitar que los estilos rompan el render.
+  function createPrintableClone(data, nombreDelProfesor) {
     const plantilla = document.getElementById('plantilla-pdf');
-    const clone = plantilla.firstElementChild.cloneNode(true); // .plantilla-pdf-base
+    const clone = plantilla.firstElementChild.cloneNode(true); 
 
     // Rellenar campos
     clone.querySelector('.pdf-nombre').innerText = data.nombre_alumno || '(Nombre no disponible)';
     clone.querySelector('.pdf-grupo').innerText = data.grupo || '(Grupo no disponible)';
     clone.querySelector('.pdf-maestro').innerText = nombreDelProfesor || (data.maestro_nombre || '(Docente no disponible)');
 
-    // Texto del profesor (escape + saltos)
+    // Rellenar comentarios
     const pdfTextoEl = clone.querySelector('.pdf-texto');
     const safeTexto = (data.texto || '')
         .replace(/&/g,'&amp;')
         .replace(/</g,'&lt;')
         .replace(/>/g,'&gt;');
     pdfTextoEl.innerHTML = safeTexto.replace(/\n/g, '<br/>');
-    pdfTextoEl.style.whiteSpace = 'pre-wrap';
-    pdfTextoEl.style.color = '#333';
 
-    // Forzamos estilos en todo el clone para evitar que elementos posicionados lo tapen
-    // (solo aplicamos dentro del clone, no tocamos el DOM global)
-    const all = clone.querySelectorAll('*');
-    all.forEach(el => {
-        // Reset posicionamiento que pueda causar overlays inesperados
-        // Conserva inline positioning si ya hay alguno razonable
-        const computed = window.getComputedStyle(el);
-        // Si el elemento está absolutamente posicionado, déjalo, pero asegura zIndex bajo
-        if (computed.position === 'absolute' || computed.position === 'fixed') {
-            el.style.zIndex = el.style.zIndex || '0';
-        } else {
-            el.style.position = el.style.position || 'static';
-            el.style.zIndex = el.style.zIndex || '0';
-        }
-        // Forzar visibilidad
-        el.style.visibility = 'visible';
-        // Asegurar color legible
-        if (!el.style.color) el.style.color = '#333';
-        // Evitar que elementos con background-blend o mezcla tapen texto
-        el.style.background = el.style.background || 'transparent';
-    });
-
-    // Elevamos específicamente las cajas que deben ir encima
-    const infoBox = clone.querySelector('.pdf-info-box');
-    if (infoBox) {
-        infoBox.style.position = 'relative';
-        infoBox.style.zIndex = '20';
-        infoBox.style.background = infoBox.style.background || '#f8fafd';
-    }
-    pdfTextoEl.style.position = 'relative';
-    pdfTextoEl.style.zIndex = '30';
-
-    // Estilos para que sea renderizable pero no visible al usuario
-    clone.style.display = 'block';
-    clone.style.position = 'relative';
-    clone.style.visibility = 'visible';
-    clone.style.margin = '0';
-    clone.style.pointerEvents = 'none';
-    clone.style.width = '800px';
-
+    // Lo agregamos inmediatamente al DOM (invisible) para que el navegador dimensione el texto
     const container = document.getElementById('pdf-clones-container');
     container.appendChild(clone);
+    
     return clone;
-}
+  }
   
   function removeClone(clone) {
-  try {
-    if (!clone) return;
-    if (clone.parentNode) clone.parentNode.removeChild(clone);
-  } catch (e) {
-    console.warn('removeClone error', e);
+    try {
+      if (!clone) return;
+      if (clone.parentNode) clone.parentNode.removeChild(clone);
+    } catch (e) {
+      console.warn('removeClone error', e);
+    }
   }
-}
 
   async function generarPDFIndividual(data, nombreDelProfesor) {
     try {
-      // obtener versión más reciente
       let docData = data;
       try {
         if (data && data.id) {
           const fichaRef = doc(db, "fichas", data.id);
           const fichaSnap = await getDoc(fichaRef);
           if (fichaSnap.exists()) docData = fichaSnap.data();
-          else console.warn('No existe doc fichas/' + data.id);
         }
       } catch (errFetch) {
-        console.warn('Error obteniendo doc fichas (uso data pasada):', errFetch);
+        console.warn('Error obteniendo doc fichas:', errFetch);
       }
 
-      console.log('Generando PDF para ficha:', {
-        id: data.id,
-        nombre_alumno: docData.nombre_alumno,
-        grupo: docData.grupo,
-        maestro_nombre: docData.maestro_nombre,
-        texto_len: (docData.texto || '').length,
-        texto_preview: (docData.texto || '').slice(0,200)
-      });
+      Swal.fire({ title: 'Generando PDF', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
       const clone = createPrintableClone(docData, nombreDelProfesor || docData.maestro_nombre);
       await waitForImagesToLoad(clone, 2000);
-      await new Promise(r => setTimeout(r, 200));
+      
+      // Aseguramos que el DOM se haya pintado antes de fotografiarlo
+      await new Promise(r => setTimeout(r, 500)); 
 
       const opciones = {
         margin: 15,
         filename: `${(docData.nombre_alumno||'ficha').replace(/[\\/:"*?<>|]+/g,'')} ${docData.grupo || ''}.pdf`,
-        image: { type: 'jpeg', quality: 1 },
-        html2canvas: { scale: 2, useCORS: true, allowTaint: true },
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
         jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
       };
 
-      try {
-        await html2pdf().set(opciones).from(clone).save();
-        removeClone(clone);
-        console.log('PDF generado con html2pdf OK');
-        return;
-      } catch (errPdf) {
-        console.warn('html2pdf falló, hago fallback canvas:', errPdf);
-      }
-
-      // fallback canvas
-      let canvas;
-      try {
-        canvas = await html2canvas(clone, { scale: 2, useCORS: true, allowTaint: true });
-      } catch (errCanvas) {
-        console.error('html2canvas falló:', errCanvas);
-        removeClone(clone);
-        throw errCanvas;
-      }
-
-      // mostrar preview
-      try {
-        const dataUrl = canvas.toDataURL('image/jpeg', 1.0);
-        const preview = window.open('', '_blank');
-        if (preview) {
-          preview.document.title = 'previewCanvas - Ficha';
-          preview.document.body.style.margin = '0';
-          const img = preview.document.createElement('img');
-          img.src = dataUrl;
-          img.style.maxWidth = '100%';
-          preview.document.body.appendChild(img);
-        } else console.warn('No se pudo abrir preview (popup bloqueado)');
-      } catch (e) {
-        console.warn('No se pudo mostrar preview:', e);
-      }
-
-      // intentar jsPDF desde canvas
-      try {
-        let jsPDFCtor = null;
-        if (window.jspdf && typeof window.jspdf.jsPDF === 'function') jsPDFCtor = window.jspdf.jsPDF;
-        else if (typeof window.jsPDF === 'function') jsPDFCtor = window.jsPDF;
-        else if (typeof window.jspdf === 'function') jsPDFCtor = window.jspdf;
-
-        const filename = `${(docData.nombre_alumno||'ficha').replace(/[\\/:"*?<>|]+/g,'')} ${docData.grupo || ''}.pdf`;
-        if (jsPDFCtor) {
-          const imgData = canvas.toDataURL('image/jpeg', 1.0);
-          const pdf = new jsPDFCtor('p', 'mm', 'letter');
-          const pageWidth = pdf.internal.pageSize.getWidth ? pdf.internal.pageSize.getWidth() : pdf.internal.pageSize.width;
-          const marginMM = 15;
-          const usableWidth = pageWidth - marginMM*2;
-          const pxToMm = usableWidth / canvas.width;
-          const imgHeightMM = canvas.height * pxToMm;
-          pdf.addImage(imgData, 'JPEG', marginMM, marginMM, usableWidth, imgHeightMM);
-          pdf.save(filename);
-          removeClone(clone);
-          console.log('PDF generado desde canvas con jsPDF OK');
-          return;
-        } else {
-          Swal.fire('Atención', 'Se generó una vista previa. Si el PDF sigue en blanco, descarga la imagen desde la pestaña abierta y conviértela a PDF localmente.', 'info');
-          removeClone(clone);
-          return;
-        }
-      } catch (errJsPdf) {
-        console.error('Error en fallback jsPDF:', errJsPdf);
-        Swal.fire('Error', 'No se pudo generar el PDF desde el canvas. Revisa la consola.', 'error');
-        removeClone(clone);
-        return;
-      }
-
+      await html2pdf().set(opciones).from(clone).save();
+      
+      removeClone(clone);
+      Swal.close();
+      
     } catch (e) {
       console.error('Error generando PDF individual:', e);
       Swal.fire('Error', 'Ocurrió un error al generar el PDF. Revisa la consola.', 'error');
     }
   }
 
-  // eventos UI
   document.getElementById('btn-buscar').addEventListener('click', async () => {
     const grupo = document.getElementById('filtroGrupo').value;
     if (!grupo) return Swal.fire('Aviso', 'Selecciona un grupo.', 'warning');
@@ -429,7 +317,6 @@ function createPrintableClone(data, nombreDelProfesor) {
     }
   });
 
-  // ZIP y demás (sin cambios importantes)
   document.getElementById('btn-descargar-zip').addEventListener('click', async () => {
     const grupo = document.getElementById('filtroGrupo').value;
     const btnZip = document.getElementById('btn-descargar-zip');
@@ -441,7 +328,7 @@ function createPrintableClone(data, nombreDelProfesor) {
     const zip = new JSZip();
     const carpeta = zip.folder(`Fichas_PDF_${grupo.replace(/\s+/g, '_')}`);
     const opcionesPDF = {
-      margin: 15, image: { type: 'jpeg', quality: 1 }, html2canvas: { scale: 2, useCORS: true, allowTaint: true }, jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
+      margin: 15, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
     };
 
     try {
@@ -449,10 +336,13 @@ function createPrintableClone(data, nombreDelProfesor) {
         const data = fichasActuales[i];
         const nombreDelProfesor = data.maestro_nombre || (data.maestro_email ? data.maestro_email.split('@')[0] : 'Docente');
         const clone = createPrintableClone(data, nombreDelProfesor);
+        
         await waitForImagesToLoad(clone, 2000);
-        await new Promise(r => setTimeout(r, 150));
+        await new Promise(r => setTimeout(r, 200));
+        
         const pdfBlob = await html2pdf().set(opcionesPDF).from(clone).output('blob');
         carpeta.file(`${(data.nombre_alumno||'alumno')} ${data.grupo||''}.pdf`, pdfBlob);
+        
         removeClone(clone);
       }
       const contenidoZip = await zip.generateAsync({type:"blob"});
@@ -482,7 +372,6 @@ function createPrintableClone(data, nombreDelProfesor) {
       } catch (error) { console.error(error); Swal.fire('Error', 'Ocurrió un problema.', 'error'); }
     }
   });
-
 </script>
 </body>
 </html>
