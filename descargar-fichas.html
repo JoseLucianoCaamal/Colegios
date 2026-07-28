@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="Img/logo.png">
   <link rel="stylesheet" href="css/styles.css">
 
-  <!-- IMPORTANTE: Se eliminó html2canvas suelto para evitar conflictos con el bundle de html2pdf -->
+  <!-- Librerías estrictamente necesarias -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
@@ -24,24 +24,14 @@
     td { padding: 15px; text-align: left; border-bottom: 1px solid #f4f7fa; }
     .btn-back-clean { display: inline-flex; align-items: center; gap: 5px; color: #666; text-decoration: none; font-weight: bold; margin-bottom: 15px; }
 
-    .plantilla-pdf-base { width: 800px; background: white; padding: 40px; color: #333; font-family: 'Arial', sans-serif; box-sizing: border-box;}
-    .pdf-header { text-align: center; border-bottom: 3px solid #004a99; padding-bottom: 20px; margin-bottom: 30px; }
-    .pdf-header img { width: 120px; margin-bottom: 10px; }
-    .pdf-header h1 { color: #004a99; font-size: 24px; margin: 0; }
-    .pdf-header h2 { color: #555; font-size: 18px; margin: 5px 0 0 0; font-weight: normal; }
-    .pdf-info-box { background: #f8fafd; padding: 20px; border-radius: 10px; border: 1px solid #e0e6ed; margin-bottom: 30px; }
-    .pdf-info-box p { margin: 8px 0; font-size: 14px; font-weight: bold; color:#004a99;}
-    .pdf-info-box span { font-weight: normal; color:#333;}
-    .pdf-body { line-height: 1.8; font-size: 14px; text-align: justify; white-space: pre-wrap; color: #333; }
-    .pdf-body, .pdf-info-box { break-inside: avoid; page-break-inside: avoid; -webkit-column-break-inside: avoid; }
-
-    /* CORRECCIÓN CSS: Se movió fuera de la pantalla en lugar de hacerlo invisible/0px */
+    /* CONTENEDOR INVISIBLE PERO RENDERIZABLE PARA EL NAVEGADOR */
     #pdf-clones-container { 
         position: absolute; 
-        left: -10000px; 
         top: 0; 
-        width: 800px; 
-        z-index: -1; 
+        left: 0; 
+        z-index: -9999; 
+        opacity: 0; 
+        pointer-events: none;
     }
   </style>
 </head>
@@ -80,8 +70,6 @@
       </div>
     </div>
 
-    <p id="estado-zip" style="color:#4CAF50; font-weight:bold; text-align:right; display:none;"></p>
-
     <div class="tabla-contenedor">
       <table>
         <thead>
@@ -98,22 +86,7 @@
   </section>
 </main>
 
-<div id="plantilla-pdf" style="display:none;">
-  <div class="plantilla-pdf-base">
-    <div class="pdf-header">
-      <img src="Img/logo.png" alt="Logo">
-      <h1>Centro Educativo Amor y Libertad</h1>
-      <h2>Documento Oficial: Ficha Descriptiva</h2>
-    </div>
-    <div class="pdf-info-box">
-      <p>ALUMNO: <span class="pdf-nombre"></span></p>
-      <p>GRUPO: <span class="pdf-grupo"></span></p>
-      <p>DOCENTE EVALUADOR: <span class="pdf-maestro"></span></p>
-    </div>
-    <div class="pdf-body pdf-texto"></div>
-  </div>
-</div>
-
+<!-- Aquí se inyectarán los documentos temporalmente -->
 <div id="pdf-clones-container"></div>
 
 <script type="module">
@@ -148,91 +121,72 @@
     }
   }
 
-  function waitForImagesToLoad(element, timeout = 3000) {
-    const imgs = Array.from(element.querySelectorAll('img'));
-    if (imgs.length === 0) return Promise.resolve();
-    return new Promise((resolve) => {
-      let loaded = 0;
-      let finished = false;
-      function check() {
-        if (finished) return;
-        loaded++;
-        if (loaded >= imgs.length) {
-          finished = true;
-          resolve();
-        }
-      }
-      imgs.forEach(img => {
-        if (img.complete && img.naturalWidth !== 0) check();
-        else {
-          img.addEventListener('load', check);
-          img.addEventListener('error', check);
-        }
-      });
-      setTimeout(() => { if (!finished) { finished = true; resolve(); } }, timeout);
-    });
-  }
-
-  // CORRECCIÓN JS: Simplificamos enormemente esta función para evitar que los estilos rompan el render.
+  // NUEVA FUNCIÓN: Construye el HTML dinámicamente con estilos en línea (100% seguro para el PDF)
   function createPrintableClone(data, nombreDelProfesor) {
-    const plantilla = document.getElementById('plantilla-pdf');
-    const clone = plantilla.firstElementChild.cloneNode(true); 
+    const container = document.getElementById('pdf-clones-container');
+    const clone = document.createElement('div');
+    
+    // Forzamos las medidas y el fondo para que el PDF no salga negro ni en blanco
+    clone.style.width = '800px';
+    clone.style.padding = '40px';
+    clone.style.backgroundColor = '#ffffff';
+    clone.style.color = '#000000';
+    clone.style.fontFamily = 'Arial, sans-serif';
 
-    // Rellenar campos
-    clone.querySelector('.pdf-nombre').innerText = data.nombre_alumno || '(Nombre no disponible)';
-    clone.querySelector('.pdf-grupo').innerText = data.grupo || '(Grupo no disponible)';
-    clone.querySelector('.pdf-maestro').innerText = nombreDelProfesor || (data.maestro_nombre || '(Docente no disponible)');
-
-    // Rellenar comentarios
-    const pdfTextoEl = clone.querySelector('.pdf-texto');
+    // Limpiamos los saltos de línea del texto
     const safeTexto = (data.texto || '')
         .replace(/&/g,'&amp;')
         .replace(/</g,'&lt;')
-        .replace(/>/g,'&gt;');
-    pdfTextoEl.innerHTML = safeTexto.replace(/\n/g, '<br/>');
+        .replace(/>/g,'&gt;')
+        .replace(/\n/g, '<br/>');
 
-    // Lo agregamos inmediatamente al DOM (invisible) para que el navegador dimensione el texto
-    const container = document.getElementById('pdf-clones-container');
+    // Estructura simplificada sin logos
+    clone.innerHTML = `
+      <h1 style="color: #004a99; text-align: center; margin-bottom: 10px; font-size: 24px;">Ficha Descriptiva</h1>
+      <hr style="border: 1px solid #004a99; margin-bottom: 20px;">
+      
+      <div style="background-color: #f8fafd; padding: 15px; border: 1px solid #ccc; border-radius: 5px; margin-bottom: 30px;">
+        <p style="margin: 5px 0; font-size: 16px;"><strong>ALUMNO:</strong> ${data.nombre_alumno || 'No disponible'}</p>
+        <p style="margin: 5px 0; font-size: 16px;"><strong>GRUPO:</strong> ${data.grupo || 'No disponible'}</p>
+        <p style="margin: 5px 0; font-size: 16px;"><strong>DOCENTE:</strong> ${nombreDelProfesor || 'No disponible'}</p>
+      </div>
+
+      <div style="font-size: 15px; line-height: 1.6; text-align: justify;">
+        ${safeTexto}
+      </div>
+    `;
+
     container.appendChild(clone);
-    
     return clone;
   }
   
   function removeClone(clone) {
-    try {
-      if (!clone) return;
-      if (clone.parentNode) clone.parentNode.removeChild(clone);
-    } catch (e) {
-      console.warn('removeClone error', e);
-    }
+    if (clone && clone.parentNode) clone.parentNode.removeChild(clone);
   }
 
   async function generarPDFIndividual(data, nombreDelProfesor) {
     try {
       let docData = data;
-      try {
-        if (data && data.id) {
-          const fichaRef = doc(db, "fichas", data.id);
-          const fichaSnap = await getDoc(fichaRef);
-          if (fichaSnap.exists()) docData = fichaSnap.data();
-        }
-      } catch (errFetch) {
-        console.warn('Error obteniendo doc fichas:', errFetch);
+      // Tratar de obtener la ficha más actualizada
+      if (data && data.id) {
+        const fichaRef = doc(db, "fichas", data.id);
+        const fichaSnap = await getDoc(fichaRef);
+        if (fichaSnap.exists()) docData = fichaSnap.data();
       }
 
       Swal.fire({ title: 'Generando PDF', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
+      // Creamos el contenedor simple
       const clone = createPrintableClone(docData, nombreDelProfesor || docData.maestro_nombre);
-      await waitForImagesToLoad(clone, 2000);
       
-      // Aseguramos que el DOM se haya pintado antes de fotografiarlo
-      await new Promise(r => setTimeout(r, 500)); 
+      // Pequeña pausa obligatoria para que el navegador "dibuje" el HTML nuevo
+      await new Promise(r => setTimeout(r, 400)); 
 
       const opciones = {
         margin: 15,
-        filename: `${(docData.nombre_alumno||'ficha').replace(/[\\/:"*?<>|]+/g,'')} ${docData.grupo || ''}.pdf`,
+        filename: `Ficha_${(docData.nombre_alumno||'alumno').replace(/[\\/:"*?<>|]+/g,'')}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
+        html2canvas: { scale: 2 }, // Sin CORS porque ya no hay imágenes
         jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
       };
 
@@ -242,7 +196,7 @@
       Swal.close();
       
     } catch (e) {
-      console.error('Error generando PDF individual:', e);
+      console.error('Error generando PDF:', e);
       Swal.fire('Error', 'Ocurrió un error al generar el PDF. Revisa la consola.', 'error');
     }
   }
@@ -270,12 +224,11 @@
 
         const nombreDelProfesor = data.maestro_nombre || (data.maestro_email ? data.maestro_email.split('@')[0] : 'Docente');
         const row = document.createElement('tr');
-        let fechaFormato = formatoFechaSegura(data.ultima_actualizacion);
-
+        
         row.innerHTML = `
           <td style="font-weight:bold;">${data.nombre_alumno || ''}</td>
           <td style="color:#666;">${nombreDelProfesor}</td>
-          <td>${fechaFormato}</td>
+          <td>${formatoFechaSegura(data.ultima_actualizacion)}</td>
           <td style="text-align: center;">
             <button class="btn-ver-pdf" style="background:#004a99; color:white; border:none; padding:6px 12px; border-radius:5px; cursor:pointer; font-weight:bold; margin:2px;">📄 PDF</button>
             <button class="btn-delete" style="background:#ff4d4d; color:white; border:none; padding:6px 12px; border-radius:5px; cursor:pointer; font-weight:bold; margin:2px;">🗑️</button>
@@ -317,6 +270,7 @@
     }
   });
 
+  // Exportar a ZIP (También ajustado para la nueva versión simplificada)
   document.getElementById('btn-descargar-zip').addEventListener('click', async () => {
     const grupo = document.getElementById('filtroGrupo').value;
     const btnZip = document.getElementById('btn-descargar-zip');
@@ -326,22 +280,21 @@
     Swal.fire({ title: 'Generando Archivos', text: 'Esto puede tardar unos segundos...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
     const zip = new JSZip();
-    const carpeta = zip.folder(`Fichas_PDF_${grupo.replace(/\s+/g, '_')}`);
+    const carpeta = zip.folder(`Fichas_${grupo.replace(/\s+/g, '_')}`);
     const opcionesPDF = {
-      margin: 15, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
+      margin: 15, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
     };
 
     try {
       for (let i = 0; i < fichasActuales.length; i++) {
         const data = fichasActuales[i];
         const nombreDelProfesor = data.maestro_nombre || (data.maestro_email ? data.maestro_email.split('@')[0] : 'Docente');
-        const clone = createPrintableClone(data, nombreDelProfesor);
         
-        await waitForImagesToLoad(clone, 2000);
-        await new Promise(r => setTimeout(r, 200));
+        const clone = createPrintableClone(data, nombreDelProfesor);
+        await new Promise(r => setTimeout(r, 300));
         
         const pdfBlob = await html2pdf().set(opcionesPDF).from(clone).output('blob');
-        carpeta.file(`${(data.nombre_alumno||'alumno')} ${data.grupo||''}.pdf`, pdfBlob);
+        carpeta.file(`${(data.nombre_alumno||'alumno')}.pdf`, pdfBlob);
         
         removeClone(clone);
       }
