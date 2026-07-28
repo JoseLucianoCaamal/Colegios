@@ -373,3 +373,33 @@ nav a:hover { background: #f2f2f2; border-radius: 5px; }
     transform: translateY(-3px) scale(1.02);
     box-shadow: 0 12px 25px rgba(0, 74, 153, 0.6);
 }
+
+/* =========================================
+   ESTILO MOVIDO: BOTÓN LOGIN DE LA NAVEGACIÓN
+   (antes estaba inline en index.html)
+   ========================================= */
+.btn-login-nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #004a99; /* Azul institucional */
+    color: #ffffff !important; /* Forzamos el texto a blanco */
+    padding: 10px 24px;
+    border-radius: 30px; /* Forma redonda tipo píldora */
+    font-weight: bold;
+    font-size: 1rem;
+    text-decoration: none;
+    box-shadow: 0 4px 10px rgba(0, 74, 153, 0.3);
+    transition: all 0.3s ease;
+}
+
+.btn-login-nav:hover {
+    background: #003366; /* Azul más oscuro al pasar el mouse */
+    transform: translateY(-2px); /* Pequeño salto animado */
+    box-shadow: 0 6px 15px rgba(0, 74, 153, 0.4);
+}
+
+.btn-login-nav svg {
+    width: 20px;
+    height: 20px;
+}
