@@ -34,8 +34,10 @@
         .pdf-info-box p { margin: 8px 0; font-size: 14px; font-weight: bold; color:#004a99;}
         .pdf-info-box span { font-weight: normal; color:#333;}
         .pdf-body { line-height: 1.8; font-size: 14px; text-align: justify; white-space: pre-wrap; }
-        /* Evitar que elementos importantes se dividan mal entre páginas */
         .pdf-body, .pdf-info-box { break-inside: avoid; page-break-inside: avoid; -webkit-column-break-inside: avoid; }
+
+        /* contenedor para colocar clones off-screen pero renderizables */
+        #pdf-clones-container { position: fixed; left: 0; top: 0; pointer-events: none; width: 0; height: 0; overflow: hidden; z-index: 9999; }
     </style>
 </head>
 <body>
@@ -94,7 +96,7 @@
     </section>
 </main>
 
-<!-- Template base (oculto en DOM, pero lo clonaremos al generar PDFs) -->
+<!-- Template base (oculto en DOM; clonaremos su contenido) -->
 <div id="plantilla-pdf" style="display:none;">
     <div class="plantilla-pdf-base">
         <div class="pdf-header">
@@ -110,6 +112,9 @@
         <div class="pdf-body pdf-texto"></div>
     </div>
 </div>
+
+<!-- Contenedor para clones renderizables -->
+<div id="pdf-clones-container"></div>
 
 <script type="module">
     import { db, auth } from './js/firebase-config.js';
@@ -130,7 +135,6 @@
         snap.forEach(d => filtroGrupo.innerHTML += `<option value="${d.data().nombre}">${d.data().nombre}</option>`);
     }
 
-    // Helper para convertir fecha de Firestore u otros formatos
     function formatoFechaSegura(fechaValor) {
         if (!fechaValor) return "Reciente";
         try {
@@ -144,6 +148,39 @@
         }
     }
 
+    // Espera a que todas las imágenes dentro de `element` se carguen (o timeout)
+    function waitForImagesToLoad(element, timeout = 3000) {
+        const imgs = Array.from(element.querySelectorAll('img'));
+        if (imgs.length === 0) return Promise.resolve();
+        return new Promise((resolve) => {
+            let loaded = 0;
+            let finished = false;
+            function check() {
+                if (finished) return;
+                loaded++;
+                if (loaded >= imgs.length) {
+                    finished = true;
+                    resolve();
+                }
+            }
+            imgs.forEach(img => {
+                if (img.complete && img.naturalWidth !== 0) {
+                    check();
+                } else {
+                    img.addEventListener('load', check);
+                    img.addEventListener('error', check);
+                }
+            });
+            // timeout fallback
+            setTimeout(() => {
+                if (!finished) {
+                    finished = true;
+                    resolve();
+                }
+            }, timeout);
+        });
+    }
+
     // Crea un clone visible off-screen para que html2pdf lo renderice correctamente
     function createPrintableClone(data, nombreDelProfesor) {
         const plantilla = document.getElementById('plantilla-pdf');
@@ -154,17 +191,20 @@
         clone.querySelector('.pdf-maestro').innerText = nombreDelProfesor || '';
         clone.querySelector('.pdf-texto').innerText = data.texto || '';
 
-        // Mostrar el clone fuera de la pantalla para render correcto
+        // Estilos para que sea renderizable pero no visible al usuario
         clone.style.display = 'block';
-        clone.style.position = 'absolute';
-        clone.style.left = '-9999px';
-        clone.style.top = '0';
+        clone.style.position = 'relative';
+        clone.style.visibility = 'visible';
+        clone.style.margin = '0';
+        clone.style.pointerEvents = 'none';
+        // Insertamos en contenedor especial
+        const container = document.getElementById('pdf-clones-container');
+        // Aseguramos que el clone tenga ancho correcto para el render
         clone.style.width = '800px';
-        document.body.appendChild(clone);
+        container.appendChild(clone);
         return clone;
     }
 
-    // Remueve el clone del DOM
     function removeClone(clone) {
         if (clone && clone.parentNode) clone.parentNode.removeChild(clone);
     }
@@ -191,7 +231,6 @@
                 data.id = docSnap.id; 
                 fichasActuales.push(data); 
 
-                // Si el maestro antiguo no tenía nombre guardado, usamos su correo como respaldo
                 const nombreDelProfesor = data.maestro_nombre || (data.maestro_email ? data.maestro_email.split('@')[0] : 'Docente');
 
                 const row = document.createElement('tr');
@@ -244,26 +283,102 @@
         }
     });
 
+    // --- FUNCION PRINCIPAL: generarPDFIndividual con fallback a canvas/jsPDF ---
     async function generarPDFIndividual(data, nombreDelProfesor) {
         const clone = createPrintableClone(data, nombreDelProfesor);
+
         try {
-            // breve espera para asegurar que imágenes se carguen
-            await new Promise(r => setTimeout(r, 300));
+            // Esperar a imágenes y estilos
+            await waitForImagesToLoad(clone, 2000);
+            await new Promise(r => setTimeout(r, 200));
+
+            // Intento principal con html2pdf
             const opciones = {
                 margin: 15,
-                filename: `${data.nombre_alumno || 'ficha'} ${data.grupo || ''}.pdf`,
+                filename: `${(data.nombre_alumno||'ficha').replace(/[\\/:"*?<>|]+/g,'')} ${data.grupo || ''}.pdf`,
                 image: { type: 'jpeg', quality: 1 },
-                html2canvas: { scale: 2, useCORS: true },
+                html2canvas: { scale: 2, useCORS: true, allowTaint: true },
                 jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
             };
-            await html2pdf().set(opciones).from(clone).save();
+
+            try {
+                await html2pdf().set(opciones).from(clone).save();
+                removeClone(clone);
+                return;
+            } catch (errPdf) {
+                console.warn('html2pdf falló, intentando fallback por canvas:', errPdf);
+            }
+
+            // FALLBACK: renderizar con html2canvas y abrir preview
+            let canvas;
+            try {
+                // html2canvas debería estar disponible por el bundle html2pdf; si no, este bloque fallará y lo verás en consola.
+                canvas = await html2canvas(clone, { scale: 2, useCORS: true, allowTaint: true });
+            } catch (errCanvas) {
+                console.error('html2canvas falló:', errCanvas);
+                throw errCanvas;
+            }
+
+            // Mostrar preview en nueva pestaña para verificar el render
+            try {
+                const dataUrl = canvas.toDataURL('image/jpeg', 1.0);
+                const preview = window.open('', '_blank');
+                if (preview) {
+                    preview.document.title = 'previewCanvas - Ficha';
+                    preview.document.body.style.margin = '0';
+                    const img = preview.document.createElement('img');
+                    img.src = dataUrl;
+                    img.style.maxWidth = '100%';
+                    preview.document.body.appendChild(img);
+                } else {
+                    console.warn('No se pudo abrir ventana de preview (bloqueador?)');
+                }
+            } catch (e) {
+                console.warn('No se pudo abrir la preview del canvas:', e);
+            }
+
+            // Intento convertir el canvas a PDF con jsPDF (si está disponible)
+            try {
+                let jsPDFCtor = null;
+                if (window.jspdf && typeof window.jspdf.jsPDF === 'function') jsPDFCtor = window.jspdf.jsPDF;
+                else if (typeof window.jsPDF === 'function') jsPDFCtor = window.jsPDF;
+                else if (typeof window.jspdf === 'function') jsPDFCtor = window.jspdf;
+                
+                const filename = `${(data.nombre_alumno||'ficha').replace(/[\\/:"*?<>|]+/g,'')} ${data.grupo || ''}.pdf`;
+
+                if (jsPDFCtor) {
+                    const imgData = canvas.toDataURL('image/jpeg', 1.0);
+                    const pdf = new jsPDFCtor('p', 'mm', 'letter');
+                    const pageWidth = pdf.internal.pageSize.getWidth ? pdf.internal.pageSize.getWidth() : pdf.internal.pageSize.width;
+                    const marginMM = 15;
+                    const usableWidth = pageWidth - marginMM*2;
+                    const canvasWidthPx = canvas.width;
+                    const canvasHeightPx = canvas.height;
+                    const pxToMm = usableWidth / canvasWidthPx;
+                    const imgHeightMM = canvasHeightPx * pxToMm;
+                    pdf.addImage(imgData, 'JPEG', marginMM, marginMM, usableWidth, imgHeightMM);
+                    pdf.save(filename);
+                    removeClone(clone);
+                    return;
+                } else {
+                    Swal.fire('Atención', 'Se generó una vista previa del contenido. Si el PDF sigue en blanco, descarga la imagen desde la pestaña abierta y conviértela a PDF localmente.', 'info');
+                    removeClone(clone);
+                    return;
+                }
+            } catch (errJsPdf) {
+                console.error('Error en fallback jsPDF:', errJsPdf);
+                Swal.fire('Error', 'No se pudo generar el PDF desde el canvas. Revisa la consola para detalles.', 'error');
+                removeClone(clone);
+                return;
+            }
+
         } catch (e) {
-            console.error('Error generando PDF:', e);
-            Swal.fire('Error', 'No se pudo generar el PDF.', 'error');
-        } finally {
+            console.error('Error generando PDF individual:', e);
+            Swal.fire('Error', 'Ocurrió un error al generar el PDF. Revisa la consola.', 'error');
             removeClone(clone);
         }
     }
+    // --- FIN generarPDFIndividual ---
 
     document.getElementById('btn-descargar-zip').addEventListener('click', async () => {
         const grupo = document.getElementById('filtroGrupo').value;
@@ -277,7 +392,7 @@
         const carpeta = zip.folder(`Fichas_PDF_${grupo.replace(/\s+/g, '_')}`);
 
         const opcionesPDF = {
-            margin: 15, image: { type: 'jpeg', quality: 1 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
+            margin: 15, image: { type: 'jpeg', quality: 1 }, html2canvas: { scale: 2, useCORS: true, allowTaint: true }, jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
         };
 
         try {
@@ -286,8 +401,8 @@
                 const nombreDelProfesor = data.maestro_nombre || (data.maestro_email ? data.maestro_email.split('@')[0] : 'Docente');
 
                 const clone = createPrintableClone(data, nombreDelProfesor);
-                // esperar para carga de imágenes
-                await new Promise(r => setTimeout(r, 250));
+                await waitForImagesToLoad(clone, 2000);
+                await new Promise(r => setTimeout(r, 150));
 
                 const pdfBlob = await html2pdf().set(opcionesPDF).from(clone).output('blob');
                 carpeta.file(`${(data.nombre_alumno||'alumno')} ${data.grupo||''}.pdf`, pdfBlob);
