@@ -7,10 +7,11 @@
   <link rel="icon" type="image/png" href="Img/logo.png">
   <link rel="stylesheet" href="css/styles.css">
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <style>
     .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
@@ -198,6 +199,15 @@
     container.appendChild(clone);
     return clone;
   }
+  
+  function removeClone(clone) {
+  try {
+    if (!clone) return;
+    if (clone.parentNode) clone.parentNode.removeChild(clone);
+  } catch (e) {
+    console.warn('removeClone error', e);
+  }
+}
 
   async function generarPDFIndividual(data, nombreDelProfesor) {
     try {
