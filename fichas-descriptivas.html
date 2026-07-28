@@ -61,25 +61,23 @@
     import { db, auth } from './js/firebase-config.js';
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { collection, getDocs, doc, setDoc, getDoc, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    // Si quieres usar serverTimestamp en el futuro:
-    // import { serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+    // Declaraciones únicas (NO repetir estas variables en otra parte del archivo)
     const filtroGrupo = document.getElementById('filtroGrupo');
     const filtroAlumno = document.getElementById('filtroAlumno');
     const areaRedaccion = document.getElementById('area-redaccion');
     const textoFicha = document.getElementById('textoFicha');
-    
+
     let maestroActual = null;
     let nombreMaestroReal = "Docente Titular";
     let nombreAlumnoActual = "";
 
     onAuthStateChanged(auth, async (user) => {
         if (!user) window.location.href = "login.html";
-        else { 
-            // Si hay un profesor al que se está supliendo, maestroActual lo recoge
+        else {
             maestroActual = localStorage.getItem('supliendo_a') || user.email;
-            
-            // BUSCAMOS SU NOMBRE REAL PARA FIRMAR EL DOCUMENTO (ahora usamos maestroActual)
+
+            // Usar maestroActual para buscar nombre en usuarios/
             const idDocente = maestroActual.split('@')[0];
             try {
                 const docSnap = await getDoc(doc(db, "usuarios", idDocente));
@@ -87,11 +85,10 @@
                     nombreMaestroReal = docSnap.data().nombre;
                 }
             } catch (e) {
-                // si falla la búsqueda, mantenemos el fallback
-                console.warn('No se pudo obtener nombre docente:', e);
+                console.warn('Error al obtener nombre docente:', e);
             }
 
-            cargarGrupos(); 
+            cargarGrupos();
         }
     });
 
@@ -106,11 +103,11 @@
         filtroAlumno.innerHTML = "<option value=''>Cargando alumnos...</option>";
         areaRedaccion.style.display = 'none';
         if (!grupoSel) { filtroAlumno.disabled = true; return; }
-        
+
         filtroAlumno.disabled = false;
         const qAlumnos = query(collection(db, "alumnos"), where("grupo", "==", grupoSel));
         const snap = await getDocs(qAlumnos);
-        
+
         filtroAlumno.innerHTML = "<option value=''>Selecciona un alumno...</option>";
         snap.forEach((docSnap) => {
             filtroAlumno.innerHTML += `<option value="${docSnap.id}">${docSnap.data().nombre}</option>`;
@@ -120,14 +117,13 @@
     filtroAlumno.addEventListener('change', async () => {
         const idAlumno = filtroAlumno.value;
         if (!idAlumno) { areaRedaccion.style.display = 'none'; return; }
-        
+
         nombreAlumnoActual = filtroAlumno.options[filtroAlumno.selectedIndex].text;
         document.getElementById('nombre-alumno-ui').innerText = nombreAlumnoActual;
         textoFicha.value = "Cargando...";
         areaRedaccion.style.display = 'block';
 
         try {
-            // Cuando usas setDoc(doc(db,"fichas", idAlumno)) podemos leer directamente con getDoc
             const fichaRef = doc(db, "fichas", idAlumno);
             const fichaSnap = await getDoc(fichaRef);
             if (fichaSnap.exists()) {
@@ -136,7 +132,10 @@
             } else {
                 textoFicha.value = "";
             }
-        } catch (e) { textoFicha.value = ""; }
+        } catch (e) {
+            console.warn('Error al leer ficha:', e);
+            textoFicha.value = "";
+        }
     });
 
     document.getElementById('btn-guardar-ficha').addEventListener('click', async () => {
@@ -153,12 +152,11 @@
                 nombre_alumno: nombreAlumnoActual,
                 grupo: filtroGrupo.value,
                 maestro_email: maestroActual,
-                maestro_nombre: nombreMaestroReal, // AQUÍ SE GUARDA SU NOMBRE REAL
+                maestro_nombre: nombreMaestroReal,
                 texto: texto,
-                // Recomendado en el futuro: ultima_actualizacion: serverTimestamp()
                 ultima_actualizacion: new Date()
             });
-            
+
             Swal.fire({
                 icon: 'success',
                 title: '¡Ficha Guardada!',
@@ -169,8 +167,8 @@
             textoFicha.value = "";
             areaRedaccion.style.display = 'none';
             filtroAlumno.value = "";
-        } catch (error) { 
-            console.error(error);
+        } catch (error) {
+            console.error('Error al guardar ficha:', error);
             Swal.fire('Error', 'Hubo un problema al guardar en la base de datos.', 'error');
         }
     });
