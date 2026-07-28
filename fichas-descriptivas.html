@@ -76,8 +76,8 @@
         else { 
             maestroActual = localStorage.getItem('supliendo_a') || user.email;
             
-            // BUSCAMOS SU NOMBRE REAL PARA FIRMAR EL DOCUMENTO
-            const idDocente = user.email.split('@')[0];
+            // BUSCAMOS SU NOMBRE REAL PARA FIRMAR EL DOCUMENTO (usamos el correo que se está supliendo si aplica)
+            const idDocente = maestroActual.split('@')[0];
             const docSnap = await getDoc(doc(db, "usuarios", idDocente));
             if (docSnap.exists() && docSnap.data().nombre) {
                 nombreMaestroReal = docSnap.data().nombre;
