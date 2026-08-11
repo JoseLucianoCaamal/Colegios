@@ -1,0 +1,44 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userProfile() {
+      return firestore.get(/databases/(default)/documents/usuarios/$(request.auth.uid));
+    }
+
+    function activeStaff() {
+      return signedIn()
+        && userProfile().data.activo == true
+        && userProfile().data.rol in ['superadmin', 'directora', 'recepcion', 'maestro'];
+    }
+
+    function management() {
+      return signedIn()
+        && userProfile().data.activo == true
+        && userProfile().data.rol in ['superadmin', 'directora'];
+    }
+
+    match /fotos/{allPaths=**} {
+      allow read: if true;
+      allow create, update: if activeStaff()
+        && request.resource.size < 8 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if management();
+    }
+
+    match /avisos/{allPaths=**} {
+      allow read: if activeStaff();
+      allow create, update: if activeStaff()
+        && request.resource.size < 10 * 1024 * 1024;
+      allow delete: if management();
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -84,12 +84,15 @@
             // Usamos maestroActual que respeta localStorage 'supliendo_a' si aplica
             maestroActual = localStorage.getItem('supliendo_a') || user.email;
             
-            // BUSCAMOS SU NOMBRE REAL PARA FIRMAR EL DOCUMENTO (ahora usamos maestroActual)
-            const idDocente = maestroActual.split('@')[0];
             try {
-                const docSnap = await getDoc(doc(db, "usuarios", idDocente));
-                if (docSnap.exists() && docSnap.data().nombre) {
-                    nombreMaestroReal = docSnap.data().nombre;
+                if (maestroActual === user.email) {
+                    const docSnap = await getDoc(doc(db, "usuarios", user.uid));
+                    if (docSnap.exists() && docSnap.data().nombre) nombreMaestroReal = docSnap.data().nombre;
+                } else {
+                    const perfilSnap = await getDocs(query(collection(db, "usuarios"), where("email", "==", maestroActual)));
+                    if (!perfilSnap.empty && perfilSnap.docs[0].data().nombre) {
+                        nombreMaestroReal = perfilSnap.docs[0].data().nombre;
+                    }
                 }
             } catch (e) {
                 console.warn('No se pudo obtener nombre docente:', e);

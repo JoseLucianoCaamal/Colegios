@@ -69,8 +69,9 @@
 
 <script type="module">
     import { db, auth } from './js/firebase-config.js';
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { requireRoles } from './js/security.js';
+    import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { doc, setDoc, deleteDoc, collection, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     function cargarLista() {
@@ -125,6 +126,7 @@
         });
     }
     
+    await requireRoles(['superadmin']);
     cargarLista();
 
     document.getElementById('btn-registrar').addEventListener('click', async () => {
@@ -144,25 +146,31 @@
             const appSecundaria = initializeApp(auth.app.options, "AppSecundaria");
             const authSecundario = getAuth(appSecundaria);
             
+            let credencialMaestro;
             try {
                 // Intentamos crear la cuenta en Auth
-                await createUserWithEmailAndPassword(authSecundario, emailCompleto, clave);
+                credencialMaestro = await createUserWithEmailAndPassword(authSecundario, emailCompleto, clave);
             } catch (errAuth) {
-                // BYPASS MAGISTRAL: Si ya existe en Auth (porque lo borraste y recreaste), ignoramos el error.
+                // Si la cuenta ya existe, validamos la contraseña para recuperar su UID real.
                 if (errAuth.code === 'auth/email-already-in-use') {
-                    console.log("Restaurando maestro eliminado previamente...");
+                    credencialMaestro = await signInWithEmailAndPassword(authSecundario, emailCompleto, clave);
                 } else {
-                    throw errAuth; // Si es otro error, detenemos.
+                    throw errAuth;
                 }
             }
-            await authSecundario.signOut(); 
-            
-            // Forzamos guardar/restaurar en la base de datos con el formato que escribieron
-            await setDoc(doc(db, "usuarios", usuarioMin), { 
-                email: emailCompleto, 
-                rol: "maestro", 
+            const uidMaestro = credencialMaestro.user.uid;
+            await authSecundario.signOut();
+            await deleteApp(appSecundaria);
+
+            // Los perfiles de seguridad se identifican por el UID de Firebase Authentication.
+            await setDoc(doc(db, "usuarios", uidMaestro), {
+                uid: uidMaestro,
+                email: emailCompleto,
+                rol: "maestro",
                 nombre: nombre,
-                usuario_original: usuarioOriginal 
+                usuario: usuarioOriginal,
+                usuario_original: usuarioOriginal,
+                activo: true
             });
 
             Swal.fire('¡Éxito!', 'Maestro creado y habilitado.', 'success');

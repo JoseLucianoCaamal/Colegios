@@ -130,11 +130,11 @@
     onAuthStateChanged(auth, async (user) => {
         try {
             if (!user || !user.email) return;
-            const idUsuario = user.email.split('@')[0];
-            const docSnap = await getDoc(doc(db, "usuarios", idUsuario));
+            let docSnap = await getDoc(doc(db, "usuarios", user.uid));
+            if (!docSnap.exists()) docSnap = await getDoc(doc(db, "usuarios", user.email.split('@')[0]));
             if (!docSnap.exists()) return;
             const rol = docSnap.data().rol;
-            if (rol === "directora") window.location.href = "dashboard-directora.html";
+            if (rol === "superadmin" || rol === "directora") window.location.href = "dashboard-directora.html";
             else if (rol === "maestro") window.location.href = "dashboard-maestro.html";
             else if (rol === "recepcion") window.location.href = "dashboard-recepcion.html";
         } catch (error) {

@@ -1,0 +1,144 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function profilePath() {
+      return /databases/$(database)/documents/usuarios/$(request.auth.uid);
+    }
+
+    function hasProfile() {
+      return signedIn() && exists(profilePath());
+    }
+
+    function profile() {
+      return get(profilePath()).data;
+    }
+
+    function active() {
+      return hasProfile() && profile().activo == true;
+    }
+
+    function hasRole(roles) {
+      return active() && profile().rol in roles;
+    }
+
+    function isSuperadmin() {
+      return hasRole(['superadmin']);
+    }
+
+    function isManagement() {
+      return hasRole(['superadmin', 'directora']);
+    }
+
+    function isStaff() {
+      return hasRole(['superadmin', 'directora', 'recepcion', 'maestro']);
+    }
+
+    function isTeacher() {
+      return hasRole(['maestro']);
+    }
+
+    function ownsTeacherRecord(data) {
+      return signedIn() && data.maestro_email == request.auth.token.email;
+    }
+
+    // Galería pública. Solo personal activo puede publicar o editar.
+    match /fotos/{fotoId} {
+      allow read: if true;
+      allow create, update: if isStaff();
+      allow delete: if isManagement();
+    }
+
+    // Contenido público del portal: avisos generales, calendario y contacto.
+    match /web_config/{configId} {
+      allow read: if true;
+      allow create, update, delete: if isManagement();
+    }
+
+    // El identificador de cada documento debe ser el UID de Firebase Auth.
+    match /usuarios/{uid} {
+      allow read: if active() && (request.auth.uid == uid || isManagement()
+        || (isTeacher() && resource.data.rol == 'maestro'));
+      allow create, update, delete: if isSuperadmin();
+    }
+
+    match /alumnos/{alumnoId} {
+      allow read: if isStaff();
+      allow create, update: if hasRole(['superadmin', 'directora', 'recepcion']);
+      allow delete: if isManagement();
+    }
+
+    match /grupos/{grupoId} {
+      allow read: if isStaff();
+      allow create, update, delete: if isManagement();
+    }
+
+    match /materias/{materiaId} {
+      allow read: if isStaff();
+      allow create: if isManagement() || (isTeacher() && ownsTeacherRecord(request.resource.data));
+      allow update: if isManagement() || (isTeacher() && ownsTeacherRecord(resource.data) && ownsTeacherRecord(request.resource.data));
+      allow delete: if isManagement() || (isTeacher() && ownsTeacherRecord(resource.data));
+    }
+
+    match /asistencias/{asistenciaId} {
+      allow read: if isStaff();
+      // Transición de suplencias: un maestro activo puede capturar registros.
+      // La bitácora registra al usuario real que ejecuta cada operación.
+      allow create: if isManagement() || isTeacher();
+      allow update: if isManagement() || isTeacher();
+      allow delete: if isManagement();
+    }
+
+    match /calificaciones/{calificacionId} {
+      allow read: if isStaff();
+      allow create: if isManagement() || isTeacher();
+      allow update: if isManagement() || isTeacher();
+      allow delete: if isManagement();
+    }
+
+    match /fichas/{alumnoId} {
+      allow read: if isStaff();
+      allow create: if isManagement() || isTeacher();
+      allow update: if isManagement() || isTeacher();
+      allow delete: if isManagement();
+    }
+
+    // Avisos internos. La lectura por tutor/alumno se restringirá por destinatario
+    // cuando se habiliten sus cuentas; por ahora solo personal activo.
+    match /avisos/{avisoId} {
+      allow read: if isStaff();
+      allow create: if hasRole(['superadmin', 'directora', 'maestro']);
+      allow update, delete: if isManagement() || (isTeacher() && resource.data.creadoPorUid == request.auth.uid);
+
+      match /lecturas/{uid} {
+        allow read: if isManagement() || (signedIn() && request.auth.uid == uid);
+        allow create, update: if signedIn() && request.auth.uid == uid
+          && request.resource.data.uid == request.auth.uid;
+        allow delete: if isManagement();
+      }
+    }
+
+    // Bitácora inmutable para clientes: pueden crear eventos propios, nunca editarlos.
+    match /auditoria/{eventoId} {
+      allow read: if isManagement();
+      allow create: if isStaff()
+        && request.resource.data.usuarioUid == request.auth.uid
+        && request.resource.data.fecha == request.time;
+      allow update, delete: if false;
+    }
+
+    match /configuracion/{configId} {
+      allow read: if isStaff();
+      allow create, update, delete: if isManagement();
+    }
+
+    // Todo lo no declarado queda cerrado.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

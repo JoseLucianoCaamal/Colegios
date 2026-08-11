@@ -114,7 +114,7 @@
         if (!user) { window.location.href = "login.html"; return; }
         
         miEmail = user.email;
-        miId = user.email.split('@')[0];
+        miId = user.uid;
         const docSnap = await getDoc(doc(db, "usuarios", miId));
         const myData = docSnap.data();
         

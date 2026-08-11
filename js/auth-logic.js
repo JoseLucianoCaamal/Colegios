@@ -35,16 +35,22 @@ export const iniciarSesion = async (e) => {
         // 1. Iniciar sesión en el servidor de contraseñas (Auth)
         await signInWithEmailAndPassword(auth, emailParaAuth, password);
 
-        // 2. BUSCADOR INTELIGENTE EN LA BASE DE DATOS
+        // 2. Perfil de seguridad por UID. Se conserva un respaldo temporal para migración.
         let userData = null;
+        const userUid = auth.currentUser.uid;
+        const uidSnapshot = await getDoc(doc(db, "usuarios", userUid));
 
-        // Intento A: Búsqueda rápida por correo en minúsculas
-        const q = query(collection(db, "usuarios"), where("email", "==", emailParaAuth));
-        const querySnapshot = await getDocs(q);
-        
-        if (!querySnapshot.empty) {
-            userData = querySnapshot.docs[0].data();
-        } else {
+        if (uidSnapshot.exists()) {
+            userData = uidSnapshot.data();
+        }
+
+        if (!userData) {
+            const q = query(collection(db, "usuarios"), where("email", "==", emailParaAuth));
+            const querySnapshot = await getDocs(q);
+            if (!querySnapshot.empty) userData = querySnapshot.docs[0].data();
+        }
+
+        if (!userData) {
             // Intento B: Si lo anterior falló por culpa de las mayúsculas (Ej: RecepcionCEAL o id_directora)
             // Hacemos un escaneo profundo de todos los usuarios
             const allUsersSnap = await getDocs(collection(db, "usuarios"));
@@ -57,9 +63,9 @@ export const iniciarSesion = async (e) => {
         }
 
         // 3. Redirección
-        if (userData) {
+        if (userData && userData.activo !== false) {
             Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Acceso concedido', showConfirmButton: false, timer: 850, timerProgressBar: true }).then(() => {
-                if (userData.rol === "directora") window.location.href = "dashboard-directora.html";
+                if (userData.rol === "superadmin" || userData.rol === "directora") window.location.href = "dashboard-directora.html";
                 else if (userData.rol === "maestro") window.location.href = "dashboard-maestro.html";
                 else if (userData.rol === "recepcion") window.location.href = "dashboard-recepcion.html";
                 else { Swal.fire('Error', 'Rol no reconocido.', 'error'); auth.signOut(); }
