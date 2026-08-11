@@ -5,6 +5,7 @@
     <title>Pase de Lista - Amor y Libertad</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/admin-power.css">
+    <link rel="stylesheet" href="css/academic.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         body { background-color: #f4f7fa; font-family: 'Segoe UI', sans-serif;}
@@ -37,7 +38,7 @@
     </style>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body>
+<body class="academic-page">
 
 <header class="profile-header">
     <div class="cover-photo"><img src="Img/logo2.png" alt="Portada"></div>
@@ -88,19 +89,20 @@
         </div>
         <!-- FIN MEMBRETE -->
 
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eef2f7; padding-bottom: 15px; margin-bottom: 15px;" id="tabla-header-ui">
+        <div class="academic-head" id="tabla-header-ui">
             <h3 style="margin: 0; color: #004a99; font-size: 1.4rem;" id="titulo-lista">Alumnos</h3>
-            <span style="background: #e8f5e9; color: #2e7d32; padding: 5px 12px; border-radius: 20px; font-weight: bold;" id="badge-fecha"></span>
+            <span class="academic-date" id="badge-fecha"></span>
         </div>
+        <div class="academic-summary"><div class="summary-chip present"><strong id="total-presentes">0</strong><span>Presentes</span></div><div class="summary-chip late"><strong id="total-retardos">0</strong><span>Retardos</span></div><div class="summary-chip absent"><strong id="total-faltas">0</strong><span>Faltas</span></div></div>
         
-        <table>
+        <table class="academic-table">
             <thead><tr><th>Nombre del Alumno</th><th style="text-align: right; padding-right: 25px;">Asistencia</th></tr></thead>
             <tbody id="tabla-asistencia"></tbody>
         </table>
         
-        <div style="display: flex; gap: 15px; margin-top: 30px;" id="botones-accion">
-            <button id="btn-guardar-asistencia" class="btn-guardar" style="flex: 2;">✅ Confirmar y Guardar</button>
-            <button id="btn-exportar-pdf" class="btn" style="flex: 1; background: #004a99; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer;">📄 Exportar Formato PDF</button>
+        <div class="academic-actions" id="botones-accion">
+            <button id="btn-guardar-asistencia" class="btn btn-save">Confirmar y guardar</button>
+            <button id="btn-exportar-pdf" class="btn btn-export">Exportar reporte PDF</button>
         </div>
     </section>
 </main>
@@ -117,7 +119,15 @@
     
     let maestroActual = null;
     let alumnosActuales = [];
-    let idAsistenciaGuardada = null; 
+    let idAsistenciaGuardada = null;
+
+    function actualizarResumen() {
+        const seleccionados = [...tabla.querySelectorAll('input[type="radio"]:checked')].map(input => input.value);
+        document.getElementById('total-presentes').textContent = seleccionados.filter(valor => valor === 'Presente').length;
+        document.getElementById('total-retardos').textContent = seleccionados.filter(valor => valor === 'Retardo').length;
+        document.getElementById('total-faltas').textContent = seleccionados.filter(valor => valor === 'Falta').length;
+    }
+    tabla.addEventListener('change', actualizarResumen);
 
     onAuthStateChanged(auth, (user) => {
         if (!user) window.location.href = "login.html";
@@ -169,9 +179,9 @@
             if (!historialSnap.empty) {
                 idAsistenciaGuardada = historialSnap.docs[0].id;
                 historialAsistencia = historialSnap.docs[0].data().detalles;
-                document.getElementById('btn-guardar-asistencia').innerText = "🔄 Actualizar Asistencia";
+                document.getElementById('btn-guardar-asistencia').innerText = "Actualizar asistencia";
             } else {
-                document.getElementById('btn-guardar-asistencia').innerText = "✅ Confirmar y Guardar";
+                document.getElementById('btn-guardar-asistencia').innerText = "Confirmar y guardar";
             }
 
             const qAlumnos = query(collection(db, "alumnos"), where("grupo", "==", grupo));
@@ -198,6 +208,7 @@
                 `;
             });
             if(contador === 0) tabla.innerHTML = "<tr><td colspan='2'>No hay alumnos en este grupo.</td></tr>";
+            actualizarResumen();
         } catch (error) { console.error(error); }
     });
 

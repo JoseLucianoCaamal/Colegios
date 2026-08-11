@@ -7,6 +7,7 @@
   <link rel="icon" type="image/png" href="Img/logo.png">
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/admin-power.css">
+    <link rel="stylesheet" href="css/academic.css">
 
   <!-- Librerías estrictamente necesarias -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -128,33 +129,26 @@
     const clone = document.createElement('div');
     
     // Forzamos las medidas y el fondo para que el PDF no salga negro ni en blanco
-    clone.style.width = '800px';
-    clone.style.padding = '40px';
-    clone.style.backgroundColor = '#ffffff';
-    clone.style.color = '#000000';
-    clone.style.fontFamily = 'Arial, sans-serif';
+    clone.className = 'pdf-document';
 
     // Limpiamos los saltos de línea del texto
-    const safeTexto = (data.texto || '')
-        .replace(/&/g,'&amp;')
-        .replace(/</g,'&lt;')
-        .replace(/>/g,'&gt;')
-        .replace(/\n/g, '<br/>');
+    const escapar = valor => String(valor || 'No disponible').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const safeTexto = escapar(data.texto || 'Sin observaciones registradas.').replace(/\n/g, '<br>');
+    const nombreAlumno = escapar(data.nombre_alumno);
+    const grupo = escapar(data.grupo);
+    const docente = escapar(nombreDelProfesor || data.maestro_nombre);
+    const periodo = escapar(data.periodo || 'Seguimiento general');
+    const fecha = formatoFechaSegura(data.ultima_actualizacion);
 
     // Estructura simplificada sin logos
     clone.innerHTML = `
-      <h1 style="color: #004a99; text-align: center; margin-bottom: 10px; font-size: 24px;">Ficha Descriptiva</h1>
-      <hr style="border: 1px solid #004a99; margin-bottom: 20px;">
-      
-      <div style="background-color: #f8fafd; padding: 15px; border: 1px solid #ccc; border-radius: 5px; margin-bottom: 30px;">
-        <p style="margin: 5px 0; font-size: 16px;"><strong>ALUMNO:</strong> ${data.nombre_alumno || 'No disponible'}</p>
-        <p style="margin: 5px 0; font-size: 16px;"><strong>GRUPO:</strong> ${data.grupo || 'No disponible'}</p>
-        <p style="margin: 5px 0; font-size: 16px;"><strong>DOCENTE:</strong> ${nombreDelProfesor || 'No disponible'}</p>
-      </div>
-
-      <div style="font-size: 15px; line-height: 1.6; text-align: justify;">
-        ${safeTexto}
-      </div>
+      <div class="pdf-accent"></div>
+      <header class="pdf-brand"><img src="Img/logo.png" alt=""><div><h1>Centro Educativo Amor y Libertad</h1><p>La verdad nos hará libres · Mérida, Yucatán</p></div><div class="pdf-doc-label">DOCUMENTO ESCOLAR</div></header>
+      <div class="pdf-title"><h2>Ficha descriptiva del estudiante</h2><p>Informe de seguimiento académico y formativo</p></div>
+      <section class="pdf-data-grid"><div class="pdf-data-item wide"><span>Nombre del estudiante</span><strong>${nombreAlumno}</strong></div><div class="pdf-data-item"><span>Grupo</span><strong>${grupo}</strong></div><div class="pdf-data-item"><span>Periodo</span><strong>${periodo}</strong></div><div class="pdf-data-item"><span>Docente responsable</span><strong>${docente}</strong></div><div class="pdf-data-item"><span>Última actualización</span><strong>${fecha}</strong></div></section>
+      <section class="pdf-section"><div class="pdf-section-title">Observaciones y seguimiento</div><div class="pdf-observation">${safeTexto}</div></section>
+      <section class="pdf-signatures"><div class="pdf-signature"><strong>${docente}</strong><span>Firma del docente responsable</span></div><div class="pdf-signature"><strong>Nombre y firma</strong><span>Madre, padre o tutor</span></div></section>
+      <footer class="pdf-footer"><span><strong>Amor y Libertad</strong> · Formación integral con valores</span><span>Documento generado por el sistema escolar</span></footer>
     `;
 
     container.appendChild(clone);
@@ -187,7 +181,7 @@
         margin: 15,
         filename: `Ficha_${(docData.nombre_alumno||'alumno').replace(/[\\/:"*?<>|]+/g,'')}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 }, // Sin CORS porque ya no hay imágenes
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
         jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
       };
 
@@ -283,7 +277,7 @@
     const zip = new JSZip();
     const carpeta = zip.folder(`Fichas_${grupo.replace(/\s+/g, '_')}`);
     const opcionesPDF = {
-      margin: 15, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
+      margin: 10, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' }, jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
     };
 
     try {

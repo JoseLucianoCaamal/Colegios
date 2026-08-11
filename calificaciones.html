@@ -5,6 +5,7 @@
     <title>Calificaciones - Amor y Libertad</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/admin-power.css">
+    <link rel="stylesheet" href="css/academic.css">
     <!-- SWEETALERT2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -21,7 +22,7 @@
         .btn-back-clean { display: inline-flex; align-items: center; gap: 5px; color: #666; text-decoration: none; font-weight: bold; margin-bottom: 15px; }
     </style>
 </head>
-<body>
+<body class="academic-page">
 
 <header class="profile-header">
     <div class="cover-photo"><img src="Img/logo2.png" alt="Portada"></div>
@@ -60,8 +61,8 @@
     </section>
 
     <section class="card" id="seccion-lista" style="display: none;">
-        <h3 style="margin-top: 0; color: #4CAF50;" id="titulo-lista">Alumnos a Evaluar</h3>
-        <table>
+        <div class="grade-panel-title"><h3 id="titulo-lista">Alumnos a evaluar</h3><span class="grade-average" id="promedio-grupo">Promedio: —</span></div>
+        <table class="academic-table">
             <thead><tr><th>Nombre del Alumno</th><th>Calificación / Observación</th></tr></thead>
             <tbody id="tabla-calificaciones"></tbody>
         </table>
@@ -79,6 +80,12 @@
     const tabla = document.getElementById('tabla-calificaciones');
     let maestroActual = null;
     let alumnosActuales = [];
+
+    function actualizarPromedio() {
+        const notas = [...tabla.querySelectorAll('.input-calificacion')].map(campo => Number(campo.value)).filter(valor => Number.isFinite(valor) && valor >= 0 && valor <= 10);
+        document.getElementById('promedio-grupo').textContent = notas.length ? `Promedio: ${(notas.reduce((total, valor) => total + valor, 0) / notas.length).toFixed(1)}` : 'Promedio: —';
+    }
+    tabla.addEventListener('input', actualizarPromedio);
 
     onAuthStateChanged(auth, (user) => {
         if (!user) window.location.href = "login.html";
@@ -138,11 +145,12 @@
                 tabla.innerHTML += `
                     <tr>
                         <td style="font-weight:bold; font-size:1.05rem;">${data.nombre}</td>
-                        <td><input type="text" class="input-calificacion" id="calif_${idAlumno}" value="${notaPrevia}" placeholder="Ej: 10, B, Excelente..."></td>
+                        <td><input type="number" min="0" max="10" step="0.1" inputmode="decimal" class="input-calificacion" id="calif_${idAlumno}" value="${notaPrevia}" placeholder="0 - 10"><span class="grade-help">Escala numérica de 0 a 10</span></td>
                     </tr>
                 `;
             });
             if(cont === 0) tabla.innerHTML = "<tr><td colspan='2'>No hay alumnos en este grupo.</td></tr>";
+            actualizarPromedio();
         } catch (e) { console.error(e); }
     });
 
@@ -152,7 +160,15 @@
         const idDocumento = `${grupo}_${materia}_${periodo}`.replace(/\s+/g, '');
         
         let notas = {};
-        alumnosActuales.forEach(id => { notas[id] = document.getElementById(`calif_${id}`).value; });
+        for (const id of alumnosActuales) {
+            const campo = document.getElementById(`calif_${id}`);
+            const valor = Number(campo.value);
+            if (campo.value === '' || !Number.isFinite(valor) || valor < 0 || valor > 10) {
+                campo.focus();
+                return Swal.fire('Calificación inválida', 'Todas las calificaciones deben ser números entre 0 y 10.', 'warning');
+            }
+            notas[id] = valor;
+        }
 
         try {
             await setDoc(doc(db, "calificaciones", idDocumento), { 

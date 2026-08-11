@@ -7,6 +7,7 @@
     <link rel="icon" type="image/png" href="Img/logo.png">
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/admin-power.css">
+    <link rel="stylesheet" href="css/academic.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         .container { max-width: 900px; margin: 30px auto; padding: 0 20px; }
@@ -19,7 +20,7 @@
         .btn-back-clean { display: inline-flex; align-items: center; gap: 5px; color: #666; text-decoration: none; font-weight: bold; margin-bottom: 15px; }
     </style>
 </head>
-<body>
+<body class="academic-page">
 
 <header class="profile-header">
     <div class="cover-photo"><img src="Img/logo2.png" alt="Portada"></div>
@@ -34,7 +35,7 @@
 
 <main class="container">
     <section class="card">
-        <div class="filters-grid">
+        <div class="filters-grid period-row">
             <div>
                 <label>Selecciona el Grupo</label>
                 <select id="filtroGrupo" class="input-control"><option value="">Cargando...</option></select>
@@ -43,17 +44,16 @@
                 <label>Selecciona al Alumno</label>
                 <select id="filtroAlumno" class="input-control" disabled><option value="">Primero elige un grupo...</option></select>
             </div>
+            <div style="grid-column:auto;"><label>Periodo de seguimiento</label><select id="periodoFicha" class="input-control"><option>Trimestre 1</option><option>Trimestre 2</option><option>Trimestre 3</option><option>Seguimiento final</option></select></div>
         </div>
     </section>
 
     <section class="card" id="area-redaccion" style="display: none;">
-        <h3 style="color:#FF9800; margin-top:0;">Ficha de: <span id="nombre-alumno-ui" style="color:#333;"></span></h3>
-        <p style="color:#666; font-size:0.9rem; margin-bottom:15px;">Escribe el resumen de desempeño, habilidades y observaciones del estudiante.</p>
+        <div class="student-heading"><span class="student-avatar" id="inicial-alumno">A</span><div><h3 id="nombre-alumno-ui"></h3><p>Seguimiento descriptivo del estudiante</p></div></div>
+        <div class="editor-layout"><div class="editor-main"><textarea id="textoFicha" class="input-control" maxlength="4000" placeholder="Describe avances académicos, habilidades, convivencia, áreas de oportunidad y recomendaciones..."></textarea><div class="editor-meta"><span>Redacción clara, objetiva y respetuosa</span><strong id="contador-caracteres">0 / 4000</strong></div></div><aside class="editor-aside"><h4>Guía de redacción</h4><ul><li>Avances académicos</li><li>Habilidades destacadas</li><li>Participación y convivencia</li><li>Áreas de oportunidad</li><li>Recomendaciones de seguimiento</li></ul></aside></div>
         
-        <textarea id="textoFicha" class="input-control" placeholder="El alumno ha demostrado gran avance en..."></textarea>
-        
-        <button id="btn-guardar-ficha" class="btn" style="width:100%; margin-top:15px; padding:15px; border-radius:8px; background:#004a99; color:white; font-weight:bold; font-size:1.1rem; border:none; cursor:pointer;">
-            💾 Guardar Ficha Descriptiva
+        <button id="btn-guardar-ficha" class="btn" style="width:100%; margin-top:18px;">
+            Guardar ficha descriptiva
         </button>
     </section>
 </main>
@@ -73,6 +73,10 @@
     let maestroActual = null;
     let nombreMaestroReal = "Docente Titular";
     let nombreAlumnoActual = "";
+
+    textoFicha.addEventListener('input', () => {
+        document.getElementById('contador-caracteres').textContent = `${textoFicha.value.length} / 4000`;
+    });
 
     onAuthStateChanged(auth, async (user) => {
         if (!user) window.location.href = "login.html";
@@ -123,6 +127,7 @@
         
         nombreAlumnoActual = filtroAlumno.options[filtroAlumno.selectedIndex].text;
         document.getElementById('nombre-alumno-ui').innerText = nombreAlumnoActual;
+        document.getElementById('inicial-alumno').innerText = nombreAlumnoActual.charAt(0).toUpperCase();
         textoFicha.value = "Cargando...";
         areaRedaccion.style.display = 'block';
 
@@ -132,10 +137,12 @@
             if (fichaSnap.exists()) {
                 const data = fichaSnap.data();
                 textoFicha.value = data.texto || "";
+                if (data.periodo) document.getElementById('periodoFicha').value = data.periodo;
             } else {
                 textoFicha.value = "";
             }
         } catch (e) { textoFicha.value = ""; }
+        textoFicha.dispatchEvent(new Event('input'));
     });
 
     document.getElementById('btn-guardar-ficha').addEventListener('click', async () => {
@@ -152,7 +159,8 @@
                 nombre_alumno: nombreAlumnoActual,
                 grupo: filtroGrupo.value,
                 maestro_email: maestroActual,
-                maestro_nombre: nombreMaestroReal, // AQUÍ SE GUARDA SU NOMBRE REAL
+                maestro_nombre: nombreMaestroReal,
+                periodo: document.getElementById('periodoFicha').value,
                 texto: texto,
                 ultima_actualizacion: new Date()
             });
