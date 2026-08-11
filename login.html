@@ -76,7 +76,8 @@
         if (!docSnap.exists()) docSnap = await getDoc(doc(db, "usuarios", user.email.split('@')[0]));
         if (!docSnap.exists()) return;
         const rol = docSnap.data().rol;
-        if (rol === "superadmin" || rol === "directora") window.location.href = "dashboard-directora.html";
+        if (rol === "superadmin") window.location.href = "dashboard-superadmin.html";
+        else if (rol === "directora") window.location.href = "dashboard-directora.html";
         else if (rol === "maestro") window.location.href = "dashboard-maestro.html";
         else if (rol === "recepcion") window.location.href = "dashboard-recepcion.html";
     });

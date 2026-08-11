@@ -64,10 +64,16 @@ export const iniciarSesion = async (e) => {
 
         // 3. Redirección
         if (userData && userData.activo !== false) {
-            const rolNormalizado = String(userData.rol || '').trim().toLowerCase()
+            let rolNormalizado = String(userData.rol || '').trim().toLowerCase()
                 .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            // Compatibilidad temporal durante la migración de documentos antiguos.
+            if (!['superadmin', 'directora', 'maestro', 'recepcion'].includes(rolNormalizado)) {
+                if (emailParaAuth === 'recepcionceal@amorylibertad.org') rolNormalizado = 'recepcion';
+                else if (emailParaAuth === 'directora@amorylibertad.org') rolNormalizado = 'directora';
+            }
             Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Acceso concedido', showConfirmButton: false, timer: 850, timerProgressBar: true }).then(() => {
-                if (rolNormalizado === "superadmin" || rolNormalizado === "directora") window.location.href = "dashboard-directora.html";
+                if (rolNormalizado === "superadmin") window.location.href = "dashboard-superadmin.html";
+                else if (rolNormalizado === "directora") window.location.href = "dashboard-directora.html";
                 else if (rolNormalizado === "maestro") window.location.href = "dashboard-maestro.html";
                 else if (rolNormalizado === "recepcion") window.location.href = "dashboard-recepcion.html";
                 else { Swal.fire('Error', 'Rol no reconocido.', 'error'); auth.signOut(); }

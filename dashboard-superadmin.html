@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Administración del sistema - Amor y Libertad</title>
+  <link rel="icon" href="Img/logo.png">
+  <link rel="stylesheet" href="css/superadmin.css">
+</head>
+<body class="sa-page">
+<div class="sa-shell">
+  <aside class="sa-sidebar">
+    <div class="sa-brand"><img src="Img/logo.png" alt=""><div><strong>Amor y Libertad</strong><span>Administración del sistema</span></div></div>
+    <nav class="sa-nav">
+      <div class="sa-nav-label">Sistema</div>
+      <a class="active" href="dashboard-superadmin.html">Resumen técnico</a>
+      <a href="gestionar-maestros.html">Usuarios y accesos</a>
+      <a href="mantenimiento.html">Mantenimiento</a>
+      <div class="sa-nav-label">Administración</div>
+      <a href="dashboard-directora.html">Panel académico</a>
+      <a href="gestionar-grupos.html">Grupos escolares</a>
+      <a href="index.html">Portal público</a>
+    </nav>
+    <div class="sa-sidebar-footer"><button class="sa-logout" id="cerrar-sesion">Cerrar sesión</button></div>
+  </aside>
+  <main class="sa-main">
+    <header class="sa-topbar"><span class="sa-breadcrumb">Sistema / Resumen técnico</span><div class="sa-user"><span class="sa-user-avatar">SA</span><div><strong id="nombre-usuario">Superadministrador</strong><span>Control técnico y seguridad</span></div></div></header>
+    <section class="sa-content">
+      <div class="sa-heading"><div><h1>Estado general del sistema</h1><p>Control de accesos, información académica y mantenimiento de la plataforma.</p></div><span class="sa-status">Firebase conectado</span></div>
+      <div class="sa-metrics">
+        <article class="sa-metric"><span>Usuarios activos</span><strong id="m-usuarios">—</strong><small>Perfiles habilitados</small></article>
+        <article class="sa-metric"><span>Estudiantes</span><strong id="m-alumnos">—</strong><small>Matrícula registrada</small></article>
+        <article class="sa-metric"><span>Grupos</span><strong id="m-grupos">—</strong><small>Grupos configurados</small></article>
+        <article class="sa-metric"><span>Registros de asistencia</span><strong id="m-asistencias">—</strong><small>Historial disponible</small></article>
+      </div>
+      <div class="sa-grid">
+        <section class="sa-panel"><div class="sa-panel-head"><h2>Herramientas administrativas</h2><span>Acceso exclusivo</span></div><div class="sa-tools">
+          <a class="sa-tool" href="gestionar-maestros.html"><strong>Usuarios y docentes</strong><span>Crear cuentas, revisar perfiles UID y suspender accesos.</span></a>
+          <a class="sa-tool" href="mantenimiento.html"><strong>Mantenimiento de datos</strong><span>Operaciones delicadas, limpieza e integridad de registros.</span></a>
+          <a class="sa-tool" href="dashboard-directora.html"><strong>Administración académica</strong><span>Entrar al panel operativo de dirección.</span></a>
+          <a class="sa-tool" href="SEGURIDAD_FIREBASE.md"><strong>Guía de seguridad</strong><span>Migración, reglas, App Check y proceso de publicación.</span></a>
+        </div></section>
+        <aside class="sa-panel"><div class="sa-panel-head"><h2>Controles de seguridad</h2><span>Primera fase</span></div><div class="sa-security-list">
+          <div class="sa-security-item"><span>Perfil superadmin por UID</span><strong>ACTIVO</strong></div>
+          <div class="sa-security-item"><span>Usuarios migrados por UID</span><strong>ACTIVO</strong></div>
+          <div class="sa-security-item pending"><span>Reglas estrictas publicadas</span><strong>PENDIENTE</strong></div>
+          <div class="sa-security-item pending"><span>App Check</span><strong>PENDIENTE</strong></div>
+          <div class="sa-security-item pending"><span>Auditoría automática</span><strong>PENDIENTE</strong></div>
+        </div><div class="sa-note">No publiques las reglas nuevas hasta terminar las pruebas de todos los roles.</div></aside>
+      </div>
+    </section>
+  </main>
+</div>
+<script type="module">
+  import { auth, db } from './js/firebase-config.js';
+  import { requireRoles } from './js/security.js';
+  import { signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+  import { collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+  const { profile } = await requireRoles(['superadmin']);
+  document.getElementById('nombre-usuario').textContent = profile.nombre || 'Superadministrador';
+
+  async function contar(coleccion, elemento, filtro = null) {
+    try {
+      const snapshot = await getDocs(collection(db, coleccion));
+      const cantidad = filtro ? snapshot.docs.filter(doc => filtro(doc.data())).length : snapshot.size;
+      document.getElementById(elemento).textContent = cantidad;
+    } catch (error) {
+      document.getElementById(elemento).textContent = '—';
+      console.error(`No se pudo contar ${coleccion}`, error);
+    }
+  }
+
+  await Promise.all([
+    contar('usuarios', 'm-usuarios', data => data.activo === true),
+    contar('alumnos', 'm-alumnos'),
+    contar('grupos', 'm-grupos'),
+    contar('asistencias', 'm-asistencias')
+  ]);
+
+  document.getElementById('cerrar-sesion').addEventListener('click', async () => {
+    await signOut(auth);
+    localStorage.removeItem('supliendo_a');
+    localStorage.removeItem('supliendo_nombre');
+    window.location.replace('index.html');
+  });
+</script>
+</body>
+</html>
