@@ -34,4 +34,4 @@ body.login-page { min-height:100vh; margin:0; color:var(--text); background:#f4f
 .login-help { margin:28px 0 0; padding-top:21px; border-top:1px solid #edf1f5; color:#7a8999; font-size:.7rem; line-height:1.5; text-align:center; }
 @media(max-width:850px){.login-layout{grid-template-columns:1fr}.login-showcase{display:none}.login-side{min-height:100vh;padding:24px}.login-card-logo{display:block}.login-card-modern{text-align:left}}
 @media(max-width:480px){.login-side{padding:15px}.login-card-modern{padding:31px 23px;border-radius:18px}.login-card-modern h2,.login-intro{text-align:center}}
-
+.swal2-popup{width:min(380px,calc(100vw - 28px))!important;padding:25px!important;border-radius:18px!important;font-family:"Segoe UI",Arial,sans-serif!important;box-shadow:0 28px 80px rgba(0,24,45,.28)!important}.swal2-title{padding:0!important;color:var(--navy)!important;font-size:1.22rem!important}.swal2-html-container{color:var(--muted)!important;font-size:.82rem!important}.swal2-icon{width:62px!important;height:62px!important;margin:3px auto 19px!important}.swal2-loader{width:34px!important;height:34px!important;border-width:3px!important}

@@ -23,7 +23,8 @@ export const iniciarSesion = async (e) => {
     emailParaAuth = emailParaAuth.toLowerCase();
 
     Swal.fire({
-        title: 'Verificando datos...',
+        title: 'Verificando acceso',
+        text: 'Estamos validando tus credenciales.',
         allowOutsideClick: false,
         didOpen: () => { Swal.showLoading(); }
     });
@@ -57,7 +58,7 @@ export const iniciarSesion = async (e) => {
 
         // 3. Redirección
         if (userData) {
-            Swal.fire({ icon: 'success', title: '¡Acceso Concedido!', showConfirmButton: false, timer: 1200 }).then(() => {
+            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Acceso concedido', showConfirmButton: false, timer: 850, timerProgressBar: true }).then(() => {
                 if (userData.rol === "directora") window.location.href = "dashboard-directora.html";
                 else if (userData.rol === "maestro") window.location.href = "dashboard-maestro.html";
                 else if (userData.rol === "recepcion") window.location.href = "dashboard-recepcion.html";

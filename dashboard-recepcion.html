@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel de Recepción - Amor y Libertad</title>
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/admin-power.css">
     <style>
         .grid-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; max-width: 900px; margin: 40px auto; padding: 0 20px; }
         .option-card { background: white; padding: 40px 20px; border-radius: 15px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: transform 0.3s; border: 1px solid #eef2f7;}
@@ -14,7 +15,7 @@
         .btn-logout { background: #ff4d4d; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
-<body>
+<body class="admin-powered">
 
 <header class="profile-header">
     <div class="cover-photo"><img src="Img/logo2.png" alt="Portada"></div>
@@ -39,14 +40,14 @@
 
     <div class="grid-options">
         <div class="option-card">
-            <span class="option-icon">📝</span>
+            <span class="option-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4zM8 8h8M8 12h8M8 16h5"/></svg></span>
             <h3>Registro de Alumnos</h3>
             <p style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">Da de alta, edita, promueve y asigna grupos.</p>
             <a href="registro-alumnos.html" class="btn" style="background:#8e44ad; color:white; padding:10px 20px; border-radius:8px; text-decoration:none; font-weight:bold;">ENTRAR AL REGISTRO</a>
         </div>
 
         <div class="option-card">
-            <span class="option-icon">🔒</span>
+            <span class="option-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span>
             <h3>Mi Seguridad</h3>
             <p style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">Cambia tu contraseña de acceso.</p>
             <a href="cambiar-password.html" class="btn btn-primary">CAMBIAR CLAVE</a>

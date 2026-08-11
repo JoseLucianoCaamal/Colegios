@@ -6,6 +6,8 @@
     <title>Gestionar Maestros - Amor y Libertad</title>
     <link rel="icon" type="image/png" href="Img/logo.png">
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/admin-power.css">
+    <link rel="stylesheet" href="css/manage.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         .grid-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; max-width: 1000px; margin: 20px auto; padding: 0 20px; }
@@ -20,7 +22,7 @@
         .btn-delete:hover { background: #c62828; }
     </style>
 </head>
-<body>
+<body class="admin-powered">
 
 <header class="profile-header">
     <div class="cover-photo"><img src="Img/logo2.png" alt="Portada"></div>
@@ -35,7 +37,7 @@
 
 <main class="grid-layout">
     <section class="card">
-        <h3 style="margin-top:0; color:#004a99;">✨ Nuevo Maestro</h3>
+        <h3 style="margin-top:0; color:#073763;">Nuevo maestro</h3>
         <label>Nombre Completo del Docente</label>
         <input type="text" id="nombreMaestro" class="input-control" placeholder="Ej: Mtra. Sofía Martínez">
         <label>Nombre de Usuario</label>
@@ -46,7 +48,7 @@
     </section>
 
     <section class="card">
-        <h3 style="margin-top:0; color:#004a99;">📋 Maestros Registrados</h3>
+        <h3 style="margin-top:0; color:#073763;">Maestros registrados</h3>
         <p style="color:#c62828; font-size:0.85rem; font-weight:bold;">Borrar un maestro revocará su acceso al sistema inmediatamente.</p>
         <div style="overflow-x: auto;">
             <table>
@@ -93,7 +95,7 @@
                     <td style="font-weight:bold;">${data.nombre}</td>
                     <td style="color:#004a99; font-weight:bold;">${usuarioVisible}</td>
                     <td style="text-align: center;">
-                        <button class="btn-delete">🗑️ Eliminar</button>
+                        <button class="btn-delete">Eliminar acceso</button>
                     </td>
                 `;
 

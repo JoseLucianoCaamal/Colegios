@@ -6,6 +6,7 @@
     <title>Panel de Maestros - Amor y Libertad</title>
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/admin-power.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         .grid-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; max-width: 900px; margin: 40px auto; padding: 0 20px; }
@@ -34,10 +35,10 @@
         input:checked + .slider:before { transform: translateX(26px); }
     </style>
 </head>
-<body>
+<body class="admin-powered">
 
 <div id="banner-suplencia" class="banner-suplencia">
-    🚨 ESTÁS EN MODO SUPLENTE ACTUANDO COMO: <span id="nombre-suplido"></span> 
+    Modo suplente activo · Estás trabajando como: <span id="nombre-suplido"></span>
     <button id="btn-salir-suplencia" style="margin-left:15px; padding:5px 15px; border-radius:20px; border:none; background:#333; color:white; cursor:pointer; font-weight:bold;">Salir del Modo</button>
 </div>
 
@@ -75,29 +76,29 @@
     <div id="vista-normal" class="grid-options" style="display: none;">
         
         <div class="option-card" id="card-suplencia-disponible" style="display:none; background:#fff8e1; border-color:#FF9800;">
-            <span class="option-icon">🤝</span><h3 style="color:#f57f17;">Clases Extra</h3>
+            <span class="option-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 12h8M12 8v8"/><circle cx="12" cy="12" r="9"/></svg></span><h3 style="color:#9b6200;">Clases extra</h3>
             <p style="color: #666; font-size: 0.8rem; margin-bottom: 15px;">Entrar al aula de <b id="text-suplir-a"></b></p>
             <button id="btn-entrar-suplencia" class="btn btn-primary" style="background:#FF9800; border:none; color:#333; cursor:pointer; width:100%;">ENTRAR AL AULA</button>
         </div>
 
-        <div class="option-card"><span class="option-icon">🧒</span><h3>Directorio</h3><a href="ver-alumnos.html" class="btn btn-primary">ENTRAR</a></div>
-        <div class="option-card"><span class="option-icon">📁</span><h3>Documentos</h3><a href="documentos-maestro.html" class="btn btn-primary" style="background:#004a99; border:none;">ABRIR CARPETA</a></div>
-        <div class="option-card"><span class="option-icon">📚</span><h3>Mis Materias</h3><a href="materias.html" class="btn btn-primary">ENTRAR</a></div>
-        <div class="option-card"><span class="option-icon">📸</span><h3>Subir Fotos</h3><a href="fotos.html" class="btn btn-primary">ENTRAR</a></div>
+        <div class="option-card"><span class="option-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a6 6 0 0 1 12 0v2M17 8h5M17 12h5"/></svg></span><h3>Directorio de alumnos</h3><p>Consulta la información de tus estudiantes.</p><a href="ver-alumnos.html" class="btn btn-primary">Abrir directorio</a></div>
+        <div class="option-card"><span class="option-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h6l2 2h8v14H4z"/></svg></span><h3>Documentos</h3><p>Accede a formatos y archivos escolares.</p><a href="documentos-maestro.html" class="btn btn-primary">Abrir carpeta</a></div>
+        <div class="option-card"><span class="option-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h7v14H4zM13 5h7v14h-7z"/></svg></span><h3>Mis materias</h3><p>Gestiona asignaturas, asistencia y evaluaciones.</p><a href="materias.html" class="btn btn-primary">Ver materias</a></div>
+        <div class="option-card"><span class="option-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="15" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 15-5-5L5 20"/></svg></span><h3>Galería escolar</h3><p>Publica evidencias y actividades del grupo.</p><a href="fotos.html" class="btn btn-primary">Administrar fotos</a></div>
         
         <div class="option-card">
-            <span class="option-icon">🔀</span><h3>Prestar Aula</h3>
+            <span class="option-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 7h11l-3-3M17 17H6l3 3"/></svg></span><h3>Prestar aula</h3>
             <p style="color: #666; font-size: 0.8rem; margin-bottom: 15px;">Dar acceso temporal a un suplente.</p>
             <button id="btn-prestar-aula" class="btn btn-primary" style="background:#607d8b; border:none; cursor:pointer; width:100%;">ASIGNAR SUPLENTE</button>
         </div>
 
         <div class="option-card">
-            <span class="option-icon">🧹</span><h3 style="color:#e65100;">Mantenimiento</h3>
+            <span class="option-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.7 2.5 17.2A2 2 0 0 0 4.2 20h15.6a2 2 0 0 0 1.7-2.8L13.7 3.7a2 2 0 0 0-3.4 0Z"/></svg></span><h3 style="color:#a64e00;">Mantenimiento</h3>
             <p style="color: #666; font-size: 0.8rem; margin-bottom: 15px;">Borrar historiales antiguos de pase de lista.</p>
             <a href="limpiar-asistencia.html" class="btn btn-primary" style="background:#e65100; border:none;">LIMPIAR LISTAS</a>
         </div>
 
-        <div class="option-card"><span class="option-icon">🔒</span><h3>Seguridad</h3><a href="cambiar-password.html" class="btn btn-primary">CAMBIAR CLAVE</a></div>
+        <div class="option-card"><span class="option-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><h3>Seguridad</h3><p>Actualiza la contraseña de tu cuenta.</p><a href="cambiar-password.html" class="btn btn-primary">Cambiar contraseña</a></div>
     </div>
 </main>
 
