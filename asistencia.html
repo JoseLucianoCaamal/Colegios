@@ -236,32 +236,42 @@
     });
 
     // MAGIA DEL PDF PROFESIONAL
-    document.getElementById('btn-exportar-pdf').addEventListener('click', () => {
-        const headerPDF = document.getElementById('pdf-header');
-        const headerUI = document.getElementById('tabla-header-ui');
-        const botones = document.getElementById('botones-accion');
-        
-        // Llenamos el subtítulo del PDF con la información actual
-        document.getElementById('pdf-subtitle').innerText = `Grupo: ${filtroGrupo.value}  |  Asignatura: ${selectMateria.value}  |  Fecha: ${document.getElementById('fechaAsistencia').value}`;
-        
-        // Escondemos la interfaz web y mostramos el membrete
-        headerPDF.style.display = 'block';
-        headerUI.style.display = 'none';
-        botones.style.display = 'none';
-        
-        // Generamos PDF tamaño carta
-        html2pdf().set({ 
-            margin: 15, 
-            filename: `Asistencia_${filtroGrupo.value}.pdf`, 
-            image: { type: 'jpeg', quality: 1 }, 
-            html2canvas: { scale: 2 }, 
-            jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' } 
-        }).from(document.getElementById('seccion-lista')).save().then(() => {
-            // Regresamos todo a la normalidad
-            headerPDF.style.display = 'none';
-            headerUI.style.display = 'flex';
-            botones.style.display = 'flex';
-        });
+    document.getElementById('btn-exportar-pdf').addEventListener('click', async () => {
+        const escapar = valor => String(valor || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        const fechaISO = document.getElementById('fechaAsistencia').value;
+        const fechaTexto = fechaISO ? new Date(`${fechaISO}T12:00:00`).toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
+        const registros = [...tabla.querySelectorAll('tr')].map((fila, indice) => {
+            const nombre = fila.querySelector('.student-name')?.textContent.trim() || '';
+            const estado = fila.querySelector('input[type="radio"]:checked')?.value || 'Sin registro';
+            return nombre ? `<tr><td>${indice + 1}</td><td>${escapar(nombre)}</td><td><span class="status status-${estado.toLowerCase()}">${escapar(estado)}</span></td></tr>` : '';
+        }).join('');
+
+        const reporte = document.createElement('div');
+        reporte.className = 'attendance-pdf-report';
+        reporte.style.position = 'fixed';
+        reporte.style.left = '-10000px';
+        reporte.style.top = '0';
+        reporte.innerHTML = `
+            <header class="attendance-pdf-brand"><img src="Img/logo.png" alt=""><div><h1>Centro Educativo Amor y Libertad</h1><p>Control institucional de asistencia</p></div></header>
+            <section class="attendance-pdf-title"><h2>Reporte de asistencia</h2><p>${escapar(fechaTexto)}</p></section>
+            <section class="attendance-pdf-data"><div><span>Grupo</span><strong>${escapar(filtroGrupo.value)}</strong></div><div><span>Asignatura</span><strong>${escapar(selectMateria.value)}</strong></div><div><span>Total de estudiantes</span><strong>${alumnosActuales.length}</strong></div></section>
+            <section class="attendance-pdf-summary"><div><strong>${document.getElementById('total-presentes').textContent}</strong><span>Presentes</span></div><div><strong>${document.getElementById('total-retardos').textContent}</strong><span>Retardos</span></div><div><strong>${document.getElementById('total-faltas').textContent}</strong><span>Faltas</span></div></section>
+            <table class="attendance-pdf-table"><thead><tr><th>No.</th><th>Nombre del estudiante</th><th>Estado</th></tr></thead><tbody>${registros}</tbody></table>
+            <footer class="attendance-pdf-footer"><span>Centro Educativo Amor y Libertad</span><span>Generado por el sistema escolar</span></footer>`;
+        document.body.appendChild(reporte);
+
+        try {
+            await html2pdf().set({
+                margin: 12,
+                filename: `Asistencia_${filtroGrupo.value}_${fechaISO}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+                jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' },
+                pagebreak: { mode: ['css', 'legacy'] }
+            }).from(reporte).save();
+        } finally {
+            reporte.remove();
+        }
     });
 </script>
 </body>
