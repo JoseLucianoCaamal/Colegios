@@ -4,7 +4,7 @@ import { uploadToCloudinary } from './cloudinary-config.js';
 import { collection, addDoc, getDocs, deleteDoc, doc, setDoc, query, where, orderBy, limit, serverTimestamp, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 const { user, profile } = await requireRoles(['superadmin','directora','maestro','recepcion']);
-const role = profile.rol;
+const role = String(profile.rol || '').trim().toLowerCase();
 const OPTIONS = {
   superadmin: [['usuario','Una persona específica'],['roles','Seleccionar roles'],['colegio','Todo el colegio'],['docentes','Todos los docentes'],['direccion','Todo el equipo directivo'],['grupo','Un grupo'],['nivel','Un nivel'],['alumno','Un estudiante / tutor']],
   directora: [['usuario','Una persona específica'],['roles','Seleccionar roles'],['colegio','Todo el colegio'],['docentes','Todos los docentes'],['grupo','Un grupo'],['nivel','Un nivel'],['alumno','Un estudiante / tutor']],
@@ -28,17 +28,20 @@ let notices = [], filter = 'received', contacts = [], groups = [], students = []
 const assignedGroups = new Set();
 
 async function loadDirectory() {
-  const [usersSnap, groupsSnap, studentsSnap, subjectsSnap] = await Promise.all(['usuarios','grupos','alumnos','materias'].map(name => getDocs(collection(db,name))));
+  const usersSnap = await getDocs(collection(db, 'usuarios'));
   const mapContacts = snap => snap.docs.map(item => ({ id:item.id, uid:item.data().uid || item.id, ...item.data() })).filter(item => item.activo !== false && item.id !== user.uid);
   contacts = mapContacts(usersSnap);
+  selectedTarget.textContent = `${contacts.length} contacto(s) disponible(s). Escribe para buscar.`;
   onSnapshot(collection(db, 'usuarios'), snapshot => {
     contacts = mapContacts(snapshot);
+    if (!targetId.value) selectedTarget.textContent = `${contacts.length} contacto(s) disponible(s). Escribe para buscar.`;
     if (typeSelect.value === 'usuario' && targetSearch.value.trim()) targetSearch.dispatchEvent(new Event('input'));
   });
-  groups = groupsSnap.docs.map(item => ({ id:item.id, ...item.data() }));
-  students = studentsSnap.docs.map(item => ({ id:item.id, ...item.data() }));
-  subjects = subjectsSnap.docs.map(item => ({ id:item.id, ...item.data() }));
-  if (role === 'maestro') subjectsSnap.docs.map(item => item.data()).filter(item => String(item.maestro_email || '').toLowerCase() === String(user.email).toLowerCase()).forEach(item => { if(item.grupo) assignedGroups.add(String(item.grupo)); });
+  const extras = await Promise.allSettled(['grupos','alumnos','materias'].map(name => getDocs(collection(db, name))));
+  groups = extras[0].status === 'fulfilled' ? extras[0].value.docs.map(item => ({ id:item.id, ...item.data() })) : [];
+  students = extras[1].status === 'fulfilled' ? extras[1].value.docs.map(item => ({ id:item.id, ...item.data() })) : [];
+  subjects = extras[2].status === 'fulfilled' ? extras[2].value.docs.map(item => ({ id:item.id, ...item.data() })) : [];
+  if (role === 'maestro') subjects.filter(item => String(item.maestro_email || '').toLowerCase() === String(user.email).toLowerCase()).forEach(item => { if(item.grupo) assignedGroups.add(String(item.grupo)); });
 }
 function automaticTarget(type) { return { colegio:'rol:todos', docentes:'rol:maestro', direccion:'rol:directora', roles:'roles:seleccion' }[type] || ''; }
 function updateTargetMode() {
@@ -52,7 +55,7 @@ function updateTargetMode() {
 }
 function searchCandidates(term) {
   const type=typeSelect.value, needle=term.toLowerCase().trim(); if(!needle) return [];
-  const source = type === 'usuario' ? contacts.map(x=>({...x,label:x.nombre || x.usuario || x.email,detail:`${x.rol} · ${x.email}`,value:x.id})) : type === 'grupo' ? groups.map(x=>({...x,label:x.nombre || x.id,detail:'Grupo escolar',value:x.nombre || x.id})) : type === 'alumno' ? students.map(x=>({...x,label:x.nombre || x.id,detail:`${x.grupo || 'Sin grupo'} · Tutor: ${x.tutor || 'sin registrar'}`,value:x.id})) : groups.map(x=>({label:x.nombre || x.id,detail:'Nivel o grupo',value:x.nombre || x.id}));
+  const source = type === 'usuario' ? contacts.map(x=>({...x,label:x.nombre || x.usuario || x.email,detail:`${x.rol} · ${x.usuario_original || x.usuario || ''} · ${x.email || ''}`,value:x.id})) : type === 'grupo' ? groups.map(x=>({...x,label:x.nombre || x.id,detail:'Grupo escolar',value:x.nombre || x.id})) : type === 'alumno' ? students.map(x=>({...x,label:x.nombre || x.id,detail:`${x.grupo || 'Sin grupo'} · Tutor: ${x.tutor || 'sin registrar'}`,value:x.id})) : groups.map(x=>({label:x.nombre || x.id,detail:'Nivel o grupo',value:x.nombre || x.id}));
   return source.filter(x=>`${x.label} ${x.detail || ''}`.toLowerCase().includes(needle)).slice(0,8);
 }
 targetSearch.addEventListener('input',()=>{const matches=searchCandidates(targetSearch.value);resultsBox.innerHTML=matches.map((item,index)=>`<button type="button" data-result="${index}"><strong>${escapeHtml(item.label)}</strong><span>${escapeHtml(item.detail)}</span></button>`).join('');resultsBox.querySelectorAll('[data-result]').forEach(button=>button.addEventListener('click',()=>{const item=matches[Number(button.dataset.result)];targetId.value=item.value;targetSearch.value=item.label;selectedTarget.textContent=`Seleccionado: ${item.label}`;resultsBox.innerHTML='';}));});
@@ -79,7 +82,7 @@ document.querySelectorAll('[data-filter]').forEach(button=>button.addEventListen
 document.getElementById('refresh-messages').addEventListener('click',renderMessages);
 function resolveRecipients(type,destination){const active=contacts.filter(item=>item.activo!==false),management=active.filter(item=>['superadmin','directora'].includes(item.rol)),teacherForGroup=(item,group)=>item.rol==='maestro'&&subjects.some(subject=>String(subject.grupo||'')===String(group)&&String(subject.maestro_email||'').toLowerCase()===String(item.email||'').toLowerCase());let recipients=[];if(type==='colegio')recipients=active;if(type==='docentes')recipients=active.filter(item=>item.rol==='maestro');if(type==='roles'){const roles=[...roleTargets.querySelectorAll('input:checked')].map(input=>input.value);recipients=active.filter(item=>roles.includes(item.rol)||(roles.includes('padre')&&item.rol==='tutor'));}if(type==='direccion')recipients=management;if(type==='usuario')recipients=active.filter(item=>item.id===destination);if(type==='grupo')recipients=active.filter(item=>item.grupo===destination||(Array.isArray(item.grupos)&&item.grupos.includes(destination))||teacherForGroup(item,destination));if(type==='nivel')recipients=active.filter(item=>String(item.grupo||'').toLowerCase().includes(String(destination).toLowerCase())||(Array.isArray(item.grupos)&&item.grupos.some(group=>String(group).toLowerCase().includes(String(destination).toLowerCase()))||(item.rol==='maestro'&&subjects.some(subject=>String(subject.grupo||'').toLowerCase().includes(String(destination).toLowerCase())&&String(subject.maestro_email||'').toLowerCase()===String(item.email||'').toLowerCase())));if(type==='alumno'){const student=students.find(item=>item.id===destination),group=student?.grupo;recipients=active.filter(item=>(Array.isArray(item.alumnoIds)&&item.alumnoIds.includes(destination))||(group&&teacherForGroup(item,group)));}if(['grupo','nivel','alumno'].includes(type))recipients=[...recipients,...management];return[...new Set(recipients.map(item=>item.id).filter(Boolean).filter(uid=>uid!==user.uid))];}
 document.getElementById('message-form').addEventListener('submit',async event=>{event.preventDefault();const type=typeSelect.value;if(!allowed.some(([value])=>value===type))return Swal.fire('Destino no permitido','','error');const destination=targetId.value.trim();if(!destination)return Swal.fire('Selecciona el destinatario','Usa el buscador para elegir una persona, grupo o estudiante.','warning');const destinatarioUids=resolveRecipients(type,destination);if(!destinatarioUids.length)return Swal.fire('Sin destinatarios','No existen cuentas activas vinculadas con esa selección.','warning');const file=document.getElementById('msg-file').files[0],state=document.getElementById('upload-state');try{state.textContent=file?'Subiendo adjunto a Cloudinary…':'Publicando…';const attachment=file?await uploadToCloudinary(file,'avisos'):null;const record={titulo:document.getElementById('msg-title').value.trim(),mensaje:document.getElementById('msg-body').value.trim(),prioridad:document.getElementById('msg-priority').value,destinatarioTipo:type,destinatarioId:destination,destinatarioNombre:targetSearch.value.trim(),destinatarioUids,creadoPorUid:user.uid,creadoPorNombre:profile.nombre||user.email,creadoPorRol:role,creadoEn:serverTimestamp(),activo:true,archivoUrl:attachment?.url||'',archivoNombre:attachment?.nombre||'',archivoPublicId:attachment?.publicId||'',archivoBytes:attachment?.bytes||0,archivoProveedor:attachment?'cloudinary':''};const created=await addDoc(collection(db,'avisos'),record);await auditEvent('aviso.publicado',{collection:'avisos',id:created.id},`${record.titulo} · ${destinatarioUids.length} destinatarios`);event.target.reset();updateTargetMode();state.textContent='';Swal.fire('Mensaje enviado',`Se notificará a ${destinatarioUids.length} destinatario(s).`,'success');}catch(error){state.textContent='';Swal.fire('No se pudo publicar',error.message,'error');}});
-await loadDirectory(); updateTargetMode();
+updateTargetMode(); await loadDirectory();
 const preselectedUid=new URLSearchParams(location.search).get('to');
 if(preselectedUid){const contact=contacts.find(item=>item.id===preselectedUid);if(contact){typeSelect.value='usuario';updateTargetMode();targetId.value=contact.id;targetSearch.value=contact.nombre||contact.usuario||contact.email;selectedTarget.textContent=`Seleccionado: ${targetSearch.value}`;}}
 listenMessages();

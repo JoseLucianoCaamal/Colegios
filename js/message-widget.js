@@ -99,20 +99,21 @@ onAuthStateChanged(auth, async user => {
     list.classList.add('conversation-mode');
     const thread = messages.filter(({ data }) => data.destinatarioTipo === 'usuario' && ((data.creadoPorUid === user.uid && data.destinatarioId === activeContact.id) || (data.creadoPorUid === activeContact.id && Array.isArray(data.destinatarioUids) && data.destinatarioUids.includes(user.uid))));
     list.innerHTML = `
-      <div class="mw-conversation-head"><button class="mw-back">‹</button><span class="mw-contact-avatar">${avatarContent(activeContact)}</span><div><strong>${escapeHtml(activeContact.nombre || activeContact.usuario || activeContact.email)}</strong><span>${escapeHtml(activeContact.rol)} · ${escapeHtml(activeContact.usuario_original || activeContact.email)}</span></div></div>
-      <div class="mw-thread">${thread.length ? thread.map(({ id, data }) => `<article class="mw-bubble ${data.creadoPorUid === user.uid ? 'mine' : 'theirs'}"><strong>${escapeHtml(data.titulo)}</strong><p>${escapeHtml(data.mensaje)}</p><footer><time>${formatDate(data.creadoEn)}</time>${(['superadmin','directora'].includes(role) || data.creadoPorUid === user.uid) ? `<button class="mw-delete-message" data-delete-message="${id}" title="Eliminar mensaje">Eliminar</button>` : ''}</footer></article>`).join('') : '<div class="mw-empty">Inicia la conversación con este contacto.</div>'}</div>
-      ${role === 'recepcion' ? '' : '<form class="mw-quick-form"><input maxlength="120" placeholder="Asunto" required><textarea maxlength="1000" placeholder="Escribir un mensaje…" required></textarea><button type="submit" aria-label="Enviar">➤</button></form>'}`;
+      <div class="mw-conversation-head"><button class="mw-back">‹</button><span class="mw-contact-avatar">${avatarContent(activeContact)}</span><div><strong>${escapeHtml(activeContact.nombre || activeContact.usuario || activeContact.email)}</strong><span>${escapeHtml(activeContact.rol)} · ${escapeHtml(activeContact.usuario_original || activeContact.email)}</span></div>${['superadmin','directora'].includes(role) && thread.length ? '<button class="mw-delete-conversation" title="Eliminar conversación">Eliminar chat</button>' : ''}</div>
+      <div class="mw-thread">${thread.length ? thread.map(({ data }) => `<article class="mw-bubble ${data.creadoPorUid === user.uid ? 'mine' : 'theirs'}"><strong>${escapeHtml(data.titulo || 'Mensaje')}</strong><p>${escapeHtml(data.mensaje)}</p><footer><time>${formatDate(data.creadoEn)}</time></footer></article>`).join('') : '<div class="mw-empty">Inicia la conversación con este contacto.</div>'}</div>
+      ${role === 'recepcion' ? '' : '<form class="mw-quick-form"><input maxlength="120" placeholder="Asunto (opcional)"><textarea maxlength="1000" placeholder="Escribir un mensaje…" required></textarea><button type="submit" aria-label="Enviar">➤</button></form>'}`;
 
     list.querySelector('.mw-back').addEventListener('click', () => { view = 'contacts'; activeContact = null; toolbar.hidden = false; render(); });
     thread.filter(item => item.data.creadoPorUid !== user.uid).forEach(item => markRead(item.id));
-    list.querySelectorAll('[data-delete-message]').forEach(button => button.addEventListener('click', async () => {
-      const answer = await (window.Swal?.fire ? window.Swal.fire({ title:'¿Eliminar mensaje?', text:'Esta acción no se puede deshacer.', icon:'warning', showCancelButton:true, confirmButtonText:'Sí, eliminar', cancelButtonText:'Cancelar', confirmButtonColor:'#c64650' }) : Promise.resolve({ isConfirmed:confirm('¿Eliminar este mensaje?') }));
+    list.querySelector('.mw-delete-conversation')?.addEventListener('click', async () => {
+      const answer = await (window.Swal?.fire ? window.Swal.fire({ title:'¿Eliminar toda la conversación?', text:`Se eliminarán ${thread.length} mensaje(s) para ambos usuarios. Esta acción no se puede deshacer.`, icon:'warning', showCancelButton:true, confirmButtonText:'Sí, eliminar chat', cancelButtonText:'Cancelar', confirmButtonColor:'#c64650' }) : Promise.resolve({ isConfirmed:confirm('¿Eliminar toda esta conversación?') }));
       if (!answer.isConfirmed) return;
       try {
-        await deleteDoc(doc(db, 'avisos', button.dataset.deleteMessage));
-        await auditEvent('aviso.eliminado', { collection:'avisos', id:button.dataset.deleteMessage }, 'Mensaje eliminado desde conversación');
-      } catch (error) { window.Swal?.fire?.('No se pudo eliminar', error.message, 'error'); }
-    }));
+        await Promise.all(thread.map(item => deleteDoc(doc(db, 'avisos', item.id))));
+        await auditEvent('conversacion.eliminada', { collection:'avisos', id:activeContact.id }, `${thread.length} mensajes eliminados`);
+        view = 'contacts'; activeContact = null; toolbar.hidden = false; render();
+      } catch (error) { window.Swal?.fire?.('No se pudo eliminar el chat', error.message, 'error'); }
+    });
     const form = list.querySelector('.mw-quick-form');
     if (form) form.addEventListener('submit', async event => {
       event.preventDefault();
@@ -120,7 +121,7 @@ onAuthStateChanged(auth, async user => {
       const button = form.querySelector('button');
       button.disabled = true;
       try {
-        const record = { titulo:input.value.trim(), mensaje:textarea.value.trim(), prioridad:'normal', destinatarioTipo:'usuario', destinatarioId:activeContact.id, destinatarioNombre:activeContact.nombre || activeContact.email, destinatarioUids:[activeContact.id], creadoPorUid:user.uid, creadoPorNombre:profile.nombre || user.email, creadoPorRol:role, creadoEn:serverTimestamp(), activo:true, archivoUrl:'' };
+        const record = { titulo:input.value.trim() || 'Mensaje', mensaje:textarea.value.trim(), prioridad:'normal', destinatarioTipo:'usuario', destinatarioId:activeContact.id, destinatarioNombre:activeContact.nombre || activeContact.email, destinatarioUids:[activeContact.id], creadoPorUid:user.uid, creadoPorNombre:profile.nombre || user.email, creadoPorRol:role, creadoEn:serverTimestamp(), activo:true, archivoUrl:'' };
         const created = await addDoc(collection(db, 'avisos'), record);
         await auditEvent('aviso.privado_enviado', { collection:'avisos', id:created.id }, record.titulo);
         form.reset();
@@ -139,7 +140,7 @@ onAuthStateChanged(auth, async user => {
     root.querySelectorAll('[data-mw-view]').forEach(item => item.classList.toggle('active', item.dataset.mwView === view));
     if (view === 'contacts') {
       const items = contacts.filter(item => `${item.nombre} ${item.usuario} ${item.email} ${item.rol}`.toLowerCase().includes(term));
-      const mass = role === 'recepcion' ? '' : '<button class="mw-contact mw-mass-contact" data-mass-message><span class="mw-contact-avatar">✦</span><div><strong>Crear mensaje masivo</strong><span>Docentes, padres o destinatarios</span></div><b>›</b></button>';
+      const mass = role === 'recepcion' ? '' : '<button class="mw-contact mw-mass-contact" data-mass-message><span class="mw-contact-avatar mw-school-logo"><img src="Img/logo.png" alt="Logo del colegio"></span><div><strong>Crear mensaje masivo</strong><span>Docentes, padres o destinatarios</span></div><b>›</b></button>';
       list.innerHTML = mass + (items.length ? items.map(item => `<button class="mw-contact" data-contact="${item.id}"><span class="mw-contact-avatar">${avatarContent(item)}</span><div><strong>${escapeHtml(item.nombre || item.usuario || item.email)}</strong><span>${escapeHtml(item.rol)} · ${escapeHtml(item.usuario_original || item.email)}</span></div><b>›</b></button>`).join('') : '<div class="mw-empty">No se encontraron contactos.</div>');
       list.querySelector('[data-mass-message]')?.addEventListener('click', () => { location.href = 'centro-mensajes.html'; });
       list.querySelectorAll('[data-contact]').forEach(button => button.addEventListener('click', () => openConversation(contacts.find(item => item.id === button.dataset.contact))));
