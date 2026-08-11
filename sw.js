@@ -1,5 +1,5 @@
 // Cambiamos la versión para forzar la actualización en todos los celulares
-const CACHE_NAME = 'colegio-v7.0';
+const CACHE_NAME = 'colegio-v7.1';
 const ASSETS = [
   '/Colegios/',
   '/Colegios/index.html',

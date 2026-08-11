@@ -134,7 +134,7 @@
             document.getElementById('saludo-maestro').innerText = `Hola, ${myData.nombre || 'Maestro(a)'}`;
             document.getElementById('vista-normal').style.display = 'grid';
 
-            const qSuplente = query(collection(db, "usuarios"), where("delegado_a", "==", miEmail));
+            const qSuplente = query(collection(db, "usuarios"), where("rol", "==", "maestro"), where("delegado_a", "==", miEmail));
             const suplenteSnap = await getDocs(qSuplente);
             
             if (!suplenteSnap.empty) {

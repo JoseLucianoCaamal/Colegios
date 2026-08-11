@@ -89,7 +89,7 @@
                     const docSnap = await getDoc(doc(db, "usuarios", user.uid));
                     if (docSnap.exists() && docSnap.data().nombre) nombreMaestroReal = docSnap.data().nombre;
                 } else {
-                    const perfilSnap = await getDocs(query(collection(db, "usuarios"), where("email", "==", maestroActual)));
+                    const perfilSnap = await getDocs(query(collection(db, "usuarios"), where("rol", "==", "maestro"), where("email", "==", maestroActual)));
                     if (!perfilSnap.empty && perfilSnap.docs[0].data().nombre) {
                         nombreMaestroReal = perfilSnap.docs[0].data().nombre;
                     }
