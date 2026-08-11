@@ -1,5 +1,5 @@
 // Cambiamos la versión para forzar la actualización en todos los celulares
-const CACHE_NAME = 'colegio-v6.7';
+const CACHE_NAME = 'colegio-v6.8';
 const ASSETS = [
   '/Colegios/',
   '/Colegios/index.html',
@@ -55,11 +55,26 @@ self.addEventListener('activate', (e) => {
   );
 });
 
-// Interceptar peticiones
+// HTML, JavaScript y CSS usan red primero para evitar ejecutar versiones antiguas.
 self.addEventListener('fetch', (e) => {
-  e.respondWith(
-    caches.match(e.request).then((response) => {
-      return response || fetch(e.request);
-    })
+  if (e.request.method !== 'GET') return;
+  const url = new URL(e.request.url);
+  const isLocal = url.origin === self.location.origin;
+  const networkFirst = isLocal && (
+    e.request.mode === 'navigate' ||
+    ['document', 'script', 'style'].includes(e.request.destination)
   );
+
+  if (networkFirst) {
+    e.respondWith(
+      fetch(e.request).then(response => {
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(e.request, copy));
+        return response;
+      }).catch(() => caches.match(e.request))
+    );
+    return;
+  }
+
+  e.respondWith(caches.match(e.request).then(response => response || fetch(e.request)));
 });
