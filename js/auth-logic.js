@@ -1,6 +1,6 @@
 import { auth, db } from './firebase-config.js';
 import { signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { doc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { doc, getDoc, collection, query, where, getDocs, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 export const iniciarSesion = async (e) => {
     if (e && typeof e.preventDefault === 'function') { e.preventDefault(); }
@@ -64,6 +64,10 @@ export const iniciarSesion = async (e) => {
 
         // 3. Redirección
         if (userData && userData.activo !== false) {
+            if (uidSnapshot.exists()) {
+                updateDoc(doc(db, "usuarios", userUid), { ultimoAcceso: serverTimestamp() })
+                    .catch(error => console.warn('No se pudo registrar el último acceso:', error));
+            }
             let rolNormalizado = String(userData.rol || '').trim().toLowerCase()
                 .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
             // Compatibilidad temporal durante la migración de documentos antiguos.

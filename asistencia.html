@@ -110,6 +110,7 @@
 
 <script type="module">
     import { db, auth } from './js/firebase-config.js';
+    import { auditEvent } from './js/security.js';
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { collection, query, where, getDocs, addDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -226,9 +227,11 @@
         try {
             if (idAsistenciaGuardada) {
                 await updateDoc(doc(db, "asistencias", idAsistenciaGuardada), { detalles: registroAsistencia, timestamp: new Date() });
+                await auditEvent('asistencia.actualizada', { collection: 'asistencias', id: idAsistenciaGuardada }, `${filtroGrupo.value} · ${selectMateria.value}`);
                 alert("🔄 ¡Asistencia actualizada!");
             } else {
-                await addDoc(collection(db, "asistencias"), { grupo: filtroGrupo.value, materia: selectMateria.value, fecha: document.getElementById('fechaAsistencia').value, detalles: registroAsistencia, timestamp: new Date() });
+                const registroCreado = await addDoc(collection(db, "asistencias"), { grupo: filtroGrupo.value, materia: selectMateria.value, fecha: document.getElementById('fechaAsistencia').value, detalles: registroAsistencia, timestamp: new Date() });
+                await auditEvent('asistencia.creada', { collection: 'asistencias', id: registroCreado.id }, `${filtroGrupo.value} · ${selectMateria.value}`);
                 alert("🎉 ¡Lista guardada!");
             }
             document.getElementById('seccion-lista').style.display = 'none'; 

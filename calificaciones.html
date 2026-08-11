@@ -72,6 +72,7 @@
 
 <script type="module">
     import { db, auth } from './js/firebase-config.js';
+    import { auditEvent } from './js/security.js';
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { collection, query, where, getDocs, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -172,9 +173,10 @@
         }
 
         try {
-            await setDoc(doc(db, "calificaciones", idDocumento), { 
+            await setDoc(doc(db, "calificaciones", idDocumento), {
                 id_unico: idDocumento, grupo, materia, periodo, maestro_email: maestroActual, notas 
             });
+            await auditEvent('calificaciones.guardadas', { collection: 'calificaciones', id: idDocumento }, `${grupo} · ${materia} · ${periodo}`);
             
             // MENSAJE ANIMADO
             Swal.fire({

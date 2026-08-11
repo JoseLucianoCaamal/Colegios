@@ -63,7 +63,9 @@ service cloud.firestore {
     match /usuarios/{uid} {
       allow read: if active() && (request.auth.uid == uid || isManagement()
         || (isTeacher() && resource.data.rol == 'maestro'));
-      allow create, update, delete: if isSuperadmin();
+      allow create, delete: if isSuperadmin();
+      allow update: if isSuperadmin() || (active() && request.auth.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ultimoAcceso']));
     }
 
     match /alumnos/{alumnoId} {

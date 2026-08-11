@@ -14,7 +14,8 @@
     <nav class="sa-nav">
       <div class="sa-nav-label">Sistema</div>
       <a class="active" href="dashboard-superadmin.html">Resumen técnico</a>
-      <a href="gestionar-maestros.html">Usuarios y accesos</a>
+      <a href="admin-sistema.html">Consola administrativa</a>
+      <a href="gestionar-maestros.html">Alta de docentes</a>
       <a href="mantenimiento.html">Mantenimiento</a>
       <div class="sa-nav-label">Administración</div>
       <a href="dashboard-directora.html">Panel académico</a>
@@ -35,7 +36,8 @@
       </div>
       <div class="sa-grid">
         <section class="sa-panel"><div class="sa-panel-head"><h2>Herramientas administrativas</h2><span>Acceso exclusivo</span></div><div class="sa-tools">
-          <a class="sa-tool" href="gestionar-maestros.html"><strong>Usuarios y docentes</strong><span>Crear cuentas, revisar perfiles UID y suspender accesos.</span></a>
+          <a class="sa-tool" href="admin-sistema.html"><strong>Consola administrativa</strong><span>Usuarios, auditoría, salud, avisos, ciclo escolar y respaldos.</span></a>
+          <a class="sa-tool" href="gestionar-maestros.html"><strong>Alta de docentes</strong><span>Crear cuentas nuevas directamente con UID.</span></a>
           <a class="sa-tool" href="mantenimiento.html"><strong>Mantenimiento de datos</strong><span>Operaciones delicadas, limpieza e integridad de registros.</span></a>
           <a class="sa-tool" href="dashboard-directora.html"><strong>Administración académica</strong><span>Entrar al panel operativo de dirección.</span></a>
           <a class="sa-tool" href="SEGURIDAD_FIREBASE.md"><strong>Guía de seguridad</strong><span>Migración, reglas, App Check y proceso de publicación.</span></a>
@@ -43,10 +45,10 @@
         <aside class="sa-panel"><div class="sa-panel-head"><h2>Controles de seguridad</h2><span>Primera fase</span></div><div class="sa-security-list">
           <div class="sa-security-item"><span>Perfil superadmin por UID</span><strong>ACTIVO</strong></div>
           <div class="sa-security-item"><span>Usuarios migrados por UID</span><strong>ACTIVO</strong></div>
-          <div class="sa-security-item pending"><span>Reglas estrictas publicadas</span><strong>PENDIENTE</strong></div>
+          <div class="sa-security-item"><span>Reglas estrictas publicadas</span><strong>ACTIVO</strong></div>
           <div class="sa-security-item pending"><span>App Check</span><strong>PENDIENTE</strong></div>
-          <div class="sa-security-item pending"><span>Auditoría automática</span><strong>PENDIENTE</strong></div>
-        </div><div class="sa-note">No publiques las reglas nuevas hasta terminar las pruebas de todos los roles.</div></aside>
+          <div class="sa-security-item"><span>Auditoría administrativa</span><strong>ACTIVO</strong></div>
+        </div><div class="sa-note">Activa App Check después de monitorear solicitudes verificadas para evitar bloqueos legítimos.</div></aside>
       </div>
     </section>
   </main>

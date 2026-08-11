@@ -1,11 +1,12 @@
 // Cambiamos la versión para forzar la actualización en todos los celulares
-const CACHE_NAME = 'colegio-v7.1';
+const CACHE_NAME = 'colegio-v8.1';
 const ASSETS = [
   '/Colegios/',
   '/Colegios/index.html',
   '/Colegios/login.html',
   '/Colegios/dashboard-directora.html',
   '/Colegios/dashboard-superadmin.html',
+  '/Colegios/admin-sistema.html',
   '/Colegios/dashboard-maestro.html',
   '/Colegios/dashboard-recepcion.html',
   '/Colegios/gestionar-maestros.html',
@@ -16,6 +17,7 @@ const ASSETS = [
   '/Colegios/css/home.css',
   '/Colegios/css/dashboard.css',
   '/Colegios/css/superadmin.css',
+  '/Colegios/css/admin-system.css',
   '/Colegios/css/login.css',
   '/Colegios/css/gallery.css',
   '/Colegios/css/admin-power.css',
@@ -25,6 +27,7 @@ const ASSETS = [
   '/Colegios/js/auth-logic.js',
   '/Colegios/js/security.js',
   '/Colegios/js/role-nav.js',
+  '/Colegios/js/admin-system.js',
   '/Colegios/manifest.json',
   '/Colegios/Img/logo.png',
   '/Colegios/Img/logo2.png',

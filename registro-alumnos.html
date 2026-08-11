@@ -81,6 +81,7 @@
 
 <script type="module">
     import { db, auth } from './js/firebase-config.js';
+    import { auditEvent } from './js/security.js';
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { collection, addDoc, getDocs, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -131,7 +132,8 @@
         if (!nombre || !fecha || !tutor || !telefono || !grupo) return alert("Rellena los campos obligatorios");
 
         try {
-            await addDoc(collection(db, "alumnos"), { nombre, fechaNacimiento: fecha, alergias, tutor, telefono, grupo });
+            const alumnoCreado = await addDoc(collection(db, "alumnos"), { nombre, fechaNacimiento: fecha, alergias, tutor, telefono, grupo });
+            await auditEvent('alumno.creado', { collection: 'alumnos', id: alumnoCreado.id }, `${nombre} · ${grupo}`);
             alert("Alumno registrado"); location.reload();
         } catch (e) { alert("Error: " + e.message); }
     });
@@ -164,7 +166,7 @@
             });
 
             row.querySelector('.btn-delete').addEventListener('click', async () => {
-                if(confirm(`¿Estás seguro de eliminar a ${data.nombre}?`)) { await deleteDoc(doc(db, "alumnos", docSnap.id)); location.reload(); }
+                if(confirm(`¿Estás seguro de eliminar a ${data.nombre}?`)) { await deleteDoc(doc(db, "alumnos", docSnap.id)); await auditEvent('alumno.eliminado', { collection: 'alumnos', id: docSnap.id }, data.nombre); location.reload(); }
             });
 
             lista.appendChild(row);
@@ -182,6 +184,7 @@
         
         try {
             await updateDoc(doc(db, "alumnos", idAlumnoAEditar), { grupo: nuevoGrupo });
+            await auditEvent('alumno.grupo_actualizado', { collection: 'alumnos', id: idAlumnoAEditar }, nuevoGrupo);
             document.getElementById('modal-promover').style.display = 'none';
             location.reload();
         } catch (error) {
