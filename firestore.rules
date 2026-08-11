@@ -73,7 +73,11 @@ service cloud.firestore {
       allow delete: if isSuperadmin()
         || (hasRole(['directora']) && resource.data.rol == 'maestro');
       allow update: if isSuperadmin() || (active() && request.auth.uid == uid
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ultimoAcceso','delegado_a','delegado_nombre']));
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'ultimoAcceso', 'delegado_a', 'delegado_nombre',
+          'nombre', 'telefonoPerfil', 'bio', 'colorPerfil',
+          'fotoPerfil', 'fotoPerfilPublicId', 'perfilActualizadoEn'
+        ]));
     }
 
     match /alumnos/{alumnoId} {

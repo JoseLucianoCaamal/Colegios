@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Mi perfil · Amor y Libertad</title>
+  <link rel="icon" href="Img/logo.png">
+  <link rel="stylesheet" href="css/profile.css">
+</head>
+<body>
+  <header class="profile-topbar">
+    <a id="profile-back" href="index.html">← Volver a mi panel</a>
+    <div class="profile-brand"><img src="Img/logo.png" alt=""><div><strong>Mi perfil</strong><span>Identidad dentro de la plataforma escolar</span></div></div>
+  </header>
+  <main class="profile-shell">
+    <section class="profile-intro">
+      <p class="profile-eyebrow">CUENTA PERSONAL</p>
+      <h1>Personaliza cómo te ven en el sistema</h1>
+      <p>Tu foto, nombre y presentación aparecerán en mensajería y paneles. Los permisos de tu cuenta permanecen protegidos.</p>
+    </section>
+    <form id="profile-form" class="profile-card">
+      <aside class="profile-photo-panel">
+        <div id="profile-preview" class="profile-preview"><span id="profile-initials">U</span></div>
+        <label class="profile-upload">Cambiar fotografía<input id="profile-photo" type="file" accept="image/jpeg,image/png,image/webp" hidden></label>
+        <small>JPG, PNG o WEBP. Máximo 5 MB.</small>
+      </aside>
+      <div class="profile-fields">
+        <div class="profile-section-head"><div><span>Información pública</span><h2>Datos del perfil</h2></div><span id="profile-status" class="profile-status">Cargando…</span></div>
+        <label>Nombre para mostrar<input id="profile-name" maxlength="80" required></label>
+        <div class="profile-row"><label>Teléfono institucional<input id="profile-phone" type="tel" maxlength="25" placeholder="Opcional"></label><label>Color del perfil<input id="profile-color" type="color" value="#1c5d8c"></label></div>
+        <label>Presentación breve<textarea id="profile-bio" maxlength="240" rows="4" placeholder="Ej. Dirección escolar y acompañamiento a la comunidad educativa."></textarea><small><span id="bio-count">0</span>/240 caracteres</small></label>
+        <div class="profile-protected"><strong>Datos protegidos</strong><p>Estos datos identifican tu cuenta y solamente el superadministrador puede cambiarlos.</p><div><span><small>Correo</small><b id="profile-email">—</b></span><span><small>Rol</small><b id="profile-role">—</b></span></div></div>
+        <div class="profile-actions"><a id="profile-cancel" href="index.html">Cancelar</a><button id="profile-save" type="submit">Guardar cambios</button></div>
+      </div>
+    </form>
+  </main>
+  <script type="module" src="js/profile.js"></script>
+</body>
+</html>
