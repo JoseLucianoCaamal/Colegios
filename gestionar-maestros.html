@@ -127,7 +127,7 @@
         });
     }
     
-    await requireRoles(['superadmin']);
+    await requireRoles(['superadmin', 'directora']);
     cargarLista();
 
     document.getElementById('btn-registrar').addEventListener('click', async () => {

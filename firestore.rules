@@ -48,7 +48,7 @@ service cloud.firestore {
 
     function canCreateNotice(data) {
       return isSuperadmin()
-        || (hasRole(['directora']) && data.destinatarioTipo in ['colegio','docentes','grupo','nivel','alumno','usuario'])
+        || (hasRole(['directora']) && data.destinatarioTipo in ['colegio','docentes','roles','grupo','nivel','alumno','usuario'])
         || (isTeacher() && data.destinatarioTipo in ['direccion','docentes','grupo','alumno','usuario']);
     }
 
@@ -68,7 +68,10 @@ service cloud.firestore {
     // El identificador de cada documento debe ser el UID de Firebase Auth.
     match /usuarios/{uid} {
       allow read: if isStaff();
-      allow create, delete: if isSuperadmin();
+      allow create: if isSuperadmin()
+        || (hasRole(['directora']) && request.resource.data.rol == 'maestro');
+      allow delete: if isSuperadmin()
+        || (hasRole(['directora']) && resource.data.rol == 'maestro');
       allow update: if isSuperadmin() || (active() && request.auth.uid == uid
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ultimoAcceso','delegado_a','delegado_nombre']));
     }
