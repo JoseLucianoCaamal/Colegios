@@ -248,12 +248,6 @@
 
         const reporte = document.createElement('div');
         reporte.className = 'attendance-pdf-report';
-        reporte.style.position = 'fixed';
-        reporte.style.left = '50%';
-        reporte.style.top = '0';
-        reporte.style.transform = 'translateX(-50%)';
-        reporte.style.zIndex = '10001';
-        reporte.style.boxShadow = '0 0 0 100vmax rgba(14, 30, 43, .55)';
         reporte.innerHTML = `
             <header class="attendance-pdf-brand"><img src="Img/logo.png" alt=""><div><h1>Centro Educativo Amor y Libertad</h1><p>Control institucional de asistencia</p></div></header>
             <section class="attendance-pdf-title"><h2>Reporte de asistencia</h2><p>${escapar(fechaTexto)}</p></section>
@@ -261,7 +255,10 @@
             <section class="attendance-pdf-summary"><div><strong>${document.getElementById('total-presentes').textContent}</strong><span>Presentes</span></div><div><strong>${document.getElementById('total-retardos').textContent}</strong><span>Retardos</span></div><div><strong>${document.getElementById('total-faltas').textContent}</strong><span>Faltas</span></div></section>
             <table class="attendance-pdf-table"><thead><tr><th>No.</th><th>Nombre del estudiante</th><th>Estado</th></tr></thead><tbody>${registros}</tbody></table>
             <footer class="attendance-pdf-footer"><span>Centro Educativo Amor y Libertad</span><span>Generado por el sistema escolar</span></footer>`;
-        document.body.appendChild(reporte);
+        const vistaPrevia = document.createElement('div');
+        vistaPrevia.style.cssText = 'position:fixed;inset:0;z-index:10000;overflow:auto;padding:24px;background:rgba(14,30,43,.62);display:flex;justify-content:center;align-items:flex-start;';
+        vistaPrevia.appendChild(reporte);
+        document.body.appendChild(vistaPrevia);
 
         try {
             const logoReporte = reporte.querySelector('img');
@@ -281,7 +278,7 @@
                 pagebreak: { mode: ['css', 'legacy'] }
             }).from(reporte).save();
         } finally {
-            reporte.remove();
+            vistaPrevia.remove();
         }
     });
 </script>
