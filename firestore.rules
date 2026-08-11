@@ -67,8 +67,7 @@ service cloud.firestore {
 
     // El identificador de cada documento debe ser el UID de Firebase Auth.
     match /usuarios/{uid} {
-      allow read: if active() && (request.auth.uid == uid || isManagement()
-        || (isTeacher() && resource.data.rol == 'maestro'));
+      allow read: if isStaff();
       allow create, delete: if isSuperadmin();
       allow update: if isSuperadmin() || (active() && request.auth.uid == uid
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ultimoAcceso','delegado_a','delegado_nombre']));
@@ -118,12 +117,15 @@ service cloud.firestore {
     // Avisos internos. La lectura por tutor/alumno se restringirá por destinatario
     // cuando se habiliten sus cuentas; por ahora solo personal activo.
     match /avisos/{avisoId} {
-      // La interfaz filtra la bandeja según destinatario. Se conserva lectura para
-      // personal activo porque las consultas web de Firestore no filtran reglas.
-      allow read: if isStaff();
+      allow read: if isManagement()
+        || (isStaff() && resource.data.creadoPorUid == request.auth.uid)
+        || (isStaff() && request.auth.uid in resource.data.destinatarioUids);
       allow create: if hasRole(['superadmin', 'directora', 'maestro'])
         && request.resource.data.creadoPorUid == request.auth.uid
         && request.resource.data.creadoPorRol == profile().rol
+        && request.resource.data.destinatarioUids is list
+        && request.resource.data.destinatarioUids.size() > 0
+        && request.resource.data.destinatarioUids.size() <= 200
         && canCreateNotice(request.resource.data);
       allow update, delete: if isManagement() || (isTeacher() && resource.data.creadoPorUid == request.auth.uid);
 
