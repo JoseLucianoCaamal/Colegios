@@ -29,7 +29,12 @@ const assignedGroups = new Set();
 
 async function loadDirectory() {
   const [usersSnap, groupsSnap, studentsSnap, subjectsSnap] = await Promise.all(['usuarios','grupos','alumnos','materias'].map(name => getDocs(collection(db,name))));
-  contacts = usersSnap.docs.map(item => ({ id:item.id, ...item.data() })).filter(item => item.uid && item.activo !== false && item.id !== user.uid);
+  const mapContacts = snap => snap.docs.map(item => ({ id:item.id, uid:item.data().uid || item.id, ...item.data() })).filter(item => item.activo !== false && item.id !== user.uid);
+  contacts = mapContacts(usersSnap);
+  onSnapshot(collection(db, 'usuarios'), snapshot => {
+    contacts = mapContacts(snapshot);
+    if (typeSelect.value === 'usuario' && targetSearch.value.trim()) targetSearch.dispatchEvent(new Event('input'));
+  });
   groups = groupsSnap.docs.map(item => ({ id:item.id, ...item.data() }));
   students = studentsSnap.docs.map(item => ({ id:item.id, ...item.data() }));
   subjects = subjectsSnap.docs.map(item => ({ id:item.id, ...item.data() }));

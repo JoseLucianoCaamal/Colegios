@@ -1,10 +1,11 @@
 import { auth, db } from './firebase-config.js';
 import { getCurrentProfile, auditEvent } from './security.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-import { collection, getDocs, addDoc, onSnapshot, query, where, limit, doc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { collection, getDocs, addDoc, deleteDoc, onSnapshot, query, where, limit, doc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[char]));
 const initials = name => String(name || 'U').split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase();
+const avatarContent = person => person?.fotoPerfil ? `<img src="${escapeHtml(person.fotoPerfil)}" alt="">` : initials(person?.nombre || person?.email);
 const formatDate = value => value?.toDate ? value.toDate().toLocaleString('es-MX', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }) : '';
 
 onAuthStateChanged(auth, async user => {
@@ -32,7 +33,7 @@ onAuthStateChanged(auth, async user => {
     </button>
     <aside class="mw-drawer" aria-label="Mensajería escolar">
       <header class="mw-head">
-        <a class="mw-avatar mw-profile-avatar" href="perfil.html" title="Personalizar mi perfil">${profile.fotoPerfil ? `<img src="${escapeHtml(profile.fotoPerfil)}" alt="">` : initials(profile.nombre)}</a>
+        <a class="mw-avatar mw-profile-avatar" href="perfil.html" title="Personalizar mi perfil">${avatarContent(profile)}</a>
         <div><strong>${escapeHtml(profile.nombre || user.email)}</strong><span>Mensajería escolar · ${escapeHtml(role)}</span></div>
         <a class="mw-profile-link" href="perfil.html">Mi perfil</a>
         <button class="mw-close" aria-label="Cerrar">×</button>
@@ -68,7 +69,19 @@ onAuthStateChanged(auth, async user => {
   const search = root.querySelector('.mw-search');
   const toolbar = root.querySelector('.mw-toolbar');
   const usersSnap = await getDocs(collection(db, 'usuarios'));
-  contacts = usersSnap.docs.map(item => ({ id:item.id, ...item.data() })).filter(item => item.uid && item.activo !== false && item.id !== user.uid);
+  const mapContacts = snapshot => snapshot.docs.map(item => ({ id:item.id, uid:item.data().uid || item.id, ...item.data() })).filter(item => item.activo !== false && item.id !== user.uid);
+  contacts = mapContacts(usersSnap);
+  onSnapshot(collection(db, 'usuarios'), snapshot => {
+    contacts = mapContacts(snapshot);
+    const current = snapshot.docs.find(item => item.id === user.uid)?.data();
+    if (current) {
+      root.querySelector('.mw-head strong').textContent = current.nombre || user.email;
+      const avatarMarkup = avatarContent(current);
+      root.querySelector('.mw-profile-avatar').innerHTML = avatarMarkup;
+      if (pageAvatar) pageAvatar.innerHTML = avatarMarkup;
+    }
+    if (view === 'contacts') render();
+  });
 
   const merge = () => {
     messages = [...new Map([...received, ...sent]).values()].sort((a, b) => (a.data.creadoEn?.seconds || 0) - (b.data.creadoEn?.seconds || 0));
@@ -86,12 +99,20 @@ onAuthStateChanged(auth, async user => {
     list.classList.add('conversation-mode');
     const thread = messages.filter(({ data }) => data.destinatarioTipo === 'usuario' && ((data.creadoPorUid === user.uid && data.destinatarioId === activeContact.id) || (data.creadoPorUid === activeContact.id && Array.isArray(data.destinatarioUids) && data.destinatarioUids.includes(user.uid))));
     list.innerHTML = `
-      <div class="mw-conversation-head"><button class="mw-back">‹</button><span class="mw-contact-avatar">${initials(activeContact.nombre)}</span><div><strong>${escapeHtml(activeContact.nombre || activeContact.usuario || activeContact.email)}</strong><span>${escapeHtml(activeContact.rol)} · ${escapeHtml(activeContact.usuario_original || activeContact.email)}</span></div></div>
-      <div class="mw-thread">${thread.length ? thread.map(({ data }) => `<article class="mw-bubble ${data.creadoPorUid === user.uid ? 'mine' : 'theirs'}"><strong>${escapeHtml(data.titulo)}</strong><p>${escapeHtml(data.mensaje)}</p><time>${formatDate(data.creadoEn)}</time></article>`).join('') : '<div class="mw-empty">Inicia la conversación con este contacto.</div>'}</div>
+      <div class="mw-conversation-head"><button class="mw-back">‹</button><span class="mw-contact-avatar">${avatarContent(activeContact)}</span><div><strong>${escapeHtml(activeContact.nombre || activeContact.usuario || activeContact.email)}</strong><span>${escapeHtml(activeContact.rol)} · ${escapeHtml(activeContact.usuario_original || activeContact.email)}</span></div></div>
+      <div class="mw-thread">${thread.length ? thread.map(({ id, data }) => `<article class="mw-bubble ${data.creadoPorUid === user.uid ? 'mine' : 'theirs'}"><strong>${escapeHtml(data.titulo)}</strong><p>${escapeHtml(data.mensaje)}</p><footer><time>${formatDate(data.creadoEn)}</time>${(['superadmin','directora'].includes(role) || data.creadoPorUid === user.uid) ? `<button class="mw-delete-message" data-delete-message="${id}" title="Eliminar mensaje">Eliminar</button>` : ''}</footer></article>`).join('') : '<div class="mw-empty">Inicia la conversación con este contacto.</div>'}</div>
       ${role === 'recepcion' ? '' : '<form class="mw-quick-form"><input maxlength="120" placeholder="Asunto" required><textarea maxlength="1000" placeholder="Escribir un mensaje…" required></textarea><button type="submit" aria-label="Enviar">➤</button></form>'}`;
 
     list.querySelector('.mw-back').addEventListener('click', () => { view = 'contacts'; activeContact = null; toolbar.hidden = false; render(); });
     thread.filter(item => item.data.creadoPorUid !== user.uid).forEach(item => markRead(item.id));
+    list.querySelectorAll('[data-delete-message]').forEach(button => button.addEventListener('click', async () => {
+      const answer = await (window.Swal?.fire ? window.Swal.fire({ title:'¿Eliminar mensaje?', text:'Esta acción no se puede deshacer.', icon:'warning', showCancelButton:true, confirmButtonText:'Sí, eliminar', cancelButtonText:'Cancelar', confirmButtonColor:'#c64650' }) : Promise.resolve({ isConfirmed:confirm('¿Eliminar este mensaje?') }));
+      if (!answer.isConfirmed) return;
+      try {
+        await deleteDoc(doc(db, 'avisos', button.dataset.deleteMessage));
+        await auditEvent('aviso.eliminado', { collection:'avisos', id:button.dataset.deleteMessage }, 'Mensaje eliminado desde conversación');
+      } catch (error) { window.Swal?.fire?.('No se pudo eliminar', error.message, 'error'); }
+    }));
     const form = list.querySelector('.mw-quick-form');
     if (form) form.addEventListener('submit', async event => {
       event.preventDefault();
@@ -119,7 +140,7 @@ onAuthStateChanged(auth, async user => {
     if (view === 'contacts') {
       const items = contacts.filter(item => `${item.nombre} ${item.usuario} ${item.email} ${item.rol}`.toLowerCase().includes(term));
       const mass = role === 'recepcion' ? '' : '<button class="mw-contact mw-mass-contact" data-mass-message><span class="mw-contact-avatar">✦</span><div><strong>Crear mensaje masivo</strong><span>Docentes, padres o destinatarios</span></div><b>›</b></button>';
-      list.innerHTML = mass + (items.length ? items.map(item => `<button class="mw-contact" data-contact="${item.id}"><span class="mw-contact-avatar">${initials(item.nombre)}</span><div><strong>${escapeHtml(item.nombre || item.usuario || item.email)}</strong><span>${escapeHtml(item.rol)} · ${escapeHtml(item.usuario_original || item.email)}</span></div><b>›</b></button>`).join('') : '<div class="mw-empty">No se encontraron contactos.</div>');
+      list.innerHTML = mass + (items.length ? items.map(item => `<button class="mw-contact" data-contact="${item.id}"><span class="mw-contact-avatar">${avatarContent(item)}</span><div><strong>${escapeHtml(item.nombre || item.usuario || item.email)}</strong><span>${escapeHtml(item.rol)} · ${escapeHtml(item.usuario_original || item.email)}</span></div><b>›</b></button>`).join('') : '<div class="mw-empty">No se encontraron contactos.</div>');
       list.querySelector('[data-mass-message]')?.addEventListener('click', () => { location.href = 'centro-mensajes.html'; });
       list.querySelectorAll('[data-contact]').forEach(button => button.addEventListener('click', () => openConversation(contacts.find(item => item.id === button.dataset.contact))));
       return;

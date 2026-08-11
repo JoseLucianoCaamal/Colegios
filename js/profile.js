@@ -2,7 +2,7 @@ import { auth, db } from './firebase-config.js';
 import { requireRoles, auditEvent } from './security.js';
 import { dashboardForRole } from './role-nav.js';
 import { uploadToCloudinary } from './cloudinary-config.js';
-import { doc, updateDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { doc, updateDoc, serverTimestamp, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 const { user, profile } = await requireRoles(['superadmin', 'directora', 'recepcion', 'maestro']);
 const $ = selector => document.querySelector(selector);
@@ -26,6 +26,13 @@ function renderPhoto(url = profile.fotoPerfil) {
   preview.innerHTML = url ? `<img src="${url}" alt="Fotografía de perfil">` : `<span>${(profile.nombre || user.email || 'U').split(/\s+/).slice(0,2).map(value=>value[0]).join('').toUpperCase()}</span>`;
 }
 renderPhoto();
+onSnapshot(doc(db, 'usuarios', user.uid), snapshot => {
+  if (!snapshot.exists() || pendingPhoto) return;
+  const fresh = snapshot.data();
+  if (fresh.fotoPerfil) renderPhoto(fresh.fotoPerfil);
+  $('#profile-name').value = fresh.nombre || $('#profile-name').value;
+  status.textContent = fresh.fotoPerfil ? 'Perfil y fotografía sincronizados' : 'Perfil cargado';
+});
 $('#profile-bio').addEventListener('input', event => { $('#bio-count').textContent = event.target.value.length; });
 $('#profile-color').addEventListener('input', () => { preview.style.background = $('#profile-color').value; });
 photoInput.addEventListener('change', () => {
@@ -57,6 +64,7 @@ form.addEventListener('submit', async event => {
     await updateDoc(doc(db, 'usuarios', user.uid), changes);
     await auditEvent('usuario.perfil_actualizado', { collection:'usuarios', id:user.uid }, 'Actualización de perfil personal');
     pendingPhoto = null;
+    if (photo) renderPhoto(photo.url);
     status.textContent = 'Cambios guardados';
     status.className = 'profile-status saved';
     setTimeout(() => { location.href = home; }, 900);
