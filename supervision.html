@@ -5,6 +5,7 @@
     <title>Boletas - Amor y Libertad</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/admin-power.css">
+    <link rel="stylesheet" href="css/academic.css">
     
     <!-- Librerías para PDF y ZIP -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -25,22 +26,22 @@
         .btn-back-clean { display: inline-flex; align-items: center; gap: 5px; color: #666; text-decoration: none; font-weight: bold; margin-bottom: 15px; }
         
         /* ESTILOS DE LA BOLETA PDF OCULTA */
-        #plantilla-boleta { display: none; width: 800px; background: white; padding: 40px; color: #333; font-family: 'Arial', sans-serif; box-sizing: border-box;}
-        .pdf-header { text-align: center; border-bottom: 3px solid #8e44ad; padding-bottom: 20px; margin-bottom: 30px; }
-        .pdf-header img { width: 100px; margin-bottom: 10px; }
-        .pdf-header h1 { color: #8e44ad; font-size: 24px; margin: 0; }
-        .pdf-header h2 { color: #555; font-size: 18px; margin: 5px 0 0 0; font-weight: normal; }
-        .pdf-info-box { background: #f8fafd; padding: 20px; border-radius: 10px; border: 1px solid #e0e6ed; margin-bottom: 30px; }
-        .pdf-info-box p { margin: 8px 0; font-size: 14px; font-weight: bold; color:#004a99;}
-        .pdf-info-box span { font-weight: normal; color:#333;}
+        #plantilla-boleta { display:none;width:760px;min-height:940px;background:#fff;padding:38px 44px 50px;color:#172534;font-family:Arial,sans-serif;box-sizing:border-box;position:relative}
+        .pdf-header { display:flex;align-items:center;gap:14px;border-bottom:3px solid #073763;padding-bottom:16px;margin-bottom:22px;text-align:left }
+        .pdf-header img { width:66px;height:66px;object-fit:contain;margin:0 }
+        .pdf-header h1 { color:#073763;font-size:22px;margin:0 }
+        .pdf-header h2 { color:#718092;font-size:11px;margin:5px 0 0;font-weight:normal }
+        .pdf-report-title{text-align:center;margin-bottom:18px}.pdf-report-title h3{margin:0;color:#073763;font-size:20px}.pdf-report-title p{margin:5px 0 0;color:#718092;font-size:10px}
+        .pdf-info-box { display:grid;grid-template-columns:1.4fr .6fr;gap:1px;background:#dce5ec;border:1px solid #dce5ec;border-radius:8px;overflow:hidden;margin-bottom:22px;padding:0 }
+        .pdf-info-box p { margin:0;padding:11px 13px;background:#f7f9fb;font-size:9px;color:#718092;text-transform:uppercase;font-weight:bold }
+        .pdf-info-box p:first-child{grid-column:1/-1}.pdf-info-box span{display:block;margin-top:4px;color:#172534;font-size:12px;text-transform:none}
         
-        .tabla-boleta-pdf { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        .tabla-boleta-pdf th { background: #8e44ad; color: white; padding: 12px; border: 1px solid #ddd; text-align: center;}
-        .tabla-boleta-pdf td { padding: 12px; border: 1px solid #ddd; text-align: center; font-size: 14px; font-weight: bold; color: #333;}
-        .tabla-boleta-pdf td:first-child { text-align: left; font-weight: normal; }
+        .tabla-boleta-pdf { width:100%;border-collapse:collapse;margin-top:0 }
+        .tabla-boleta-pdf th { background:#073763;color:#fff;padding:10px 12px;border:0;text-align:left;font-size:9px;letter-spacing:.05em }
+        .tabla-boleta-pdf th:last-child{text-align:center}.tabla-boleta-pdf td{padding:11px 12px;border-bottom:1px solid #dfe7ed;text-align:center;font-size:11px;font-weight:bold;color:#172534}.tabla-boleta-pdf td:first-child{text-align:left;font-weight:normal}.pdf-grade-summary{display:flex;justify-content:flex-end;margin-top:15px}.pdf-grade-summary span{padding:8px 12px;border-radius:7px;color:#073763;background:#eaf3f8;font-size:10px;font-weight:bold}.pdf-report-footer{position:absolute;left:44px;right:44px;bottom:20px;display:flex;justify-content:space-between;padding-top:9px;border-top:1px solid #dfe7ed;color:#718092;font-size:8px}
     </style>
 </head>
-<body>
+<body class="academic-page">
 
 <header class="profile-header">
     <div class="cover-photo"><img src="Img/logo2.png" alt="Portada"></div>
@@ -96,8 +97,9 @@
     <div class="pdf-header">
         <img src="Img/logo.png" alt="Logo">
         <h1>Centro Educativo Amor y Libertad</h1>
-        <h2>Documento Oficial: Boleta de Calificaciones</h2>
+        <h2>La verdad nos hará libres · Mérida, Yucatán</h2>
     </div>
+    <div class="pdf-report-title"><h3>Reporte de evaluación</h3><p>Resumen de resultados por asignatura</p></div>
     <div class="pdf-info-box">
         <p>ALUMNO: <span id="pdf-nombre"></span></p>
         <p>GRUPO: <span id="pdf-grupo"></span></p>
@@ -113,6 +115,8 @@
             <!-- Las materias se llenarán con JS -->
         </tbody>
     </table>
+    <div class="pdf-grade-summary"><span id="pdf-promedio">Evaluación mixta</span></div>
+    <footer class="pdf-report-footer"><span>Centro Educativo Amor y Libertad</span><span>Generado por el sistema escolar</span></footer>
 </div>
 
 <script type="module">
@@ -122,8 +126,16 @@
 
     const filtroGrupo = document.getElementById('filtroGrupo');
     let listaMateriasOficiales = [];
-    let diccionarioNotasGlobal = {}; 
+    let diccionarioNotasGlobal = {};
     let alumnosActuales = [];
+
+    function actualizarResumenPDF(alumnoId) {
+        const valores = Object.values(diccionarioNotasGlobal[alumnoId] || {}).map(String).map(valor => valor.trim()).filter(Boolean);
+        const numericas = valores.filter(valor => /^\d+(\.\d+)?$/.test(valor)).map(Number).filter(valor => valor >= 0 && valor <= 10);
+        document.getElementById('pdf-promedio').innerText = valores.length && numericas.length === valores.length
+            ? `Promedio numérico: ${(numericas.reduce((total, valor) => total + valor, 0) / numericas.length).toFixed(1)}`
+            : 'Evaluación cualitativa o mixta';
+    }
 
     onAuthStateChanged(auth, (user) => { if (user) cargarGrupos(); else window.location.href="login.html"; });
 
@@ -148,6 +160,7 @@
             const materiasSnap = await getDocs(qMaterias);
             listaMateriasOficiales = [];
             materiasSnap.forEach(doc => listaMateriasOficiales.push(doc.data().nombre));
+            listaMateriasOficiales = [...new Set(listaMateriasOficiales)];
 
             // 2. Obtener todas las calificaciones de ese grupo en ese periodo
             const qCalif = query(collection(db, "calificaciones"), where("grupo", "==", grupo), where("periodo", "==", periodo));
@@ -221,13 +234,14 @@
             listaMateriasOficiales.forEach(mat => {
                 let nota = "Sin evaluar";
                 let colorNota = "#ff4d4d";
-                if (diccionarioNotasGlobal[alumnoData.id] && diccionarioNotasGlobal[alumnoData.id][mat]) {
+                if (diccionarioNotasGlobal[alumnoData.id] && diccionarioNotasGlobal[alumnoData.id][mat] !== undefined && diccionarioNotasGlobal[alumnoData.id][mat] !== '') {
                     nota = diccionarioNotasGlobal[alumnoData.id][mat];
                     colorNota = "#004a99";
                 }
                 tbodyMaterias.innerHTML += `<tr><td>${mat}</td><td style="color:${colorNota};">${nota}</td></tr>`;
             });
         }
+        actualizarResumenPDF(alumnoData.id);
 
         const plantilla = document.getElementById('plantilla-boleta');
         plantilla.style.display = 'block';
@@ -236,10 +250,10 @@
         const nombreArchivo = `${alumnoData.nombre} Calificaciones ${grupo}.pdf`;
 
         html2pdf().set({
-            margin: 15,
+            margin: 10,
             filename: nombreArchivo,
             image: { type: 'jpeg', quality: 1 },
-            html2canvas: { scale: 2 },
+            html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
             jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
         }).from(plantilla).save().then(() => {
             plantilla.style.display = 'none';
@@ -280,16 +294,17 @@
                 listaMateriasOficiales.forEach(mat => {
                     let nota = "Sin evaluar";
                     let colorNota = "#ff4d4d";
-                    if (diccionarioNotasGlobal[alumnoData.id] && diccionarioNotasGlobal[alumnoData.id][mat]) {
+                    if (diccionarioNotasGlobal[alumnoData.id] && diccionarioNotasGlobal[alumnoData.id][mat] !== undefined && diccionarioNotasGlobal[alumnoData.id][mat] !== '') {
                         nota = diccionarioNotasGlobal[alumnoData.id][mat];
                         colorNota = "#004a99";
                     }
                     tbodyMaterias.innerHTML += `<tr><td>${mat}</td><td style="color:${colorNota};">${nota}</td></tr>`;
                 });
+                actualizarResumenPDF(alumnoData.id);
 
                 // Convertimos a PDF
                 const pdfBlob = await html2pdf().set({
-                    margin: 15, image: { type: 'jpeg', quality: 1 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
+                    margin: 10, image: { type: 'jpeg', quality: 1 }, html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' }, jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
                 }).from(plantilla).output('blob');
                 
                 // Metemos al ZIP CON EL NOMBRE EXACTO SOLICITADO

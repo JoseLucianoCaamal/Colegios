@@ -4,46 +4,33 @@
     <meta charset="UTF-8">
     <title>Documentos - Amor y Libertad</title>
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/admin-power.css">
+    <link rel="stylesheet" href="css/academic.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        .grid-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; max-width: 900px; margin: 40px auto; padding: 0 20px; }
-        .option-card { background: white; padding: 40px 20px; border-radius: 15px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: transform 0.3s; border: 1px solid #eef2f7;}
-        .option-card:hover { transform: translateY(-5px); border-color:#004a99;}
-        .option-icon { font-size: 3rem; margin-bottom: 15px; display: block; }
+        .documents-shell{width:min(1040px,calc(100% - 40px));margin:34px auto}.documents-intro{display:flex;justify-content:space-between;align-items:end;gap:24px;margin-bottom:22px}.documents-intro h2{margin:0;color:#073763;font-size:1.35rem}.documents-intro p{margin:6px 0 0;color:#708092;font-size:.82rem}.documents-count{padding:8px 12px;border:1px solid #dce6ee;border-radius:8px;color:#53697d;background:#fff;font-size:.72rem;font-weight:800}.documents-list{overflow:hidden;border:1px solid #dfe7ed;border-radius:16px;background:#fff;box-shadow:0 14px 34px rgba(28,49,68,.07)}.document-row{display:grid;grid-template-columns:56px minmax(0,1fr) 220px 130px;align-items:center;gap:18px;padding:20px 22px;border-bottom:1px solid #e8eef3}.document-row:last-child{border-bottom:0}.document-row:hover{background:#f8fafc}.document-code{display:grid;width:48px;height:48px;place-items:center;border:1px solid #d9e5ed;border-radius:12px;color:#073763;background:#edf5fa;font-size:.72rem;font-weight:900;letter-spacing:.06em}.document-info h3{margin:0;color:#172534;font-size:.95rem}.document-info p{margin:5px 0 0;color:#738294;font-size:.72rem}.document-meta{color:#6c7d8e;font-size:.7rem}.document-meta strong{display:block;margin-bottom:4px;color:#33495c}.document-open{display:inline-flex;align-items:center;justify-content:center;min-height:40px;border:1px solid #073763;border-radius:9px;color:#073763;text-decoration:none;font-size:.72rem;font-weight:800}.document-open:hover{color:#fff;background:#073763}@media(max-width:760px){.documents-intro{align-items:start;flex-direction:column}.document-row{grid-template-columns:48px 1fr}.document-meta,.document-open{grid-column:2}.document-open{width:100%}}
         .btn-back-clean { display: inline-flex; align-items: center; gap: 5px; color: #666; text-decoration: none; font-weight: bold; margin-bottom: 15px; }
     </style>
 </head>
-<body>
+<body class="academic-page">
 
 <header class="profile-header">
     <div class="cover-photo"><img src="Img/logo2.png" alt="Portada"></div>
     <div class="profile-info">
-        <a href="dashboard-maestro.html" class="btn-back-clean">⬅ Volver al Panel Principal</a>
+        <a href="dashboard-maestro.html" class="btn-back-clean">← Volver al panel principal</a>
         <div class="profile-text">
-            <h1>Carpeta de Documentos</h1>
-            <p>Archivos y Reportes del Docente</p>
+            <h1>Centro de documentos</h1>
+            <p>Registros académicos y reportes del docente</p>
         </div>
     </div>
 </header>
 
 <main>
-    <div class="grid-options">
-        <div class="option-card">
-            <span class="option-icon">📋</span>
-            <h3>Pase de Lista</h3>
-            <a href="asistencia.html" class="btn btn-primary">ABRIR</a>
-        </div>
-        <div class="option-card">
-            <span class="option-icon">📝</span>
-            <h3>Calificaciones</h3>
-            <a href="calificaciones.html" class="btn btn-primary" style="background:#4CAF50; border-color:#4CAF50;">ABRIR</a>
-        </div>
-        <div class="option-card">
-            <span class="option-icon">📄</span>
-            <h3>Fichas Descriptivas</h3>
-            <a href="fichas-descriptivas.html" class="btn btn-primary" style="background:#FF9800; border-color:#FF9800; color:#333;">ABRIR</a>
-        </div>
-    </div>
+    <section class="documents-shell"><div class="documents-intro"><div><h2>Herramientas académicas</h2><p>Selecciona el registro que deseas consultar o actualizar.</p></div><span class="documents-count">3 módulos disponibles</span></div><div class="documents-list">
+        <article class="document-row"><span class="document-code">AS</span><div class="document-info"><h3>Pase de lista</h3><p>Registra asistencia, retardos y faltas por grupo y asignatura.</p></div><div class="document-meta"><strong>Registro diario</strong>Consulta y exportación PDF</div><a href="asistencia.html" class="document-open">Abrir módulo</a></article>
+        <article class="document-row"><span class="document-code">EV</span><div class="document-info"><h3>Evaluaciones</h3><p>Captura calificaciones numéricas, letras o valoraciones.</p></div><div class="document-meta"><strong>Por periodo</strong>Historial por asignatura</div><a href="calificaciones.html" class="document-open">Abrir módulo</a></article>
+        <article class="document-row"><span class="document-code">FD</span><div class="document-info"><h3>Fichas descriptivas</h3><p>Documenta avances, habilidades y áreas de seguimiento.</p></div><div class="document-meta"><strong>Seguimiento individual</strong>Formato institucional PDF</div><a href="fichas-descriptivas.html" class="document-open">Abrir módulo</a></article>
+    </div></section>
 </main>
 </body>
 </html>

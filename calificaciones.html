@@ -61,12 +61,12 @@
     </section>
 
     <section class="card" id="seccion-lista" style="display: none;">
-        <div class="grade-panel-title"><h3 id="titulo-lista">Alumnos a evaluar</h3><span class="grade-average" id="promedio-grupo">Promedio: —</span></div>
+        <div class="grade-panel-title"><div><h3 id="titulo-lista">Alumnos a evaluar</h3><p class="grade-caption">Acepta números, letras o descripciones breves.</p></div><span class="grade-average" id="promedio-grupo">Promedio numérico: —</span></div>
         <table class="academic-table">
             <thead><tr><th>Nombre del Alumno</th><th>Calificación / Observación</th></tr></thead>
             <tbody id="tabla-calificaciones"></tbody>
         </table>
-        <button id="btn-guardar" class="btn btn-primary" style="width:100%; margin-top:20px; padding:15px; border-radius:8px; font-weight:bold; background:#004a99; border:none; cursor:pointer;">✅ Guardar Calificaciones</button>
+        <button id="btn-guardar" class="btn btn-primary grade-save">Guardar evaluaciones</button>
     </section>
 </main>
 
@@ -82,8 +82,9 @@
     let alumnosActuales = [];
 
     function actualizarPromedio() {
-        const notas = [...tabla.querySelectorAll('.input-calificacion')].map(campo => Number(campo.value)).filter(valor => Number.isFinite(valor) && valor >= 0 && valor <= 10);
-        document.getElementById('promedio-grupo').textContent = notas.length ? `Promedio: ${(notas.reduce((total, valor) => total + valor, 0) / notas.length).toFixed(1)}` : 'Promedio: —';
+        const campos = [...tabla.querySelectorAll('.input-calificacion')].map(campo => campo.value.trim()).filter(Boolean);
+        const notas = campos.filter(valor => /^\d+(\.\d+)?$/.test(valor)).map(Number).filter(valor => valor >= 0 && valor <= 10);
+        document.getElementById('promedio-grupo').textContent = notas.length === campos.length && notas.length ? `Promedio numérico: ${(notas.reduce((total, valor) => total + valor, 0) / notas.length).toFixed(1)}` : 'Evaluación mixta';
     }
     tabla.addEventListener('input', actualizarPromedio);
 
@@ -145,7 +146,7 @@
                 tabla.innerHTML += `
                     <tr>
                         <td style="font-weight:bold; font-size:1.05rem;">${data.nombre}</td>
-                        <td><input type="number" min="0" max="10" step="0.1" inputmode="decimal" class="input-calificacion" id="calif_${idAlumno}" value="${notaPrevia}" placeholder="0 - 10"><span class="grade-help">Escala numérica de 0 a 10</span></td>
+                        <td><input type="text" maxlength="40" class="input-calificacion" id="calif_${idAlumno}" value="${notaPrevia}" placeholder="Ej. 9.5, A, Logrado"><span class="grade-help">Número, letra o valoración descriptiva breve</span></td>
                     </tr>
                 `;
             });
@@ -162,10 +163,10 @@
         let notas = {};
         for (const id of alumnosActuales) {
             const campo = document.getElementById(`calif_${id}`);
-            const valor = Number(campo.value);
-            if (campo.value === '' || !Number.isFinite(valor) || valor < 0 || valor > 10) {
+            const valor = campo.value.trim();
+            if (!valor) {
                 campo.focus();
-                return Swal.fire('Calificación inválida', 'Todas las calificaciones deben ser números entre 0 y 10.', 'warning');
+                return Swal.fire('Evaluación pendiente', 'Escribe una calificación o valoración para cada estudiante.', 'warning');
             }
             notas[id] = valor;
         }

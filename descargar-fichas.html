@@ -129,11 +129,12 @@
     const clone = document.createElement('div');
     
     // Forzamos las medidas y el fondo para que el PDF no salga negro ni en blanco
-    clone.className = 'pdf-document';
+    clone.className = 'pdf-document pdf-document-compact';
 
     // Limpiamos los saltos de línea del texto
     const escapar = valor => String(valor || 'No disponible').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     const safeTexto = escapar(data.texto || 'Sin observaciones registradas.').replace(/\n/g, '<br>');
+    if (safeTexto.length > 1800) clone.classList.add('pdf-text-dense');
     const nombreAlumno = escapar(data.nombre_alumno);
     const grupo = escapar(data.grupo);
     const docente = escapar(nombreDelProfesor || data.maestro_nombre);
@@ -143,11 +144,10 @@
     // Estructura simplificada sin logos
     clone.innerHTML = `
       <div class="pdf-accent"></div>
-      <header class="pdf-brand"><img src="Img/logo.png" alt=""><div><h1>Centro Educativo Amor y Libertad</h1><p>La verdad nos hará libres · Mérida, Yucatán</p></div><div class="pdf-doc-label">DOCUMENTO ESCOLAR</div></header>
+      <header class="pdf-brand"><img src="Img/logo.png" alt=""><div><h1>Centro Educativo Amor y Libertad</h1><p>La verdad nos hará libres · Mérida, Yucatán</p></div></header>
       <div class="pdf-title"><h2>Ficha descriptiva del estudiante</h2><p>Informe de seguimiento académico y formativo</p></div>
       <section class="pdf-data-grid"><div class="pdf-data-item wide"><span>Nombre del estudiante</span><strong>${nombreAlumno}</strong></div><div class="pdf-data-item"><span>Grupo</span><strong>${grupo}</strong></div><div class="pdf-data-item"><span>Periodo</span><strong>${periodo}</strong></div><div class="pdf-data-item"><span>Docente responsable</span><strong>${docente}</strong></div><div class="pdf-data-item"><span>Última actualización</span><strong>${fecha}</strong></div></section>
       <section class="pdf-section"><div class="pdf-section-title">Observaciones y seguimiento</div><div class="pdf-observation">${safeTexto}</div></section>
-      <section class="pdf-signatures"><div class="pdf-signature"><strong>${docente}</strong><span>Firma del docente responsable</span></div><div class="pdf-signature"><strong>Nombre y firma</strong><span>Madre, padre o tutor</span></div></section>
       <footer class="pdf-footer"><span><strong>Amor y Libertad</strong> · Formación integral con valores</span><span>Documento generado por el sistema escolar</span></footer>
     `;
 

@@ -93,6 +93,7 @@
             <h3 style="margin: 0; color: #004a99; font-size: 1.4rem;" id="titulo-lista">Alumnos</h3>
             <span class="academic-date" id="badge-fecha"></span>
         </div>
+        <div class="attendance-command"><div><span class="command-label">Avance del pase</span><strong id="avance-lista">0 de 0 registrados</strong></div><button type="button" id="btn-todos-presentes" class="btn-mark-all">Marcar todos presentes</button></div>
         <div class="academic-summary"><div class="summary-chip present"><strong id="total-presentes">0</strong><span>Presentes</span></div><div class="summary-chip late"><strong id="total-retardos">0</strong><span>Retardos</span></div><div class="summary-chip absent"><strong id="total-faltas">0</strong><span>Faltas</span></div></div>
         
         <table class="academic-table">
@@ -126,8 +127,13 @@
         document.getElementById('total-presentes').textContent = seleccionados.filter(valor => valor === 'Presente').length;
         document.getElementById('total-retardos').textContent = seleccionados.filter(valor => valor === 'Retardo').length;
         document.getElementById('total-faltas').textContent = seleccionados.filter(valor => valor === 'Falta').length;
+        document.getElementById('avance-lista').textContent = `${seleccionados.length} de ${alumnosActuales.length} registrados`;
     }
     tabla.addEventListener('change', actualizarResumen);
+    document.getElementById('btn-todos-presentes').addEventListener('click', () => {
+        tabla.querySelectorAll('input[value="Presente"]').forEach(input => { input.checked = true; });
+        actualizarResumen();
+    });
 
     onAuthStateChanged(auth, (user) => {
         if (!user) window.location.href = "login.html";
@@ -196,12 +202,12 @@
 
                 tabla.innerHTML += `
                     <tr>
-                        <td><div class="student-name">${data.nombre}</div></td>
+                        <td><div class="attendance-student"><span class="roster-number">${contador}</span><span class="student-initial">${data.nombre.charAt(0).toUpperCase()}</span><div><div class="student-name">${data.nombre}</div><small>Estudiante registrado</small></div></div></td>
                         <td>
                             <div class="attendance-options">
-                                <input type="radio" name="ast_${idAlumno}" id="p_${idAlumno}" value="Presente" ${isP}><label for="p_${idAlumno}">✔️ P</label>
-                                <input type="radio" name="ast_${idAlumno}" id="r_${idAlumno}" value="Retardo" ${isR}><label for="r_${idAlumno}">⏱️ R</label>
-                                <input type="radio" name="ast_${idAlumno}" id="f_${idAlumno}" value="Falta" ${isF}><label for="f_${idAlumno}">❌ F</label>
+                                <input type="radio" name="ast_${idAlumno}" id="p_${idAlumno}" value="Presente" ${isP}><label for="p_${idAlumno}">Presente</label>
+                                <input type="radio" name="ast_${idAlumno}" id="r_${idAlumno}" value="Retardo" ${isR}><label for="r_${idAlumno}">Retardo</label>
+                                <input type="radio" name="ast_${idAlumno}" id="f_${idAlumno}" value="Falta" ${isF}><label for="f_${idAlumno}">Falta</label>
                             </div>
                         </td>
                     </tr>
