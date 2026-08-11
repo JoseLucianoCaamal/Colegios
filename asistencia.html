@@ -249,8 +249,11 @@
         const reporte = document.createElement('div');
         reporte.className = 'attendance-pdf-report';
         reporte.style.position = 'fixed';
-        reporte.style.left = '-10000px';
+        reporte.style.left = '50%';
         reporte.style.top = '0';
+        reporte.style.transform = 'translateX(-50%)';
+        reporte.style.zIndex = '10001';
+        reporte.style.boxShadow = '0 0 0 100vmax rgba(14, 30, 43, .55)';
         reporte.innerHTML = `
             <header class="attendance-pdf-brand"><img src="Img/logo.png" alt=""><div><h1>Centro Educativo Amor y Libertad</h1><p>Control institucional de asistencia</p></div></header>
             <section class="attendance-pdf-title"><h2>Reporte de asistencia</h2><p>${escapar(fechaTexto)}</p></section>
@@ -261,6 +264,14 @@
         document.body.appendChild(reporte);
 
         try {
+            const logoReporte = reporte.querySelector('img');
+            if (logoReporte && !logoReporte.complete) {
+                await logoReporte.decode().catch(() => new Promise(resolve => {
+                    logoReporte.addEventListener('load', resolve, { once: true });
+                    logoReporte.addEventListener('error', resolve, { once: true });
+                }));
+            }
+            await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
             await html2pdf().set({
                 margin: 12,
                 filename: `Asistencia_${filtroGrupo.value}_${fechaISO}.pdf`,
