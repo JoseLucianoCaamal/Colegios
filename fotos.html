@@ -137,7 +137,14 @@
             
             try {
                 await addDoc(collection(db, "fotos"), {
-                    url: urlSegura, seccion: nombreSeccion, maestro_email: maestroActual, fecha: new Date()
+                    url: urlSegura,
+                    seccion: nombreSeccion,
+                    maestro_email: maestroActual,
+                    fecha: new Date(),
+                    proveedor: 'cloudinary',
+                    publicId: result.info.public_id || '',
+                    bytes: result.info.bytes || 0,
+                    formato: result.info.format || ''
                 });
                 
                 inputSeccion.value = "";

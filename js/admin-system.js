@@ -1,8 +1,9 @@
-import { auth, db, storage } from './firebase-config.js';
+import { auth, db } from './firebase-config.js';
 import { requireRoles, auditEvent } from './security.js';
-import { signOut, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-import { collection, getDocs, doc, getDoc, updateDoc, setDoc, addDoc, query, orderBy, limit, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-import { ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
+import { signOut, sendPasswordResetEmail, getAuth, createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import { collection, getDocs, getCountFromServer, doc, getDoc, updateDoc, setDoc, addDoc, query, orderBy, limit, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { initializeApp, deleteApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { checkCloudinaryAvailability } from './cloudinary-config.js';
 
 const { user, profile } = await requireRoles(['superadmin']);
 document.getElementById('nombre-usuario').textContent = profile.nombre || 'Superadministrador';
@@ -14,10 +15,42 @@ const formatDate = value => {
 };
 const escapeHtml = value => String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
+document.getElementById('form-usuario').addEventListener('submit', async event => {
+  event.preventDefault();
+  const nombre = document.getElementById('nuevo-nombre').value.trim();
+  const rol = document.getElementById('nuevo-rol').value;
+  const entrada = document.getElementById('nuevo-email').value.trim();
+  const password = document.getElementById('nuevo-password').value;
+  const usuarioOriginal = entrada.includes('@') ? entrada.split('@')[0] : entrada;
+  const email = entrada.includes('@') ? entrada.toLowerCase() : `${entrada.toLowerCase().replace(/\s+/g, '')}@amorylibertad.org`;
+  if (password.length < 6) return Swal.fire('Contraseña insuficiente', 'Debe contener al menos 6 caracteres.', 'warning');
+  if (rol !== 'maestro' && !entrada.includes('@')) return Swal.fire('Correo requerido', 'Dirección, recepción y superadministración deben usar su correo completo.', 'warning');
+  const secondary = initializeApp(auth.app.options, `crear-${Date.now()}`);
+  try {
+    Swal.fire({ title: 'Creando cuenta…', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    const secondaryAuth = getAuth(secondary);
+    const credential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+    const uid = credential.user.uid;
+    await setDoc(doc(db, 'usuarios', uid), { uid, nombre, email, rol, activo: true, usuario: usuarioOriginal, usuario_original: usuarioOriginal, creadoEn: serverTimestamp(), creadoPorUid: user.uid });
+    await secondaryAuth.signOut();
+    await auditEvent('usuario.cuenta_creada', { collection: 'usuarios', id: uid }, `${rol}: ${email}`);
+    event.target.reset();
+    await Swal.fire('Cuenta creada', `${nombre} ya puede acceder con ${rol === 'maestro' ? usuarioOriginal : email}.`, 'success');
+    await loadUsers();
+  } catch (error) {
+    const messages = { 'auth/email-already-in-use': 'El correo ya existe en Firebase Authentication.', 'auth/weak-password': 'La contraseña no cumple los requisitos.', 'auth/invalid-email': 'El correo no es válido.' };
+    Swal.fire('No se pudo crear', messages[error.code] || error.message, 'error');
+  } finally { await deleteApp(secondary).catch(() => {}); }
+});
+
 document.querySelectorAll('.sys-tab').forEach(button => button.addEventListener('click', () => {
   document.querySelectorAll('.sys-tab,.sys-section').forEach(element => element.classList.remove('active'));
   button.classList.add('active');
   document.getElementById(`tab-${button.dataset.tab}`).classList.add('active');
+  if (button.dataset.tab === 'infraestructura' && !button.dataset.loaded) {
+    button.dataset.loaded = 'true';
+    loadInfrastructure().catch(error => Swal.fire('Métricas no disponibles', error.message, 'error'));
+  }
 }));
 
 async function loadUsers() {
@@ -87,10 +120,32 @@ async function loadConfig() {
 document.getElementById('form-config').addEventListener('submit', async event => { event.preventDefault(); const data = { cicloEscolar: document.getElementById('ciclo').value.trim(), periodo: document.getElementById('periodo').value, estado: document.getElementById('estado-ciclo').value, fechaInicio: document.getElementById('fecha-inicio').value, fechaFin: document.getElementById('fecha-fin').value, actualizadoPorUid: user.uid, actualizadoEn: serverTimestamp() }; await setDoc(doc(db, 'configuracion', 'cicloActual'), data, { merge: true }); await auditEvent('configuracion.ciclo_actualizado', { collection: 'configuracion', id: 'cicloActual' }, `${data.cicloEscolar} - ${data.periodo}`); Swal.fire('Configuración guardada', '', 'success'); });
 
 async function loadNotices() { const snapshot = await getDocs(query(collection(db, 'avisos'), orderBy('creadoEn', 'desc'), limit(30))); document.getElementById('lista-avisos').innerHTML = snapshot.empty ? '<div class="sys-empty">No hay avisos.</div>' : snapshot.docs.map(item => { const data = item.data(); return `<div class="notice-row"><strong>${escapeHtml(data.titulo)} <span class="sys-pill">${escapeHtml(data.prioridad)}</span></strong><span>${escapeHtml(data.destinatarioTipo)} ${escapeHtml(data.destinatarioId || '')} · ${formatDate(data.creadoEn)}</span></div>`; }).join(''); }
-document.getElementById('form-aviso').addEventListener('submit', async event => { event.preventDefault(); const file = document.getElementById('aviso-archivo').files[0]; if (file && file.size > 10 * 1024 * 1024) return Swal.fire('Archivo demasiado grande', 'El máximo es 10 MB.', 'warning'); const record = { titulo: document.getElementById('aviso-titulo').value.trim(), mensaje: document.getElementById('aviso-mensaje').value.trim(), prioridad: document.getElementById('aviso-prioridad').value, destinatarioTipo: document.getElementById('aviso-tipo').value, destinatarioId: document.getElementById('aviso-destino').value.trim(), creadoPorUid: user.uid, creadoPorNombre: profile.nombre, creadoEn: serverTimestamp(), activo: true, archivoUrl: '' }; const created = await addDoc(collection(db, 'avisos'), record); if (file) { const fileRef = ref(storage, `avisos/${created.id}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`); await uploadBytes(fileRef, file); await updateDoc(created, { archivoUrl: await getDownloadURL(fileRef), archivoNombre: file.name }); } await auditEvent('aviso.publicado', { collection: 'avisos', id: created.id }, record.titulo); event.target.reset(); Swal.fire('Aviso publicado', '', 'success'); await loadNotices(); });
+
+async function loadInfrastructure() {
+  const names = ['usuarios','alumnos','grupos','materias','asistencias','calificaciones','fichas','fotos','avisos','auditoria'];
+  const countSnapshots = await Promise.all(names.map(name => getCountFromServer(collection(db, name))));
+  const counts = Object.fromEntries(names.map((name, index) => [name, countSnapshots[index].data().count]));
+  const total = Object.values(counts).reduce((sum, value) => sum + value, 0);
+  document.getElementById('infra-docs').textContent = total.toLocaleString('es-MX');
+  document.getElementById('infra-collections').textContent = names.filter(name => counts[name] > 0).length;
+  document.getElementById('infra-audit').textContent = counts.auditoria;
+  document.getElementById('firebase-status').textContent = 'Conectado · reglas por rol activas';
+  document.getElementById('firebase-dot').classList.add('online');
+  const max = Math.max(...Object.values(counts), 1);
+  document.getElementById('collection-chart').innerHTML = names.map(name => `<div class="chart-row"><span>${escapeHtml(name)}</span><div class="chart-track"><div class="chart-fill" style="width:${Math.max(2, counts[name] / max * 100)}%"></div></div><strong>${counts[name]}</strong></div>`).join('');
+  const [photosSnapshot, noticesSnapshot] = await Promise.all([getDocs(collection(db,'fotos')), getDocs(collection(db,'avisos'))]);
+  const files = [...photosSnapshot.docs.map(item => item.data()), ...noticesSnapshot.docs.map(item => item.data()).filter(item => item.archivoUrl)];
+  const bytes = files.reduce((sum, item) => sum + Number(item.archivoBytes || item.bytes || 0), 0);
+  document.getElementById('cloud-assets').textContent = files.length;
+  document.getElementById('cloud-bytes').textContent = bytes ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : 'Sin dato';
+  const cloud = await checkCloudinaryAvailability();
+  document.getElementById('cloudinary-status').textContent = cloud.reachable ? 'CDN disponible · carga configurada' : 'Configurado · prueba CDN no concluyente';
+  document.getElementById('cloud-latency').textContent = `${cloud.latency} ms`;
+  if (cloud.reachable) document.getElementById('cloudinary-dot').classList.add('online');
+}
 
 document.getElementById('generar-respaldo').addEventListener('click', async () => { const names = ['usuarios','alumnos','grupos','materias','asistencias','calificaciones','fichas','fotos','avisos','configuracion','auditoria','web_config']; const backup = { metadata: { generatedAt: new Date().toISOString(), generatedBy: user.uid, project: 'colegio-628e8', formatVersion: 1 }, collections: {} }; for (const name of names) { const snapshot = await getDocs(collection(db, name)); backup.collections[name] = snapshot.docs.map(item => ({ id: item.id, data: item.data() })); } const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const anchor = document.createElement('a'); anchor.href = url; anchor.download = `respaldo_colegio_${new Date().toISOString().slice(0,10)}.json`; anchor.click(); URL.revokeObjectURL(url); await auditEvent('sistema.respaldo_generado', { collection: 'sistema', id: 'backup' }, `${names.length} colecciones`); });
 
-document.getElementById('ejecutar-diagnostico').addEventListener('click', runHealth); document.getElementById('cargar-auditoria').addEventListener('click', loadAudit); document.getElementById('recargar').addEventListener('click', async () => { await Promise.all([loadUsers(), loadAudit(), loadConfig(), loadNotices()]); }); document.getElementById('cerrar-sesion').addEventListener('click', async () => { await signOut(auth); window.location.replace('index.html'); });
+document.getElementById('ejecutar-diagnostico').addEventListener('click', runHealth); document.getElementById('cargar-auditoria').addEventListener('click', loadAudit); document.getElementById('actualizar-infra').addEventListener('click', loadInfrastructure); document.getElementById('recargar').addEventListener('click', async () => { await Promise.all([loadUsers(), loadAudit(), loadConfig(), loadNotices(), loadInfrastructure()]); }); document.getElementById('cerrar-sesion').addEventListener('click', async () => { await signOut(auth); window.location.replace('index.html'); });
 
 await Promise.all([loadUsers(), loadAudit(), loadConfig(), loadNotices()]);

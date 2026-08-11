@@ -62,7 +62,11 @@ firebase deploy --only firestore:rules,storage
 
 La API key de Firebase Web es pública por diseño y no autoriza acceso a los datos. No intentes ocultarla con JavaScript ofuscado ni variables de GitHub Pages: el navegador siempre podrá verla.
 
-En Google Cloud Console limita la clave a los dominios autorizados y únicamente a APIs de Firebase. Después registra App Check con reCAPTCHA Enterprise, monitorea solicitudes y activa la aplicación obligatoria primero en Firestore y Storage.
+En Google Cloud Console limita la clave a los dominios autorizados y únicamente a APIs de Firebase. Después registra App Check con reCAPTCHA Enterprise, monitorea solicitudes y activa la aplicación obligatoria en Firestore.
+
+## Archivos y fotografías
+
+Este proyecto utiliza Cloudinary, no Firebase Storage. El navegador solo puede contener el `cloud name` y un `upload preset` sin firma con límites de formato y tamaño. Nunca publiques el API Secret de Cloudinary. `storage.rules` se conserva únicamente como referencia y no forma parte de `firebase.json` ni del despliegue actual.
 
 Nunca coloques en este repositorio:
 
