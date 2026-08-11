@@ -1,5 +1,5 @@
 // Cambiamos la versión para forzar la actualización en todos los celulares
-const CACHE_NAME = 'colegio-v6.0';
+const CACHE_NAME = 'colegio-v6.1';
 const ASSETS = [
   '/Colegios/',
   '/Colegios/index.html',
@@ -14,6 +14,8 @@ const ASSETS = [
   '/Colegios/css/styles.css',
   '/Colegios/css/home.css',
   '/Colegios/css/dashboard.css',
+  '/Colegios/css/login.css',
+  '/Colegios/css/gallery.css',
   '/Colegios/js/app.js',
   '/Colegios/js/auth-logic.js',
   '/Colegios/manifest.json',

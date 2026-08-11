@@ -3,146 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Galería Pública - Amor y Libertad</title>
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
-    
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7fa; margin: 0; padding: 0; color: #333;}
-        
-        .hero-banner { background: #004a99; color: white; padding: 40px 20px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 30px;}
-        .hero-banner h1 { margin: 0; font-size: 2.2rem; letter-spacing: 1px;}
-        .hero-banner p { margin: 10px 0 0 0; font-size: 1.1rem; opacity: 0.9;}
-        
-        .container { max-width: 1000px; margin: auto; padding: 0 20px 40px 20px; }
-        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 30px; border: 1px solid #eef2f7;}
-        
-        .input-control { width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 1.1rem; color: #333; outline: none; transition: 0.3s; cursor: pointer; box-sizing: border-box;}
-        .input-control:focus { border-color: #004a99; }
-        label { font-size: 0.9rem; font-weight: bold; color: #666; display: block; margin-bottom: 8px; text-transform: uppercase;}
-        
-        /* CUADRÍCULA COMPACTA (2 FOTOS POR FILA EN CELULAR) */
-        .photo-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
-        
-        .photo-item { position: relative; border-radius: 10px; overflow: hidden; background: white; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: transform 0.3s; display: flex; flex-direction: column;}
-        .photo-item:hover { transform: translateY(-3px); box-shadow: 0 6px 12px rgba(0,0,0,0.15);}
-        .photo-item img { width: 100%; height: 150px; object-fit: cover; display: block; border-bottom: 3px solid #FF9800;}
-        
-        .info { padding: 10px; font-size: 0.8rem; background: #ffffff; text-align: center; font-weight: bold; color: #004a99; flex-grow: 1; display: flex; flex-direction: column; justify-content: center;}
-        .tag-seccion { display: block; font-size: 0.7rem; color: #8898aa; margin-top: 4px; font-weight: normal; }
-        
-        /* BOTÓN DE DESCARGA (FLOTANTE) */
-        .btn-descarga { position: absolute; bottom: 65px; right: 8px; background: rgba(0, 74, 153, 0.9); color: white; text-decoration: none; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; box-shadow: 0 2px 5px rgba(0,0,0,0.3); transition: 0.3s; z-index: 10;}
-        .btn-descarga:hover { background: #FF9800; transform: scale(1.1); }
-        
-        .btn-volver { display: inline-block; margin-top: 20px; background: rgba(255,255,255,0.2); color: white; padding: 8px 20px; border-radius: 20px; text-decoration: none; font-weight: bold; transition: 0.3s;}
-        .btn-volver:hover { background: rgba(255,255,255,0.4); }
-        .loader-text { text-align: center; color: #666; font-size: 1.1rem; padding: 40px 0; font-weight: bold;}
-    </style>
+    <meta name="theme-color" content="#073763">
+    <title>Galería escolar - Amor y Libertad</title>
+    <link rel="icon" type="image/png" href="Img/logo.png">
+    <link rel="stylesheet" href="css/gallery.css">
 </head>
-<body>
+<body class="gallery-page">
+<header class="gallery-nav"><div class="gallery-container gallery-nav-inner"><a class="gallery-brand" href="index.html"><img src="Img/logo.png" alt="Logo de Amor y Libertad"><div><strong>Amor y Libertad</strong><span>Galería escolar</span></div></a><a class="gallery-back" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg><span>Volver al inicio</span></a></div></header>
 
-    <header class="hero-banner">
-        <h1>📸 Galería Escolar</h1>
-        <p>Revive los mejores momentos de nuestros alumnos</p>
-        <a href="index.html" class="btn-volver">⬅ Volver al Inicio</a>
-    </header>
+<main>
+    <section class="gallery-hero"><div class="gallery-container gallery-hero-content"><div class="gallery-hero-copy"><p class="gallery-kicker">Nuestra comunidad</p><h1>Momentos que dejan huella</h1><p>Actividades, celebraciones y experiencias que forman parte de la vida escolar de nuestros alumnos.</p></div><div class="gallery-stat"><strong id="contador-fotos">—</strong><span>fotografías disponibles</span></div></div></section>
 
-    <div class="container">
-        <section class="card">
-            <label>Filtrar por Álbum o Evento</label>
-            <select id="filtroSeccion" class="input-control">
-                <option value="TODAS">Cargando fotografías...</option>
-            </select>
-        </section>
+    <section class="gallery-content"><div class="gallery-container">
+        <div class="gallery-toolbar"><div class="filter-copy"><strong>Explora nuestros álbumes</strong><span>Selecciona un evento para filtrar las fotografías.</span></div><div class="select-wrap"><select id="filtroSeccion" aria-label="Filtrar fotografías por álbum"><option value="TODAS">Cargando álbumes…</option></select><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></div></div>
+        <div id="galeria" class="photo-gallery-modern"><div class="gallery-state"><div><div class="gallery-spinner"></div><strong>Cargando recuerdos</strong><span>Estamos preparando las fotografías de nuestra comunidad.</span></div></div></div>
+    </div></section>
+</main>
 
-        <div id="galeria" class="photo-gallery">
-            <div class="loader-text" style="grid-column: 1 / -1;">Descargando recuerdos... ⏳</div>
-        </div>
-    </div>
+<footer class="gallery-footer"><div class="gallery-container gallery-footer-inner"><span>© 2026 Centro Educativo Amor y Libertad</span><a href="index.html#contacto">Contacto e inscripciones</a></div></footer>
 
-    <script type="module">
-        import { db } from './js/firebase-config.js';
-        import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Fotografía ampliada"><button class="lightbox-close" id="lightbox-close" type="button" aria-label="Cerrar fotografía"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button><img id="lightbox-image" alt="Fotografía escolar ampliada"><div class="lightbox-caption" id="lightbox-caption"></div></div>
 
-        const filtroSeccion = document.getElementById('filtroSeccion');
-        const galeria = document.getElementById('galeria');
+<script type="module">
+    import { db } from './js/firebase-config.js';
+    import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        async function inicializarGaleria() {
-            try {
-                const snap = await getDocs(collection(db, "fotos"));
-                const seccionesUnicas = new Set();
-                
-                snap.forEach(doc => {
-                    if (doc.data().seccion) seccionesUnicas.add(doc.data().seccion);
-                });
+    const filtro = document.getElementById('filtroSeccion');
+    const galeria = document.getElementById('galeria');
+    const contador = document.getElementById('contador-fotos');
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImage = document.getElementById('lightbox-image');
+    const lightboxCaption = document.getElementById('lightbox-caption');
 
-                filtroSeccion.innerHTML = '<option value="TODAS">Ver Todas las Fotografías</option>';
-                seccionesUnicas.forEach(seccion => {
-                    filtroSeccion.innerHTML += `<option value="${seccion}">${seccion}</option>`;
-                });
+    function mostrarEstado(titulo, detalle, cargando = false) {
+        galeria.innerHTML = `<div class="gallery-state"><div>${cargando ? '<div class="gallery-spinner"></div>' : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 5h16v14H4z"/><path d="m4 15 4-4 4 4 3-3 5 5"/><circle cx="15.5" cy="8.5" r="1.5"/></svg>'}<strong>${titulo}</strong><span>${detalle}</span></div></div>`;
+    }
 
-                if (seccionesUnicas.size === 0) {
-                    filtroSeccion.innerHTML = '<option value="TODAS">Aún no hay fotos subidas.</option>';
-                }
+    function abrirFoto(url, descripcion) {
+        lightboxImage.src = url;
+        lightboxCaption.textContent = descripcion;
+        lightbox.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+    function cerrarFoto() { lightbox.classList.remove('open'); lightboxImage.removeAttribute('src'); document.body.style.overflow = ''; }
+    document.getElementById('lightbox-close').addEventListener('click', cerrarFoto);
+    lightbox.addEventListener('click', event => { if (event.target === lightbox) cerrarFoto(); });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') cerrarFoto(); });
 
-                cargarFotos("TODAS");
+    async function cargarFotos(seccion = 'TODAS') {
+        mostrarEstado('Cargando recuerdos', 'Estamos preparando las fotografías de nuestra comunidad.', true);
+        try {
+            const consulta = seccion === 'TODAS' ? query(collection(db, 'fotos')) : query(collection(db, 'fotos'), where('seccion', '==', seccion));
+            const snap = await getDocs(consulta);
+            galeria.innerHTML = '';
+            contador.textContent = String(snap.size);
 
-            } catch (error) {
-                console.error("Error al cargar la galería:", error);
-                filtroSeccion.innerHTML = '<option value="TODAS">Error de conexión.</option>';
-                galeria.innerHTML = '<div class="loader-text" style="grid-column: 1 / -1; color: #c62828;">Ocurrió un error al cargar. Inténtalo de nuevo.</div>';
-            }
+            snap.forEach(documento => {
+                const data = documento.data();
+                if (!data.url) return;
+                const album = data.seccion || 'Actividad escolar';
+                const fecha = data.fecha?.toDate ? data.fecha.toDate().toLocaleDateString('es-MX', { day:'2-digit', month:'long', year:'numeric' }) : 'Reciente';
+                const urlDescarga = data.url.includes('/upload/') ? data.url.replace('/upload/', '/upload/fl_attachment/') : data.url;
+                const tarjeta = document.createElement('article');
+                tarjeta.className = 'photo-card';
+
+                const botonFoto = document.createElement('button');
+                botonFoto.className = 'photo-button'; botonFoto.type = 'button'; botonFoto.setAttribute('aria-label', `Ampliar fotografía de ${album}`);
+                const imagen = document.createElement('img'); imagen.src = data.url; imagen.alt = `Actividad escolar: ${album}`; imagen.loading = 'lazy';
+                botonFoto.appendChild(imagen); botonFoto.addEventListener('click', () => abrirFoto(data.url, `${album} · ${fecha}`));
+
+                const meta = document.createElement('div'); meta.className = 'photo-meta';
+                const texto = document.createElement('div'); const nombre = document.createElement('strong'); nombre.textContent = album; const fechaEl = document.createElement('span'); fechaEl.textContent = fecha; texto.append(nombre, fechaEl);
+                const descarga = document.createElement('a'); descarga.className = 'download-photo'; descarga.href = urlDescarga; descarga.title = 'Descargar fotografía'; descarga.setAttribute('aria-label', 'Descargar fotografía'); descarga.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m-5-5 5 5 5-5"/><path d="M5 21h14"/></svg>';
+                meta.append(texto, descarga); tarjeta.append(botonFoto, meta); galeria.appendChild(tarjeta);
+            });
+            if (!snap.size) mostrarEstado('Álbum sin fotografías', 'Todavía no se han publicado imágenes en esta sección.');
+        } catch (error) {
+            console.error('Error al cargar la galería:', error);
+            contador.textContent = '0'; mostrarEstado('No pudimos cargar la galería', 'Comprueba tu conexión e inténtalo nuevamente.');
         }
-        
-        async function cargarFotos(seccionElegida) {
-            galeria.innerHTML = '<div class="loader-text" style="grid-column: 1 / -1;">Descargando recuerdos... ⏳</div>';
-            
-            try {
-                let qFotos = (seccionElegida === "TODAS") 
-                    ? query(collection(db, "fotos")) 
-                    : query(collection(db, "fotos"), where("seccion", "==", seccionElegida));
+    }
 
-                const snap = await getDocs(qFotos);
-                galeria.innerHTML = "";
-                let contador = 0;
-
-                snap.forEach(doc => {
-                    contador++;
-                    const data = doc.data();
-                    
-                    let fechaTexto = "Reciente";
-                    if (data.fecha && data.fecha.toDate) {
-                        fechaTexto = data.fecha.toDate().toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
-                    }
-
-                    // TRUCO CLOUDINARY PARA FORZAR DESCARGA
-                    const urlDescarga = data.url.replace('/upload/', '/upload/fl_attachment/');
-
-                    galeria.innerHTML += `
-                        <div class="photo-item">
-                            <a href="${urlDescarga}" class="btn-descarga" title="Descargar Foto">⬇️</a>
-                            <a href="${data.url}" target="_blank" title="Haz clic para ver en grande">
-                                <img src="${data.url}" loading="lazy" alt="Recuerdo escolar">
-                            </a>
-                            <div class="info">
-                                ${fechaTexto}
-                                <span class="tag-seccion">${data.seccion}</span>
-                            </div>
-                        </div>
-                    `;
-                });
-
-                if (contador === 0) {
-                    galeria.innerHTML = '<div class="loader-text" style="grid-column: 1 / -1;">No encontramos fotos en este álbum.</div>';
-                }
-
-            } catch (error) {
-                galeria.innerHTML = '<div class="loader-text" style="grid-column: 1 / -1; color: #c62828;">Ocurrió un error al cargar las fotos.</div>';
-            }
+    async function inicializar() {
+        try {
+            const snap = await getDocs(collection(db, 'fotos'));
+            const secciones = [...new Set(snap.docs.map(doc => doc.data().seccion).filter(Boolean))].sort((a,b) => a.localeCompare(b, 'es'));
+            filtro.innerHTML = '<option value="TODAS">Todas las fotografías</option>';
+            secciones.forEach(seccion => { const opcion = document.createElement('option'); opcion.value = seccion; opcion.textContent = seccion; filtro.appendChild(opcion); });
+            await cargarFotos();
+        } catch (error) {
+            filtro.innerHTML = '<option value="TODAS">Galería no disponible</option>';
+            mostrarEstado('No pudimos conectar', 'La galería estará disponible nuevamente en unos momentos.');
         }
-
-        filtroSeccion.addEventListener('change', () => cargarFotos(filtroSeccion.value));
-        inicializarGaleria();
-    </script>
+    }
+    filtro.addEventListener('change', () => cargarFotos(filtro.value));
+    inicializar();
+</script>
 </body>
 </html>
