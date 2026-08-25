@@ -1,48 +1,53 @@
 :root {
-  --ws-ink:#1d2935;
-  --ws-muted:#667483;
-  --ws-line:#dfe5e8;
+  --ws-ink:#26343a;
+  --ws-muted:#6f746f;
+  --ws-line:#e6e0d8;
   --ws-paper:#ffffff;
-  --ws-canvas:#f4f5f3;
-  --ws-accent:#28766a;
-  --ws-accent-dark:#1d5a51;
-  --ws-warm:#b87942;
+  --ws-canvas:#f8f5ef;
+  --ws-accent:#547b69;
+  --ws-accent-dark:#3f6253;
+  --ws-warm:#c38158;
+  --ws-gold:#d6ad63;
+  --ws-navy:#173f5f;
   --ws-danger:#b23b42;
   --ws-danger-soft:#fff3f3;
-  --ws-shadow:0 14px 38px rgba(28,42,48,.075);
+  --ws-shadow:0 15px 38px rgba(71,58,42,.07);
 }
 
 body.workspace-page { min-height:100vh; color:var(--ws-ink); background:var(--ws-canvas)!important; font-family:Inter,"Segoe UI",Arial,sans-serif; }
-.workspace-page .profile-header { display:block; min-height:0!important; border-bottom:1px solid var(--ws-line); background:rgba(255,255,255,.96); box-shadow:none; }
+.workspace-page .profile-header { position:relative; display:block; min-height:0!important; border-bottom:1px solid var(--ws-line); background:#fffdf9; box-shadow:none; }
+.workspace-page .profile-header::before { content:""; position:absolute; inset:0 0 auto; height:5px; background:linear-gradient(90deg,var(--ws-navy) 0 42%,var(--ws-accent) 42% 66%,var(--ws-gold) 66% 82%,#d96765 82%); }
 .workspace-page .cover-photo { display:none!important; }
-.workspace-page .profile-info { display:grid!important; width:min(1180px,calc(100% - 48px)); min-height:118px; margin:0 auto!important; padding:26px 0!important; grid-template-columns:auto 1fr; align-items:center!important; gap:28px; transform:none!important; }
+.workspace-page .profile-info { display:grid!important; width:min(1180px,calc(100% - 48px)); min-height:126px; margin:0 auto!important; padding:31px 0 25px!important; grid-template-columns:auto 1fr; align-items:center!important; gap:30px; transform:none!important; }
 .workspace-page .profile-text { min-width:0; }
-.workspace-page .profile-text::before { content:"ADMINISTRACIÓN ESCOLAR"; display:block; margin-bottom:6px; color:var(--ws-accent); font-size:.64rem; font-weight:800; letter-spacing:.14em; }
-.workspace-page .profile-text h1 { margin:0!important; color:var(--ws-ink)!important; font-size:clamp(1.45rem,2.6vw,2rem)!important; line-height:1.12; letter-spacing:-.035em; }
+.workspace-page .profile-text::before { content:"Comunidad educativa"; display:block; margin-bottom:7px; color:var(--ws-warm); font-family:Georgia,"Times New Roman",serif; font-size:.82rem; font-weight:700; font-style:italic; letter-spacing:.01em; }
+.workspace-page .profile-text h1 { margin:0!important; color:var(--ws-navy)!important; font-family:Georgia,"Times New Roman",serif; font-size:clamp(1.55rem,2.7vw,2.1rem)!important; font-weight:700; line-height:1.12; letter-spacing:-.025em; }
 .workspace-page .profile-text p { margin:6px 0 0!important; color:var(--ws-muted)!important; font-size:.78rem!important; }
-.workspace-page .btn-back-clean { display:inline-flex!important; min-height:42px; margin:0!important; padding:0 15px; align-items:center; border:1px solid var(--ws-line); border-radius:8px; color:#3e4b56!important; background:#fff; font-size:.73rem; font-weight:750; text-decoration:none; transition:.16s ease; }
-.workspace-page .btn-back-clean:hover { border-color:#bcc8cc; background:#f8faf9; transform:translateX(-2px); }
+.workspace-page .btn-back-clean { display:inline-flex!important; min-height:42px; margin:0!important; padding:0 15px; align-items:center; border:1px solid #ddd4c8; border-radius:999px; color:#4d5857!important; background:#fff; font-size:.73rem; font-weight:750; text-decoration:none; transition:.16s ease; }
+.workspace-page .btn-back-clean:hover { border-color:#c8b9a7; background:#fbf5ed; transform:translateX(-2px); }
 
 .workspace-page .grid-layout,.workspace-page .container { width:min(1180px,100%)!important; max-width:none!important; margin:32px auto!important; padding:0 24px!important; }
 .workspace-page .grid-layout { grid-template-columns:minmax(330px,.72fr) minmax(0,1.28fr)!important; gap:22px!important; }
-.workspace-page .card { min-width:0; margin-bottom:20px!important; padding:28px!important; overflow:hidden; border:1px solid var(--ws-line)!important; border-radius:12px!important; background:var(--ws-paper)!important; box-shadow:var(--ws-shadow)!important; }
-.workspace-page .card h3 { margin:0 0 9px!important; color:var(--ws-ink)!important; font-size:1.02rem!important; letter-spacing:-.015em; }
-.workspace-page .card h3::after { content:""; display:block; width:34px; height:2px; margin-top:11px; background:var(--ws-accent); }
+.workspace-page .card { min-width:0; margin-bottom:20px!important; padding:30px!important; overflow:hidden; border:1px solid var(--ws-line)!important; border-radius:18px!important; background:var(--ws-paper)!important; box-shadow:var(--ws-shadow)!important; }
+.workspace-page .card:nth-child(odd) { border-top:4px solid #d8b06a!important; }
+.workspace-page .card:nth-child(even) { border-top:4px solid #769786!important; }
+.workspace-page .card h3 { margin:0 0 9px!important; color:var(--ws-navy)!important; font-family:Georgia,"Times New Roman",serif; font-size:1.1rem!important; letter-spacing:-.01em; }
+.workspace-page .card h3::after { content:""; display:block; width:36px; height:2px; margin-top:11px; background:#d36d68; }
 .workspace-page label { display:block; margin:17px 0 7px!important; color:#596775!important; font-size:.67rem!important; font-weight:800!important; letter-spacing:.055em; text-transform:uppercase; }
-.workspace-page .input-control { width:100%; min-height:49px; margin:0 0 3px!important; padding:0 14px!important; border:1px solid #d8e0e3!important; border-radius:8px!important; outline:none; color:var(--ws-ink); background:#fafbfa; font:inherit; font-size:.86rem!important; transition:.16s ease; }
+.workspace-page .input-control { width:100%; min-height:49px; margin:0 0 3px!important; padding:0 14px!important; border:1px solid #ded8cf!important; border-radius:10px!important; outline:none; color:var(--ws-ink); background:#fdfbf7; font:inherit; font-size:.86rem!important; transition:.16s ease; }
 .workspace-page .input-control:focus { border-color:var(--ws-accent)!important; background:#fff; box-shadow:0 0 0 4px rgba(40,118,106,.1); }
-.workspace-page .btn { min-height:43px; padding:0 16px!important; border:0!important; border-radius:8px!important; box-shadow:none!important; font-size:.71rem!important; font-weight:800!important; letter-spacing:.025em; text-transform:none!important; cursor:pointer; }
+.workspace-page .btn { min-height:43px; padding:0 17px!important; border:0!important; border-radius:10px!important; box-shadow:none!important; font-size:.72rem!important; font-weight:800!important; letter-spacing:.015em; text-transform:none!important; cursor:pointer; }
 .workspace-page .btn-primary,#btn-registrar,#btn-guardar,#btn-buscar,#btn-buscar-alumnos { color:#fff!important; background:var(--ws-accent)!important; }
 .workspace-page .btn-primary:hover,#btn-registrar:hover,#btn-guardar:hover,#btn-buscar:hover,#btn-buscar-alumnos:hover { background:var(--ws-accent-dark)!important; }
 .workspace-page #btn-registrar,.workspace-page #btn-guardar { width:100%!important; margin-top:20px; }
 .workspace-page #btn-buscar,.workspace-page #btn-buscar-alumnos { min-width:190px; }
 
 .workspace-page table { width:100%; min-width:0!important; margin-top:16px!important; border-collapse:collapse; font-size:.82rem!important; }
-.workspace-page thead { border-block:1px solid var(--ws-line); background:#f5f7f6!important; }
+.workspace-page thead { border-block:1px solid var(--ws-line); background:#f6f1e9!important; }
 .workspace-page th { padding:13px 12px!important; border:0!important; color:#64717c!important; font-size:.63rem!important; font-weight:850; letter-spacing:.07em; text-transform:uppercase; }
 .workspace-page td { padding:15px 12px!important; border-bottom:1px solid #e8ecee!important; color:#35434e; }
 .workspace-page tbody tr { transition:background .14s ease; }
-.workspace-page tbody tr:hover { background:#fafbf9; }
+.workspace-page tbody tr:hover { background:#fdf9f2; }
 .workspace-page tbody td:first-child { color:var(--ws-ink); font-weight:750; }
 .workspace-page .btn-delete,.workspace-page #btn-borrar-todo { min-height:35px; padding:0 11px!important; border:1px solid #efc8cb!important; border-radius:7px!important; color:var(--ws-danger)!important; background:var(--ws-danger-soft)!important; font-size:.67rem!important; font-weight:800!important; cursor:pointer; }
 .workspace-page .btn-delete:hover,.workspace-page #btn-borrar-todo:hover { color:#fff!important; background:var(--ws-danger)!important; }
@@ -63,4 +68,3 @@ body.workspace-page { min-height:100vh; color:var(--ws-ink); background:var(--ws
   .workspace-page table{min-width:580px!important}
   .workspace-page .card:has(table){overflow-x:auto}
 }
-
