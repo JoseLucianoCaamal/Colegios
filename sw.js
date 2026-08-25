@@ -1,5 +1,5 @@
 // Cambiamos la versión para forzar la actualización en todos los celulares
-const CACHE_NAME = 'colegio-v10.0';
+const CACHE_NAME = 'colegio-v10.1';
 const ASSETS = [
   '/Colegios/',
   '/Colegios/index.html',
@@ -20,12 +20,8 @@ const ASSETS = [
   '/Colegios/css/dashboard.css',
   '/Colegios/css/superadmin.css',
   '/Colegios/css/admin-system.css',
-  '/Colegios/css/admin-system-extra.css',
   '/Colegios/css/messages.css',
-  '/Colegios/css/messages-extra.css',
-  '/Colegios/css/messages-roles.css',
   '/Colegios/css/message-widget.css',
-  '/Colegios/css/message-conversation.css',
   '/Colegios/css/profile.css',
   '/Colegios/css/login.css',
   '/Colegios/css/gallery.css',

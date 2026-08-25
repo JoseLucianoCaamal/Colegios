@@ -16,7 +16,7 @@ onAuthStateChanged(auth, async user => {
   const role = profile.rol;
   let received = new Map(), sent = new Map(), messages = [], contacts = [], view = 'messages', activeContact = null, firstSnapshot = true;
 
-  ['../css/message-widget.css', '../css/message-conversation.css'].forEach(href => {
+  ['../css/message-widget.css'].forEach(href => {
     if (document.querySelector(`link[href="${href}"]`)) return;
     const style = document.createElement('link');
     style.rel = 'stylesheet';
