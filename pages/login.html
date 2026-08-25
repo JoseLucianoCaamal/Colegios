@@ -5,22 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#073763">
     <title>Acceso al sistema - Amor y Libertad</title>
-    <link rel="icon" type="image/png" href="Img/logo.png">
-    <link rel="apple-touch-icon" href="Img/logo.png">
-    <link rel="stylesheet" href="css/login.css">
+    <link rel="icon" type="image/png" href="../Img/logo.png">
+    <link rel="apple-touch-icon" href="../Img/logo.png">
+    <link rel="stylesheet" href="../css/login.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body class="login-page">
 <main class="login-layout">
     <section class="login-showcase" aria-label="Centro Educativo Amor y Libertad">
-        <div class="login-brand"><img src="Img/logo.png" alt="Logo de Amor y Libertad"><div><strong>Centro Educativo Amor y Libertad</strong><span>La verdad nos hará libres</span></div></div>
+        <div class="login-brand"><img src="../Img/logo.png" alt="Logo de Amor y Libertad"><div><strong>Centro Educativo Amor y Libertad</strong><span>La verdad nos hará libres</span></div></div>
         <div class="showcase-copy"><p>Plataforma escolar</p><h1>Todo el colegio,<br><span>en un solo lugar.</span></h1><p>Acceso seguro para dirección, personal docente y recepción.</p></div>
         <div class="showcase-footer">Centro Educativo Amor y Libertad · Mérida, Yucatán</div>
     </section>
 
     <section class="login-side">
         <div class="login-card-modern">
-            <img class="login-card-logo" src="Img/logo.png" alt="Logo de Amor y Libertad">
+            <img class="login-card-logo" src="../Img/logo.png" alt="Logo de Amor y Libertad">
             <h2>Bienvenido</h2>
             <p class="login-intro">Ingresa tus datos para acceder al sistema administrativo.</p>
 
@@ -28,14 +28,14 @@
             <div class="field-group"><label for="password">Contraseña</label><div class="field-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg><input type="password" id="password" autocomplete="current-password" placeholder="Escribe tu contraseña"><button class="password-toggle" id="password-toggle" type="button" aria-label="Mostrar contraseña"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
 
             <button class="login-submit" id="btn-entrar" type="button">Entrar al sistema <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
-            <a class="login-back" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>Regresar al sitio público</a>
+            <a class="login-back" href="../index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>Regresar al sitio público</a>
             <p class="login-help">Este acceso es exclusivo para personal autorizado del colegio.</p>
         </div>
     </section>
 </main>
 
 <script type="module">
-    import { iniciarSesion } from './js/auth-logic.js';
+    import { iniciarSesion } from '../js/auth-logic.js';
 
     const usuario = document.getElementById('usuario');
     const password = document.getElementById('password');
@@ -67,7 +67,7 @@
 </script>
 
 <script type="module">
-    import { auth, db } from './js/firebase-config.js';
+    import { auth, db } from '../js/firebase-config.js';
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     onAuthStateChanged(auth, async (user) => {

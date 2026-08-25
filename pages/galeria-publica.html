@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#073763">
     <title>Galería escolar - Amor y Libertad</title>
-    <link rel="icon" type="image/png" href="Img/logo.png">
-    <link rel="stylesheet" href="css/gallery.css">
+    <link rel="icon" type="image/png" href="../Img/logo.png">
+    <link rel="stylesheet" href="../css/gallery.css">
 </head>
 <body class="gallery-page">
-<header class="gallery-nav"><div class="gallery-container gallery-nav-inner"><a class="gallery-brand" href="index.html"><img src="Img/logo.png" alt="Logo de Amor y Libertad"><div><strong>Amor y Libertad</strong><span>Galería escolar</span></div></a><a class="gallery-back" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg><span>Volver al inicio</span></a></div></header>
+<header class="gallery-nav"><div class="gallery-container gallery-nav-inner"><a class="gallery-brand" href="../index.html"><img src="../Img/logo.png" alt="Logo de Amor y Libertad"><div><strong>Amor y Libertad</strong><span>Galería escolar</span></div></a><a class="gallery-back" href="../index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg><span>Volver al inicio</span></a></div></header>
 
 <main>
     <section class="gallery-hero"><div class="gallery-container gallery-hero-content"><div class="gallery-hero-copy"><p class="gallery-kicker">Nuestra comunidad</p><h1>Momentos que dejan huella</h1><p>Actividades, celebraciones y experiencias que forman parte de la vida escolar de nuestros alumnos.</p></div><div class="gallery-stat"><strong id="contador-fotos">—</strong><span>fotografías disponibles</span></div></div></section>
@@ -20,12 +20,12 @@
     </div></section>
 </main>
 
-<footer class="gallery-footer"><div class="gallery-container gallery-footer-inner"><span>© 2026 Centro Educativo Amor y Libertad</span><a href="index.html#contacto">Contacto e inscripciones</a></div></footer>
+<footer class="gallery-footer"><div class="gallery-container gallery-footer-inner"><span>© 2026 Centro Educativo Amor y Libertad</span><a href="../index.html#contacto">Contacto e inscripciones</a></div></footer>
 
 <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Fotografía ampliada"><button class="lightbox-close" id="lightbox-close" type="button" aria-label="Cerrar fotografía"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button><img id="lightbox-image" alt="Fotografía escolar ampliada"><div class="lightbox-caption" id="lightbox-caption"></div></div>
 
 <script type="module">
-    import { db } from './js/firebase-config.js';
+    import { db } from '../js/firebase-config.js';
     import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const filtro = document.getElementById('filtroSeccion');

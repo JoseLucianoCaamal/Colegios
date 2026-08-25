@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registro de Alumnos - Recepción</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/admin-power.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        .grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 1100px; margin: 20px auto; padding: 0 20px; }
+        .card { padding: 30px; border-radius: 20px; background: #ffffff; border: 1px solid #e0e6ed; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .btn-back-clean { display: inline-flex; align-items: center; gap: 5px; margin-bottom: 15px; color: #666; text-decoration: none; font-weight: bold; }
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9rem; }
+        .input-control { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        @media (max-width: 768px) { .grid-layout { grid-template-columns: 1fr; } }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; z-index: 1000; }
+        .modal-content { background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+    </style>
+</head>
+<body>
+
+<header class="profile-header">
+    <div class="cover-photo"><img src="../Img/logo2.png" alt="Portada"></div>
+    <div class="profile-info">
+        <a href="dashboard-recepcion.html" class="btn-back-clean">⬅ Volver al Panel</a>
+        <div class="profile-text">
+            <h1>Registro de Alumnos</h1>
+            <p>Base de datos general (Recepción)</p>
+        </div>
+    </div>
+</header>
+
+<main class="grid-layout">
+    <section class="card">
+        <h3 style="margin-top: 0; color: #004a99;">🧒 Dar de alta nuevo alumno</h3>
+        <div class="input-group"><label>Nombre Completo</label><input type="text" id="nombreAlumno" class="input-control"></div>
+        <div class="input-group"><label>Fecha de Nacimiento</label><input type="date" id="fechaNacimiento" class="input-control"></div>
+        <div class="input-group"><label>Alergias o Condiciones</label><input type="text" id="alergias" class="input-control" placeholder="Ej: Ninguna"></div>
+        <div class="input-group"><label>Tutor</label><input type="text" id="tutor" class="input-control"></div>
+        <div class="input-group"><label>Teléfono</label><input type="tel" id="telefono" class="input-control"></div>
+        <div class="input-group">
+            <label>Grado y Grupo</label>
+            <!-- Este select ahora se llenará automáticamente -->
+            <select id="grupo" class="input-control">
+                <option value="">Cargando grupos...</option>
+            </select>
+        </div>
+        <button id="btn-registrar" class="btn btn-primary" style="width: 100%; padding: 12px; border-radius: 8px; font-weight: bold;">Guardar Alumno</button>
+    </section>
+
+    <section class="card">
+        <h3 style="margin-top: 0; color: #004a99;">📋 Todos los Alumnos</h3>
+        <div style="overflow-x: auto;">
+            <table>
+                <thead><tr><th>Nombre</th><th>Grupo</th><th>Tutor / Alergias</th><th>Acciones</th></tr></thead>
+                <tbody id="lista-alumnos"></tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<div id="modal-promover" class="modal-overlay">
+    <div class="modal-content">
+        <h3 style="color:#004a99; margin-top:0;">Promover de Grado</h3>
+        <p>Selecciona el nuevo grupo para:<br><strong id="modal-nombre-alumno" style="font-size: 1.1rem; color:#333;"></strong></p>
+        
+        <!-- Este select del modal también se llenará automáticamente -->
+        <select id="modal-nuevo-grupo" class="input-control" style="margin-bottom:20px;">
+            <option value="">Cargando...</option>
+        </select>
+
+        <div style="display:flex; gap:10px;">
+            <button id="btn-cerrar-modal" class="btn" style="flex:1; background:#e0e6ed; color:#333; font-weight:bold; border-radius:8px; border:none; padding:10px; cursor:pointer;">Cancelar</button>
+            <button id="btn-guardar-promocion" class="btn btn-primary" style="flex:1; border-radius:8px; padding:10px; font-weight:bold;">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { db, auth } from '../js/firebase-config.js';
+    import { auditEvent } from '../js/security.js';
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { collection, addDoc, getDocs, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    onAuthStateChanged(auth, (user) => { 
+        if (!user) {
+            window.location.href = "login.html"; 
+        } else {
+            cargarGruposDinamicos(); // Primero cargamos los grupos
+            cargarAlumnos();         // Luego cargamos los alumnos
+        }
+    });
+
+    // MAGIA: Carga los grupos desde la base de datos
+    async function cargarGruposDinamicos() {
+        const selectRegistro = document.getElementById('grupo');
+        const selectModal = document.getElementById('modal-nuevo-grupo');
+        
+        try {
+            const querySnapshot = await getDocs(collection(db, "grupos"));
+            
+            selectRegistro.innerHTML = '<option value="">Selecciona un grupo...</option>';
+            selectModal.innerHTML = ''; // Limpiamos el modal
+
+            querySnapshot.forEach((docSnap) => {
+                const nombreGrupo = docSnap.data().nombre;
+                // Añadimos el grupo a ambos menús desplegables
+                selectRegistro.innerHTML += `<option value="${nombreGrupo}">${nombreGrupo}</option>`;
+                selectModal.innerHTML += `<option value="${nombreGrupo}">${nombreGrupo}</option>`;
+            });
+            
+            // Agregamos la opción de Baja/Egresado solo al modal de promoción
+            selectModal.innerHTML += `<option value="Egresado / Baja">🎓 Egresado / Baja</option>`;
+            
+        } catch (error) {
+            console.error("Error cargando grupos:", error);
+            selectRegistro.innerHTML = '<option value="">Error al cargar grupos</option>';
+        }
+    }
+
+    document.getElementById('btn-registrar').addEventListener('click', async () => {
+        const nombre = document.getElementById('nombreAlumno').value;
+        const fecha = document.getElementById('fechaNacimiento').value;
+        const alergias = document.getElementById('alergias').value || "Ninguna";
+        const tutor = document.getElementById('tutor').value;
+        const telefono = document.getElementById('telefono').value;
+        const grupo = document.getElementById('grupo').value;
+
+        if (!nombre || !fecha || !tutor || !telefono || !grupo) return alert("Rellena los campos obligatorios");
+
+        try {
+            const alumnoCreado = await addDoc(collection(db, "alumnos"), { nombre, fechaNacimiento: fecha, alergias, tutor, telefono, grupo });
+            await auditEvent('alumno.creado', { collection: 'alumnos', id: alumnoCreado.id }, `${nombre} · ${grupo}`);
+            alert("Alumno registrado"); location.reload();
+        } catch (e) { alert("Error: " + e.message); }
+    });
+
+    let idAlumnoAEditar = null;
+
+    async function cargarAlumnos() {
+        const lista = document.getElementById('lista-alumnos');
+        const querySnapshot = await getDocs(collection(db, "alumnos"));
+        lista.innerHTML = "";
+        
+        querySnapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td style="font-weight:bold;">${data.nombre}</td>
+                <td><span style="background:#eef2f7; padding:4px 8px; border-radius:4px; font-size:0.8rem; text-align:center; display:inline-block;">${data.grupo}</span></td>
+                <td>${data.tutor} (${data.telefono})<br><small style="color:#e63946; font-weight:bold;">Alergias: ${data.alergias}</small></td>
+                <td>
+                    <button class="btn-editar" style="background:#FFC107; border:none; padding:6px 10px; border-radius:5px; cursor:pointer; font-weight:bold; margin-bottom:5px; width:100%;">Promover</button>
+                    <button class="btn-delete" style="background:#ff4d4d; color:white; border:none; padding:6px 10px; border-radius:5px; cursor:pointer; font-weight:bold; width:100%;">Borrar</button>
+                </td>
+            `;
+
+            row.querySelector('.btn-editar').addEventListener('click', () => {
+                idAlumnoAEditar = docSnap.id;
+                document.getElementById('modal-nombre-alumno').innerText = data.nombre;
+                document.getElementById('modal-nuevo-grupo').value = data.grupo; 
+                document.getElementById('modal-promover').style.display = 'flex'; 
+            });
+
+            row.querySelector('.btn-delete').addEventListener('click', async () => {
+                if(confirm(`¿Estás seguro de eliminar a ${data.nombre}?`)) { await deleteDoc(doc(db, "alumnos", docSnap.id)); await auditEvent('alumno.eliminado', { collection: 'alumnos', id: docSnap.id }, data.nombre); location.reload(); }
+            });
+
+            lista.appendChild(row);
+        });
+    }
+
+    document.getElementById('btn-cerrar-modal').addEventListener('click', () => {
+        document.getElementById('modal-promover').style.display = 'none';
+        idAlumnoAEditar = null;
+    });
+
+    document.getElementById('btn-guardar-promocion').addEventListener('click', async () => {
+        if (!idAlumnoAEditar) return;
+        const nuevoGrupo = document.getElementById('modal-nuevo-grupo').value;
+        
+        try {
+            await updateDoc(doc(db, "alumnos", idAlumnoAEditar), { grupo: nuevoGrupo });
+            await auditEvent('alumno.grupo_actualizado', { collection: 'alumnos', id: idAlumnoAEditar }, nuevoGrupo);
+            document.getElementById('modal-promover').style.display = 'none';
+            location.reload();
+        } catch (error) {
+            alert("Hubo un error al actualizar el grupo.");
+        }
+    });
+</script>
+</body>
+</html>

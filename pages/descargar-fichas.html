@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gestión de Fichas - Amor y Libertad</title>
+  <link rel="icon" type="image/png" href="../Img/logo.png">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/admin-power.css">
+    <link rel="stylesheet" href="../css/academic.css">
+
+  <!-- Librerías estrictamente necesarias -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <style>
+    .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
+    .card { padding: 30px; border-radius: 20px; background: #ffffff; border: 1px solid #eef2f7; box-shadow: 0 8px 16px rgba(0,0,0,0.05); margin-bottom: 25px; }
+    .input-control { width: 100%; padding: 12px 15px; border: 2px solid #eef2f7; border-radius: 10px; font-size: 1rem; outline: none; margin-bottom: 20px;}
+    label { font-size: 0.85rem; font-weight: bold; color: #8898aa; display: block; margin-bottom: 8px; text-transform: uppercase;}
+    .tabla-contenedor { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.95rem; min-width: 600px;}
+    th { padding: 15px; text-align: left; border-bottom: 2px solid #eef2f7; color: #004a99; text-transform: uppercase; font-size: 0.85rem;}
+    td { padding: 15px; text-align: left; border-bottom: 1px solid #f4f7fa; }
+    .btn-back-clean { display: inline-flex; align-items: center; gap: 5px; color: #666; text-decoration: none; font-weight: bold; margin-bottom: 15px; }
+
+    /* CONTENEDOR INVISIBLE PERO RENDERIZABLE PARA EL NAVEGADOR */
+    #pdf-clones-container { 
+        position: absolute; 
+        top: 0; 
+        left: 0; 
+        z-index: -9999; 
+        opacity: 0; 
+        pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+<header class="profile-header">
+  <div class="cover-photo"><img src="../Img/logo2.png" alt="Portada"></div>
+  <div class="profile-info">
+    <a href="dashboard-directora.html" class="btn-back-clean" data-role-home>← Volver a mi panel</a>
+    <div class="profile-text">
+      <h1>Gestión de Fichas Descriptivas</h1>
+      <p>Control y Exportación Oficial de Documentos</p>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  <section class="card">
+    <label>🏫 Selecciona un Grupo para ver sus Fichas</label>
+    <select id="filtroGrupo" class="input-control">
+      <option value="">Cargando grupos...</option>
+    </select>
+    <button id="btn-buscar" class="btn btn-primary" style="width: 100%; padding: 12px; border-radius: 8px; font-weight: bold; background:#004a99; border:none; cursor:pointer; color: white;">Buscar Fichas</button>
+  </section>
+
+  <section class="card" id="seccion-resultados" style="display: none;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+      <h3 style="color:#004a99; margin:0;">📋 Fichas Encontradas</h3>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap;" id="botones-accion-global">
+        <button id="btn-borrar-todo" class="btn" style="background:#ff4d4d; color:white; font-weight:bold; border:none; padding:10px 15px; border-radius:8px; cursor:pointer;">
+          🗑️ Borrar Todas
+        </button>
+        <button id="btn-descargar-zip" class="btn" style="background:#FF9800; color:#333; font-weight:bold; border:none; padding:10px 15px; border-radius:8px; cursor:pointer;">
+          🗂️ Descargar ZIP
+        </button>
+      </div>
+    </div>
+
+    <div class="tabla-contenedor">
+      <table>
+        <thead>
+          <tr>
+            <th>Alumno</th>
+            <th>Docente Evaluador</th>
+            <th>Fecha</th>
+            <th style="text-align: center;">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-fichas"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<!-- Aquí se inyectarán los documentos temporalmente -->
+<div id="pdf-clones-container"></div>
+
+<script type="module">
+  import { db, auth } from '../js/firebase-config.js';
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import { collection, query, where, getDocs, doc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  let fichasActuales = [];
+
+  onAuthStateChanged(auth, (user) => {
+    if (!user) window.location.href = "login.html";
+    else cargarGrupos();
+  });
+
+  async function cargarGrupos() {
+    const snap = await getDocs(collection(db, "grupos"));
+    const filtroGrupo = document.getElementById('filtroGrupo');
+    filtroGrupo.innerHTML = '<option value="">Seleccione grupo...</option>';
+    snap.forEach(d => filtroGrupo.innerHTML += `<option value="${d.data().nombre}">${d.data().nombre}</option>`);
+  }
+
+  function formatoFechaSegura(fechaValor) {
+    if (!fechaValor) return "Reciente";
+    try {
+      if (typeof fechaValor.toDate === 'function') {
+        return fechaValor.toDate().toLocaleDateString('es-MX');
+      } else {
+        return new Date(fechaValor).toLocaleDateString('es-MX');
+      }
+    } catch (e) {
+      return "Reciente";
+    }
+  }
+
+  // NUEVA FUNCIÓN: Construye el HTML dinámicamente con estilos en línea (100% seguro para el PDF)
+  function createPrintableClone(data, nombreDelProfesor) {
+    const container = document.getElementById('pdf-clones-container');
+    const clone = document.createElement('div');
+    
+    // Forzamos las medidas y el fondo para que el PDF no salga negro ni en blanco
+    clone.className = 'pdf-document pdf-document-compact';
+
+    // Limpiamos los saltos de línea del texto
+    const escapar = valor => String(valor || 'No disponible').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const safeTexto = escapar(data.texto || 'Sin observaciones registradas.').replace(/\n/g, '<br>');
+    if (safeTexto.length > 1800) clone.classList.add('pdf-text-dense');
+    const nombreAlumno = escapar(data.nombre_alumno);
+    const grupo = escapar(data.grupo);
+    const docente = escapar(nombreDelProfesor || data.maestro_nombre);
+    const periodo = escapar(data.periodo || 'Seguimiento general');
+    const fecha = formatoFechaSegura(data.ultima_actualizacion);
+
+    // Estructura simplificada sin logos
+    clone.innerHTML = `
+      <div class="pdf-accent"></div>
+      <header class="pdf-brand"><img src="../Img/logo.png" alt=""><div><h1>Centro Educativo Amor y Libertad</h1><p>La verdad nos hará libres · Mérida, Yucatán</p></div></header>
+      <div class="pdf-title"><h2>Ficha descriptiva del estudiante</h2><p>Informe de seguimiento académico y formativo</p></div>
+      <section class="pdf-data-grid"><div class="pdf-data-item wide"><span>Nombre del estudiante</span><strong>${nombreAlumno}</strong></div><div class="pdf-data-item"><span>Grupo</span><strong>${grupo}</strong></div><div class="pdf-data-item"><span>Periodo</span><strong>${periodo}</strong></div><div class="pdf-data-item"><span>Docente responsable</span><strong>${docente}</strong></div><div class="pdf-data-item"><span>Última actualización</span><strong>${fecha}</strong></div></section>
+      <section class="pdf-section"><div class="pdf-section-title">Observaciones y seguimiento</div><div class="pdf-observation">${safeTexto}</div></section>
+      <footer class="pdf-footer"><span><strong>Amor y Libertad</strong> · Formación integral con valores</span><span>Documento generado por el sistema escolar</span></footer>
+    `;
+
+    container.appendChild(clone);
+    return clone;
+  }
+  
+  function removeClone(clone) {
+    if (clone && clone.parentNode) clone.parentNode.removeChild(clone);
+  }
+
+  async function generarPDFIndividual(data, nombreDelProfesor) {
+    try {
+      let docData = data;
+      // Tratar de obtener la ficha más actualizada
+      if (data && data.id) {
+        const fichaRef = doc(db, "fichas", data.id);
+        const fichaSnap = await getDoc(fichaRef);
+        if (fichaSnap.exists()) docData = fichaSnap.data();
+      }
+
+      Swal.fire({ title: 'Generando PDF', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+      // Creamos el contenedor simple
+      const clone = createPrintableClone(docData, nombreDelProfesor || docData.maestro_nombre);
+      
+      // Pequeña pausa obligatoria para que el navegador "dibuje" el HTML nuevo
+      await new Promise(r => setTimeout(r, 400)); 
+
+      const opciones = {
+        margin: 15,
+        filename: `Ficha_${(docData.nombre_alumno||'alumno').replace(/[\\/:"*?<>|]+/g,'')}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+        jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
+      };
+
+      await html2pdf().set(opciones).from(clone).save();
+      
+      removeClone(clone);
+      Swal.close();
+      
+    } catch (e) {
+      console.error('Error generando PDF:', e);
+      Swal.fire('Error', 'Ocurrió un error al generar el PDF. Revisa la consola.', 'error');
+    }
+  }
+
+  document.getElementById('btn-buscar').addEventListener('click', async () => {
+    const grupo = document.getElementById('filtroGrupo').value;
+    if (!grupo) return Swal.fire('Aviso', 'Selecciona un grupo.', 'warning');
+
+    document.getElementById('seccion-resultados').style.display = 'block';
+    const tabla = document.getElementById('tabla-fichas');
+    tabla.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Buscando fichas... 🔍</td></tr>";
+
+    try {
+      const qFichas = query(collection(db, "fichas"), where("grupo", "==", grupo));
+      const querySnapshot = await getDocs(qFichas);
+      fichasActuales = [];
+      tabla.innerHTML = "";
+      let contador = 0;
+
+      querySnapshot.forEach((docSnap) => {
+        contador++;
+        const data = docSnap.data();
+        data.id = docSnap.id;
+        fichasActuales.push(data);
+
+        const nombreDelProfesor = data.maestro_nombre || (data.maestro_email ? data.maestro_email.split('@')[0] : 'Docente');
+        const row = document.createElement('tr');
+        
+        row.innerHTML = `
+          <td style="font-weight:bold;">${data.nombre_alumno || ''}</td>
+          <td style="color:#666;">${nombreDelProfesor}</td>
+          <td>${formatoFechaSegura(data.ultima_actualizacion)}</td>
+          <td style="text-align: center;">
+            <button class="btn-ver-pdf" style="background:#004a99; color:white; border:none; padding:6px 12px; border-radius:5px; cursor:pointer; font-weight:bold; margin:2px;">📄 PDF</button>
+            <button class="btn-delete" style="background:#ff4d4d; color:white; border:none; padding:6px 12px; border-radius:5px; cursor:pointer; font-weight:bold; margin:2px;">🗑️</button>
+          </td>
+        `;
+
+        row.querySelector('.btn-ver-pdf').addEventListener('click', async () => {
+          await generarPDFIndividual(data, nombreDelProfesor);
+        });
+
+        row.querySelector('.btn-delete').addEventListener('click', () => {
+          Swal.fire({
+            title: '¿Eliminar Ficha?',
+            text: `Borrando ficha de ${data.nombre_alumno}`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ff4d4d',
+            confirmButtonText: 'Sí, borrar'
+          }).then(async (result) => {
+            if (result.isConfirmed) {
+              await deleteDoc(doc(db, "fichas", data.id));
+              document.getElementById('btn-buscar').click();
+            }
+          });
+        });
+
+        tabla.appendChild(row);
+      });
+
+      const botonesAccion = document.getElementById('botones-accion-global');
+      if (contador === 0) {
+        tabla.innerHTML = "<tr><td colspan='4' style='text-align:center; color:#ff4d4d;'>No hay fichas creadas para este grupo aún.</td></tr>";
+        botonesAccion.style.display = 'none';
+      } else botonesAccion.style.display = 'flex';
+
+    } catch (error) {
+      console.error(error);
+      tabla.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Error al cargar los datos.</td></tr>";
+    }
+  });
+
+  // Exportar a ZIP (También ajustado para la nueva versión simplificada)
+  document.getElementById('btn-descargar-zip').addEventListener('click', async () => {
+    const grupo = document.getElementById('filtroGrupo').value;
+    const btnZip = document.getElementById('btn-descargar-zip');
+    if (!grupo) return Swal.fire('Aviso', 'Selecciona un grupo.', 'warning');
+
+    btnZip.disabled = true;
+    Swal.fire({ title: 'Generando Archivos', text: 'Esto puede tardar unos segundos...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+    const zip = new JSZip();
+    const carpeta = zip.folder(`Fichas_${grupo.replace(/\s+/g, '_')}`);
+    const opcionesPDF = {
+      margin: 10, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' }, jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
+    };
+
+    try {
+      for (let i = 0; i < fichasActuales.length; i++) {
+        const data = fichasActuales[i];
+        const nombreDelProfesor = data.maestro_nombre || (data.maestro_email ? data.maestro_email.split('@')[0] : 'Docente');
+        
+        const clone = createPrintableClone(data, nombreDelProfesor);
+        await new Promise(r => setTimeout(r, 300));
+        
+        const pdfBlob = await html2pdf().set(opcionesPDF).from(clone).output('blob');
+        carpeta.file(`${(data.nombre_alumno||'alumno')}.pdf`, pdfBlob);
+        
+        removeClone(clone);
+      }
+      const contenidoZip = await zip.generateAsync({type:"blob"});
+      saveAs(contenidoZip, `Fichas_Completas_${grupo.replace(/\s+/g, '_')}.zip`);
+      Swal.fire('¡Listo!', 'El archivo ZIP se ha descargado.', 'success');
+      btnZip.disabled = false;
+    } catch (error) {
+      console.error(error);
+      Swal.fire('Error', 'Hubo un fallo al crear los PDFs.', 'error');
+      btnZip.disabled = false;
+    }
+  });
+
+  document.getElementById('btn-borrar-todo').addEventListener('click', async () => {
+    const grupo = document.getElementById('filtroGrupo').value;
+    const { value: confirmacion } = await Swal.fire({
+      title: 'Borrado Masivo',
+      text: `Escribe CONFIRMAR para eliminar todas las fichas de ${grupo}`,
+      input: 'text', icon: 'error', showCancelButton: true, confirmButtonText: 'Eliminar Todo', confirmButtonColor: '#ff4d4d'
+    });
+    if (confirmacion === "CONFIRMAR") {
+      Swal.fire({ title: 'Borrando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      try {
+        for (let i = 0; i < fichasActuales.length; i++) await deleteDoc(doc(db, "fichas", fichasActuales[i].id));
+        Swal.fire('¡Eliminado!', 'Todas las fichas han sido borradas.', 'success');
+        document.getElementById('btn-buscar').click();
+      } catch (error) { console.error(error); Swal.fire('Error', 'Ocurrió un problema.', 'error'); }
+    }
+  });
+</script>
+<script type="module" src="../js/role-nav.js"></script>
+</body>
+</html>

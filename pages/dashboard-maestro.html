@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Maestros - Amor y Libertad</title>
+    <link rel="icon" type="image/x-icon" href="../img/favicon.ico">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/admin-power.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .grid-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; max-width: 900px; margin: 40px auto; padding: 0 20px; }
+        .option-card { background: white; padding: 40px 20px; border-radius: 15px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: transform 0.3s; border: 1px solid #eef2f7;}
+        .option-card:hover { transform: translateY(-5px); border-color:#004a99;}
+        .option-icon { font-size: 3rem; margin-bottom: 15px; display: block; }
+        .logout-container { max-width: 1000px; margin: auto; text-align: right; padding: 10px 20px; }
+        .btn-logout { background: #ff4d4d; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        
+        .banner-suplencia { background: #FF9800; color: #333; padding: 15px; text-align: center; font-weight: bold; font-size: 1.1rem; display: none; }
+        
+        .pantalla-bloqueo {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 38, 77, 0.95);
+            z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: white; text-align: center; backdrop-filter: blur(8px);
+            transition: opacity 0.4s ease;
+        }
+        
+        .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.2);}
+        input:checked + .slider { background-color: #4CAF50; }
+        input:checked + .slider:before { transform: translateX(26px); }
+    </style>
+</head>
+<body class="admin-powered">
+
+<div id="banner-suplencia" class="banner-suplencia">
+    Modo suplente activo · Estás trabajando como: <span id="nombre-suplido"></span>
+    <button id="btn-salir-suplencia" style="margin-left:15px; padding:5px 15px; border-radius:20px; border:none; background:#333; color:white; cursor:pointer; font-weight:bold;">Salir del Modo</button>
+</div>
+
+<div id="vista-bloqueada" class="pantalla-bloqueo" style="display: none;">
+    <span style="font-size: 5rem; margin-bottom: 20px;">🛑</span>
+    <h2 style="font-size: 2.5rem; margin: 0 0 10px 0;">Aula Virtual Cedida</h2>
+    <p style="font-size: 1.2rem; max-width: 500px; color: #b3d4ff; line-height: 1.5;">Actualmente le has prestado los controles de tus materias y alumnos al docente suplente:<br><br><b id="nombre-mi-suplente" style="font-size:1.8rem; color: #FF9800;"></b></p>
+    
+    <div style="display: flex; align-items: center; gap: 15px; margin-top: 40px; background: rgba(255,255,255,0.1); padding: 15px 30px; border-radius: 50px;">
+        <span style="font-size: 1.2rem; font-weight: bold;">Préstamo Activo</span>
+        <label class="switch">
+            <input type="checkbox" id="toggle-recuperar" checked>
+            <span class="slider"></span>
+        </label>
+    </div>
+    <p style="margin-top: 15px; font-size: 0.95rem; color: #8898aa;">Apaga el interruptor para expulsar al suplente y recuperar tu aula.</p>
+</div>
+
+<header class="profile-header">
+    <div class="cover-photo"><img src="../Img/logo2.png" alt="Portada"></div>
+    <div class="profile-info">
+        <div class="profile-logo"><img src="../Img/logo.png" alt="Logo"></div>
+        <div class="profile-text">
+            <h1 id="saludo-maestro">Cargando perfil...</h1>
+            <p>Panel de Control Docente</p>
+        </div>
+    </div>
+</header>
+
+<div class="logout-container">
+    <button id="btn-logout" class="btn-logout">Cerrar Sesión</button>
+</div>
+
+<main>
+    <div id="vista-normal" class="grid-options" style="display: none;">
+        
+        <div class="option-card" id="card-suplencia-disponible" style="display:none; background:#fff8e1; border-color:#FF9800;">
+            <span class="option-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 12h8M12 8v8"/><circle cx="12" cy="12" r="9"/></svg></span><h3 style="color:#9b6200;">Clases extra</h3>
+            <p style="color: #666; font-size: 0.8rem; margin-bottom: 15px;">Entrar al aula de <b id="text-suplir-a"></b></p>
+            <button id="btn-entrar-suplencia" class="btn btn-primary" style="background:#FF9800; border:none; color:#333; cursor:pointer; width:100%;">ENTRAR AL AULA</button>
+        </div>
+
+        <div class="option-card"><span class="option-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a6 6 0 0 1 12 0v2M17 8h5M17 12h5"/></svg></span><h3>Directorio de alumnos</h3><p>Consulta la información de tus estudiantes.</p><a href="ver-alumnos.html" class="btn btn-primary">Abrir directorio</a></div>
+        <div class="option-card"><span class="option-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h6l2 2h8v14H4z"/></svg></span><h3>Documentos</h3><p>Accede a formatos y archivos escolares.</p><a href="documentos-maestro.html" class="btn btn-primary">Abrir carpeta</a></div>
+        <div class="option-card"><span class="option-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h7v14H4zM13 5h7v14h-7z"/></svg></span><h3>Mis materias</h3><p>Gestiona asignaturas, asistencia y evaluaciones.</p><a href="materias.html" class="btn btn-primary">Ver materias</a></div>
+        <div class="option-card"><span class="option-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="15" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 15-5-5L5 20"/></svg></span><h3>Galería escolar</h3><p>Publica evidencias y actividades del grupo.</p><a href="fotos.html" class="btn btn-primary">Administrar fotos</a></div>
+        <div class="option-card"><span class="option-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v12H7l-3 3z"/><path d="M8 9h8M8 13h5"/></svg></span><h3>Comunicaciones</h3><p>Informa a dirección, colegas, grupos o familias.</p><a href="centro-mensajes.html" class="btn btn-primary">Abrir bandeja</a></div>
+        
+        <div class="option-card">
+            <span class="option-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 7h11l-3-3M17 17H6l3 3"/></svg></span><h3>Prestar aula</h3>
+            <p style="color: #666; font-size: 0.8rem; margin-bottom: 15px;">Dar acceso temporal a un suplente.</p>
+            <button id="btn-prestar-aula" class="btn btn-primary" style="background:#607d8b; border:none; cursor:pointer; width:100%;">ASIGNAR SUPLENTE</button>
+        </div>
+
+        <div class="option-card">
+            <span class="option-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.7 2.5 17.2A2 2 0 0 0 4.2 20h15.6a2 2 0 0 0 1.7-2.8L13.7 3.7a2 2 0 0 0-3.4 0Z"/></svg></span><h3 style="color:#a64e00;">Mantenimiento</h3>
+            <p style="color: #666; font-size: 0.8rem; margin-bottom: 15px;">Borrar historiales antiguos de pase de lista.</p>
+            <a href="limpiar-asistencia.html" class="btn btn-primary" style="background:#e65100; border:none;">LIMPIAR LISTAS</a>
+        </div>
+
+        <div class="option-card"><span class="option-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><h3>Seguridad</h3><p>Actualiza la contraseña de tu cuenta.</p><a href="cambiar-password.html" class="btn btn-primary">Cambiar contraseña</a></div>
+    </div>
+</main>
+
+<script type="module">
+    import { auth, db } from '../js/firebase-config.js';
+    import { signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { doc, getDoc, updateDoc, collection, query, where, getDocs, deleteField } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    let miEmail = null;
+    let miId = null;
+
+    onAuthStateChanged(auth, async (user) => { 
+        if (!user) { window.location.href = "login.html"; return; }
+        
+        miEmail = user.email;
+        miId = user.uid;
+        const docSnap = await getDoc(doc(db, "usuarios", miId));
+        const myData = docSnap.data();
+        
+        const modoSuplente = localStorage.getItem('supliendo_a');
+
+        if (modoSuplente) {
+            document.getElementById('saludo-maestro').innerText = `Hola, ${myData.nombre || 'Maestro(a)'}`;
+            document.getElementById('banner-suplencia').style.display = 'block';
+            document.getElementById('nombre-suplido').innerText = localStorage.getItem('supliendo_nombre');
+            document.getElementById('vista-normal').style.display = 'grid';
+            
+        } else if (myData.delegado_a) {
+            document.getElementById('saludo-maestro').innerText = `Hola, ${myData.nombre || 'Maestro(a)'}`;
+            document.getElementById('vista-bloqueada').style.display = 'flex';
+            document.getElementById('nombre-mi-suplente').innerText = myData.delegado_nombre || myData.delegado_a;
+        } else {
+            document.getElementById('saludo-maestro').innerText = `Hola, ${myData.nombre || 'Maestro(a)'}`;
+            document.getElementById('vista-normal').style.display = 'grid';
+
+            const qSuplente = query(collection(db, "usuarios"), where("rol", "==", "maestro"), where("delegado_a", "==", miEmail));
+            const suplenteSnap = await getDocs(qSuplente);
+            
+            if (!suplenteSnap.empty) {
+                const profeAusente = suplenteSnap.docs[0].data();
+                document.getElementById('card-suplencia-disponible').style.display = 'block';
+                document.getElementById('text-suplir-a').innerText = profeAusente.nombre;
+                
+                document.getElementById('btn-entrar-suplencia').addEventListener('click', () => {
+                    localStorage.setItem('supliendo_a', profeAusente.email);
+                    localStorage.setItem('supliendo_nombre', profeAusente.nombre);
+                    location.reload();
+                });
+            }
+        }
+    });
+
+    // LA MAGIA: Al apagar el interruptor (cambia a gris)
+    document.getElementById('toggle-recuperar').addEventListener('change', async (e) => {
+        if (!e.target.checked) {
+            Swal.fire({ title: 'Procesando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            
+            try {
+                await updateDoc(doc(db, "usuarios", miId), { 
+                    delegado_a: deleteField(),
+                    delegado_nombre: deleteField() 
+                });
+                
+                // 1. Ocultar la alerta de carga al instante
+                Swal.close();
+                
+                // 2. Desaparecer la pantalla azul bloqueadora inmediatamente
+                document.getElementById('vista-bloqueada').style.display = 'none';
+                document.getElementById('vista-normal').style.display = 'grid';
+                
+                // 3. Mostrar un aviso de éxito que se quita solo en 1.5 segundos
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Aula Recuperada!',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+
+            } catch (error) {
+                Swal.fire('Error', 'Hubo un problema de red.', 'error');
+                e.target.checked = true; // Si hay error, el switch regresa a verde
+            }
+        }
+    });
+
+    document.getElementById('btn-salir-suplencia').addEventListener('click', () => {
+        localStorage.removeItem('supliendo_a');
+        localStorage.removeItem('supliendo_nombre');
+        window.location.href = window.location.href;
+    });
+
+    document.getElementById('btn-prestar-aula').addEventListener('click', async () => {
+        Swal.fire({ title: 'Cargando maestros...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        
+        const qMaestros = query(collection(db, "usuarios"), where("rol", "==", "maestro"));
+        const snap = await getDocs(qMaestros);
+        let opciones = {};
+        
+        snap.forEach(doc => {
+            if (doc.data().email !== miEmail) opciones[doc.data().email] = doc.data().nombre;
+        });
+
+        Swal.close();
+
+        const { value: suplenteEmail } = await Swal.fire({
+            title: 'Asignar Suplente',
+            text: 'Selecciona al maestro que tomará tu lugar temporalmente:',
+            input: 'select',
+            inputOptions: opciones,
+            inputPlaceholder: 'Seleccionar maestro...',
+            showCancelButton: true,
+            confirmButtonColor: '#004a99'
+        });
+
+        if (suplenteEmail) {
+            const selectEl = Swal.getPopup().querySelector('select');
+            const suplenteNombre = selectEl.options[selectEl.selectedIndex].text;
+
+            await updateDoc(doc(db, "usuarios", miId), { 
+                delegado_a: suplenteEmail,
+                delegado_nombre: suplenteNombre 
+            });
+            
+            Swal.fire('¡Listo!', 'Le has dado acceso a tu aula.', 'success').then(() => {
+                window.location.href = window.location.href;
+            });
+        }
+    });
+
+    document.getElementById('btn-logout').addEventListener('click', () => {
+        localStorage.removeItem('supliendo_a');
+        localStorage.removeItem('supliendo_nombre');
+        signOut(auth).then(() => window.location.href = "../index.html");
+    });
+</script>
+<script type="module" src="../js/message-widget.js"></script></body>
+</html>

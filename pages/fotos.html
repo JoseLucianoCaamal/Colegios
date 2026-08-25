@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galería Escolar - Maestros</title>
+    <link rel="icon" type="image/x-icon" href="../img/favicon.ico">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/admin-power.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
+
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7fa; margin: 0; padding: 0; }
+        .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
+        .card { padding: 30px; border-radius: 20px; background: #ffffff; border: 1px solid #eef2f7; box-shadow: 0 8px 16px rgba(0,0,0,0.03); margin-bottom: 25px; }
+        
+        .filters-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: end; margin-bottom: 20px;}
+        @media (max-width: 768px) { .filters-grid { grid-template-columns: 1fr; } }
+        
+        .input-control { width: 100%; padding: 14px; border: 2px solid #eef2f7; border-radius: 8px; font-size: 1rem; outline: none; transition: 0.3s; box-sizing: border-box;}
+        .input-control:focus { border-color: #FF9800; box-shadow: 0 0 8px rgba(255, 152, 0, 0.2); }
+        label { font-size: 0.85rem; font-weight: bold; color: #8898aa; display: block; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;}
+        
+        .btn-back-clean { display: inline-flex; align-items: center; gap: 5px; color: #666; text-decoration: none; font-weight: bold; margin-bottom: 15px; font-size: 0.95rem; transition: color 0.3s;}
+        .btn-back-clean:hover { color: #004a99; }
+        
+        .btn-crear { width: 100%; padding: 14px; background: #4CAF50; color: white; font-weight: bold; font-size: 1.1rem; border: none; border-radius: 8px; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 6px rgba(76, 175, 80, 0.2);}
+        .btn-crear:hover { background: #43a047; transform: translateY(-2px); }
+
+        /* DISEÑO COMPACTO Y RESPONSIVO */
+        .photo-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; margin-top: 20px; }
+        .photo-item { position: relative; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: transform 0.3s; background: white; display: flex; flex-direction: column;}
+        .photo-item:hover { transform: translateY(-3px); box-shadow: 0 6px 12px rgba(0,0,0,0.15); }
+        .photo-item img { width: 100%; height: 150px; object-fit: cover; display: block; border-bottom: 3px solid #004a99;}
+        .photo-info { background: #ffffff; color: #333; padding: 10px; font-size: 0.8rem; text-align: center; font-weight: bold; flex-grow: 1; display: flex; flex-direction: column; justify-content: center;}
+        .tag-seccion { display: block; font-size: 0.7rem; color: #8898aa; margin-top: 3px; font-weight: normal; }
+        
+        /* BOTÓN BORRAR Y DESCARGAR */
+        .btn-delete-photo { position: absolute; top: 5px; right: 5px; background: rgba(255, 77, 77, 0.9); color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-weight: bold; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); transition: 0.3s;}
+        .btn-delete-photo:hover { background: #c62828; transform: scale(1.1); }
+
+        .btn-descarga { position: absolute; bottom: 60px; right: 5px; background: rgba(0, 74, 153, 0.9); color: white; text-decoration: none; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 1rem; box-shadow: 0 2px 5px rgba(0,0,0,0.3); transition: 0.3s; z-index: 10;}
+        .btn-descarga:hover { background: #FF9800; transform: scale(1.1); }
+    </style>
+</head>
+<body>
+
+<header class="profile-header">
+    <div class="cover-photo"><img src="../Img/logo2.png" alt="Portada"></div>
+    <div class="profile-info">
+        <a href="dashboard-maestro.html" class="btn-back-clean">⬅ Volver al Panel</a>
+        <div class="profile-text">
+            <h1>Galería Escolar</h1>
+            <p>Sube y administra evidencias por Eventos</p>
+        </div>
+    </div>
+</header>
+
+<main class="container">
+    <section class="card">
+        <h3 style="margin-top:0; color:#004a99; margin-bottom: 20px;">Subir Evidencia</h3>
+        <div class="filters-grid">
+            <div style="grid-column: 1 / -1;">
+                <label>Nombre del Evento o Sección</label>
+                <input type="text" id="inputSeccion" class="input-control" placeholder="Ej: Festival de Primavera, Honores a la Bandera...">
+            </div>
+            <div style="grid-column: 1 / -1;">
+                <button id="btn-subir-foto" class="btn-crear">📸 Seleccionar y Subir Foto</button>
+            </div>
+        </div>
+    </section>
+
+    <section class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+            <h3 style="margin:0; color:#004a99;">Todas las Fotografías</h3>
+            <div style="flex-grow: 1; max-width: 400px;">
+                <select id="filtroSeccion" class="input-control">
+                    <option value="TODAS">Cargando fotografías...</option>
+                </select>
+            </div>
+        </div>
+        
+        <div id="galeria" class="photo-gallery">
+            <p style="grid-column: 1 / -1; text-align: center; color: #8898aa; font-size: 1.1rem; padding: 40px 0;">Descargando recuerdos... ⏳</p>
+        </div>
+    </section>
+</main>
+
+<script type="module">
+    import { db, auth } from '../js/firebase-config.js';
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { collection, query, where, getDocs, addDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const inputSeccion = document.getElementById('inputSeccion');
+    const filtroSeccion = document.getElementById('filtroSeccion');
+    const galeria = document.getElementById('galeria');
+    const btnSubir = document.getElementById('btn-subir-foto');
+    
+    let maestroActual = null;
+
+    onAuthStateChanged(auth, (user) => {
+        if (!user) { window.location.href = "login.html"; } 
+        else { 
+            maestroActual = localStorage.getItem('supliendo_a') || user.email;
+            cargarOpcionesSecciones(); 
+        }
+    });
+
+    async function cargarOpcionesSecciones() {
+        try {
+            const snap = await getDocs(collection(db, "fotos"));
+            const seccionesUnicas = new Set();
+            
+            snap.forEach(doc => { if (doc.data().seccion) seccionesUnicas.add(doc.data().seccion); });
+
+            filtroSeccion.innerHTML = '<option value="TODAS">Ver Todas las Fotografías</option>';
+            seccionesUnicas.forEach(seccion => { filtroSeccion.innerHTML += `<option value="${seccion}">${seccion}</option>`; });
+
+            cargarFotos("TODAS");
+        } catch (error) { console.error("Error cargando eventos:", error); }
+    }
+
+    var myWidget = cloudinary.createUploadWidget({
+        cloudName: 'eaeuplpl', 
+        uploadPreset: 'colegio_fotos', 
+        sources: ['local', 'camera'],
+        multiple: true,
+        maxFileSize: 5000000, 
+        language: "es",
+        text: { es: { menu: { files: "Mis Archivos", camera: "Cámara" }, local: { browse: "Seleccionar", dd_title_single: "Arrastra la foto aquí" } } }
+    }, async (error, result) => { 
+        if (!error && result && result.event === "success") { 
+            const urlSegura = result.info.secure_url;
+            const nombreSeccion = inputSeccion.value.trim() || "Sin Sección";
+            
+            try {
+                await addDoc(collection(db, "fotos"), {
+                    url: urlSegura,
+                    seccion: nombreSeccion,
+                    maestro_email: maestroActual,
+                    fecha: new Date(),
+                    proveedor: 'cloudinary',
+                    publicId: result.info.public_id || '',
+                    bytes: result.info.bytes || 0,
+                    formato: result.info.format || ''
+                });
+                
+                inputSeccion.value = "";
+                await cargarOpcionesSecciones(); 
+                filtroSeccion.value = nombreSeccion; 
+                cargarFotos(nombreSeccion); 
+                
+                Swal.fire({icon: 'success', title: '¡Subida exitosa!', showConfirmButton: false, timer: 1500});
+            } catch(e) { Swal.fire('Error', 'No se pudo guardar la foto en el sistema.', 'error'); }
+        }
+    });
+
+    btnSubir.addEventListener('click', () => {
+        if (inputSeccion.value.trim() === "") {
+            Swal.fire('Aviso', 'Por favor, escribe el nombre del Evento o Sección antes de subir.', 'warning');
+            inputSeccion.focus();
+            return;
+        }
+        myWidget.open();
+    });
+
+    async function cargarFotos(seccionElegida) {
+        galeria.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; font-size: 1.1rem; color: #666;">Cargando álbum... ⏳</p>';
+        
+        try {
+            let qFotos = (seccionElegida === "TODAS") ? query(collection(db, "fotos")) : query(collection(db, "fotos"), where("seccion", "==", seccionElegida));
+            const snap = await getDocs(qFotos);
+            
+            galeria.innerHTML = '';
+            let contador = 0;
+
+            snap.forEach((docSnap) => {
+                contador++;
+                const data = docSnap.data();
+                
+                let fechaTexto = "Reciente";
+                if (data.fecha && data.fecha.toDate) {
+                    fechaTexto = data.fecha.toDate().toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+                }
+                
+                const urlDescarga = data.url.replace('/upload/', '/upload/fl_attachment/');
+
+                const div = document.createElement('div');
+                div.className = 'photo-item';
+                div.innerHTML = `
+                    <button class="btn-delete-photo" title="Eliminar foto">✖</button>
+                    <a href="${urlDescarga}" class="btn-descarga" title="Descargar Foto">⬇️</a>
+                    <a href="${data.url}" target="_blank">
+                        <img src="${data.url}" loading="lazy" alt="Evidencia">
+                    </a>
+                    <div class="photo-info">
+                        ${fechaTexto}
+                        <span class="tag-seccion">${data.seccion}</span>
+                    </div>
+                `;
+
+                div.querySelector('.btn-delete-photo').addEventListener('click', async () => {
+                    const { isConfirmed } = await Swal.fire({ title: '¿Borrar esta foto?', text: 'Acción irreversible.', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ff4d4d', confirmButtonText: 'Sí, borrar' });
+                    if(isConfirmed) {
+                        Swal.fire({ title: 'Borrando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                        await deleteDoc(doc(db, "fotos", docSnap.id));
+                        Swal.close();
+                        cargarFotos(filtroSeccion.value); 
+                    }
+                });
+
+                galeria.appendChild(div);
+            });
+
+            if(contador === 0) {
+                galeria.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: #8898aa;">Este álbum está vacío.</p>';
+            }
+
+        } catch(e) {
+            galeria.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: #ff4d4d;">Error al cargar las fotos.</p>';
+        }
+    }
+
+    filtroSeccion.addEventListener('change', () => cargarFotos(filtroSeccion.value));
+</script>
+</body>
+</html>

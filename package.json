@@ -1,0 +1,10 @@
+{
+  "name": "colegio-amor-y-libertad",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Portal público y plataforma escolar del Centro Educativo Amor y Libertad.",
+  "scripts": {
+    "audit": "node tools/audit-project.mjs",
+    "check": "node --check js/app.js && node --check js/auth-logic.js && node --check js/messages.js && node --check js/message-widget.js && node --check js/profile.js && node tools/audit-project.mjs"
+  }
+}

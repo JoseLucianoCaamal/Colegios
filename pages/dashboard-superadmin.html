@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Administración del sistema - Amor y Libertad</title>
-  <link rel="icon" href="Img/logo.png">
-  <link rel="stylesheet" href="css/superadmin.css">
+  <link rel="icon" href="../Img/logo.png">
+  <link rel="stylesheet" href="../css/superadmin.css">
 </head>
 <body class="sa-page">
 <div class="sa-shell">
   <aside class="sa-sidebar">
-    <div class="sa-brand"><img src="Img/logo.png" alt=""><div><strong>Amor y Libertad</strong><span>Administración del sistema</span></div></div>
+    <div class="sa-brand"><img src="../Img/logo.png" alt=""><div><strong>Amor y Libertad</strong><span>Administración del sistema</span></div></div>
     <nav class="sa-nav">
       <div class="sa-nav-label">Sistema</div>
       <a class="active" href="dashboard-superadmin.html">Resumen técnico</a>
@@ -20,7 +20,7 @@
       <div class="sa-nav-label">Administración</div>
       <a href="dashboard-directora.html">Panel académico</a>
       <a href="gestionar-grupos.html">Grupos escolares</a>
-      <a href="index.html">Portal público</a>
+      <a href="../index.html">Portal público</a>
     </nav>
     <div class="sa-sidebar-footer"><button class="sa-logout" id="cerrar-sesion">Cerrar sesión</button></div>
   </aside>
@@ -41,7 +41,7 @@
           <a class="sa-tool" href="gestionar-maestros.html"><strong>Alta de docentes</strong><span>Crear cuentas nuevas directamente con UID.</span></a>
           <a class="sa-tool" href="mantenimiento.html"><strong>Mantenimiento de datos</strong><span>Operaciones delicadas, limpieza e integridad de registros.</span></a>
           <a class="sa-tool" href="dashboard-directora.html"><strong>Administración académica</strong><span>Entrar al panel operativo de dirección.</span></a>
-          <a class="sa-tool" href="SEGURIDAD_FIREBASE.md"><strong>Guía de seguridad</strong><span>Migración, reglas, App Check y proceso de publicación.</span></a>
+          <a class="sa-tool" href="../SEGURIDAD_FIREBASE.md"><strong>Guía de seguridad</strong><span>Migración, reglas, App Check y proceso de publicación.</span></a>
         </div></section>
         <aside class="sa-panel"><div class="sa-panel-head"><h2>Controles de seguridad</h2><span>Primera fase</span></div><div class="sa-security-list">
           <div class="sa-security-item"><span>Perfil superadmin por UID</span><strong>ACTIVO</strong></div>
@@ -55,8 +55,8 @@
   </main>
 </div>
 <script type="module">
-  import { auth, db } from './js/firebase-config.js';
-  import { requireRoles } from './js/security.js';
+  import { auth, db } from '../js/firebase-config.js';
+  import { requireRoles } from '../js/security.js';
   import { signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
   import { collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
@@ -85,8 +85,8 @@
     await signOut(auth);
     localStorage.removeItem('supliendo_a');
     localStorage.removeItem('supliendo_nombre');
-    window.location.replace('index.html');
+    window.location.replace('../index.html');
   });
 </script>
-<script type="module" src="js/message-widget.js"></script></body>
+<script type="module" src="../js/message-widget.js"></script></body>
 </html>

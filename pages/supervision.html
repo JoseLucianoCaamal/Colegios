@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Boletas - Amor y Libertad</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/admin-power.css">
+    <link rel="stylesheet" href="../css/academic.css">
+    
+    <!-- Librerías para PDF y ZIP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <style>
+        .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
+        .card { padding: 30px; border-radius: 20px; background: #ffffff; border: 1px solid #eef2f7; box-shadow: 0 8px 16px rgba(0,0,0,0.03); margin-bottom: 25px; }
+        .filters-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; align-items: end; }
+        .input-control { width: 100%; padding: 12px; border: 2px solid #eef2f7; border-radius: 8px; font-size: 1rem; outline:none;}
+        label { font-size: 0.85rem; font-weight: bold; color: #8e44ad; display: block; margin-bottom: 5px; text-transform: uppercase;}
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.95rem; }
+        th { padding: 15px; text-align: left; border-bottom: 2px solid #eef2f7; color: #004a99; text-transform: uppercase; font-size: 0.85rem;}
+        td { padding: 15px; text-align: left; border-bottom: 1px solid #f4f7fa; }
+        .btn-back-clean { display: inline-flex; align-items: center; gap: 5px; color: #666; text-decoration: none; font-weight: bold; margin-bottom: 15px; }
+        
+        /* ESTILOS DE LA BOLETA PDF OCULTA */
+        #plantilla-boleta { display:none;width:760px;min-height:940px;background:#fff;padding:38px 44px 50px;color:#172534;font-family:Arial,sans-serif;box-sizing:border-box;position:relative}
+        .pdf-header { display:flex;align-items:center;gap:14px;border-bottom:3px solid #073763;padding-bottom:16px;margin-bottom:22px;text-align:left }
+        .pdf-header img { width:66px;height:66px;object-fit:contain;margin:0 }
+        .pdf-header h1 { color:#073763;font-size:22px;margin:0 }
+        .pdf-header h2 { color:#718092;font-size:11px;margin:5px 0 0;font-weight:normal }
+        .pdf-report-title{text-align:center;margin-bottom:18px}.pdf-report-title h3{margin:0;color:#073763;font-size:20px}.pdf-report-title p{margin:5px 0 0;color:#718092;font-size:10px}
+        .pdf-info-box { display:grid;grid-template-columns:1.4fr .6fr;gap:1px;background:#dce5ec;border:1px solid #dce5ec;border-radius:8px;overflow:hidden;margin-bottom:22px;padding:0 }
+        .pdf-info-box p { margin:0;padding:11px 13px;background:#f7f9fb;font-size:9px;color:#718092;text-transform:uppercase;font-weight:bold }
+        .pdf-info-box p:first-child{grid-column:1/-1}.pdf-info-box span{display:block;margin-top:4px;color:#172534;font-size:12px;text-transform:none}
+        
+        .tabla-boleta-pdf { width:100%;border-collapse:collapse;margin-top:0 }
+        .tabla-boleta-pdf th { background:#073763;color:#fff;padding:10px 12px;border:0;text-align:left;font-size:9px;letter-spacing:.05em }
+        .tabla-boleta-pdf th:last-child{text-align:center}.tabla-boleta-pdf td{padding:11px 12px;border-bottom:1px solid #dfe7ed;text-align:center;font-size:11px;font-weight:bold;color:#172534}.tabla-boleta-pdf td:first-child{text-align:left;font-weight:normal}.pdf-grade-summary{display:flex;justify-content:flex-end;margin-top:15px}.pdf-grade-summary span{padding:8px 12px;border-radius:7px;color:#073763;background:#eaf3f8;font-size:10px;font-weight:bold}.pdf-report-footer{position:absolute;left:44px;right:44px;bottom:20px;display:flex;justify-content:space-between;padding-top:9px;border-top:1px solid #dfe7ed;color:#718092;font-size:8px}
+    </style>
+</head>
+<body class="academic-page">
+
+<header class="profile-header">
+    <div class="cover-photo"><img src="../Img/logo2.png" alt="Portada"></div>
+    <div class="profile-info">
+        <a href="dashboard-directora.html" class="btn-back-clean" data-role-home>← Volver a mi panel</a>
+        <div class="profile-text">
+            <h1>Boletas de Calificaciones</h1>
+            <p>Generación de Documentos Individuales</p>
+        </div>
+    </div>
+</header>
+
+<main class="container">
+    <section class="card">
+        <div class="filters-grid">
+            <div>
+                <label>Selecciona el Grupo</label>
+                <select id="filtroGrupo" class="input-control"><option value="">Cargando...</option></select>
+            </div>
+            <div>
+                <label>Periodo de Evaluación</label>
+                <select id="periodoEvaluacion" class="input-control">
+                    <option value="Trimestre 1">Trimestre 1</option>
+                    <option value="Trimestre 2">Trimestre 2</option>
+                    <option value="Trimestre 3">Trimestre 3</option>
+                </select>
+            </div>
+            <div>
+                <button id="btn-buscar-alumnos" class="btn btn-primary" style="width:100%; padding:12px; border-radius:8px; background:#8e44ad; border:none; font-weight:bold; cursor:pointer;">Buscar Alumnos</button>
+            </div>
+        </div>
+    </section>
+
+    <section class="card" id="seccion-resultados" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="color:#8e44ad; margin:0;" id="titulo-lista">Alumnos Encontrados</h3>
+            <button id="btn-descargar-zip" class="btn" style="background:#FF9800; color:#333; font-weight:bold; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; display:flex; align-items:center; gap:8px;">
+                🗂️ Descargar Boletas en ZIP
+            </button>
+        </div>
+        
+        <p id="estado-zip" style="color:#4CAF50; font-weight:bold; text-align:right; display:none;"></p>
+
+        <table>
+            <thead><tr><th>Nombre del Alumno</th><th style="text-align: center;">Acción</th></tr></thead>
+            <tbody id="tabla-alumnos"></tbody>
+        </table>
+    </section>
+</main>
+
+<!-- PLANTILLA OCULTA PARA LA BOLETA PDF -->
+<div id="plantilla-boleta">
+    <div class="pdf-header">
+        <img src="../Img/logo.png" alt="Logo">
+        <h1>Centro Educativo Amor y Libertad</h1>
+        <h2>La verdad nos hará libres · Mérida, Yucatán</h2>
+    </div>
+    <div class="pdf-report-title"><h3>Reporte de evaluación</h3><p>Resumen de resultados por asignatura</p></div>
+    <div class="pdf-info-box">
+        <p>ALUMNO: <span id="pdf-nombre"></span></p>
+        <p>GRUPO: <span id="pdf-grupo"></span></p>
+        <p>PERIODO: <span id="pdf-periodo"></span></p>
+        <p>FECHA DE EMISIÓN: <span id="pdf-fecha"></span></p>
+    </div>
+    
+    <table class="tabla-boleta-pdf">
+        <thead>
+            <tr><th>Asignatura</th><th>Calificación / Observación</th></tr>
+        </thead>
+        <tbody id="pdf-tabla-materias">
+            <!-- Las materias se llenarán con JS -->
+        </tbody>
+    </table>
+    <div class="pdf-grade-summary"><span id="pdf-promedio">Evaluación mixta</span></div>
+    <footer class="pdf-report-footer"><span>Centro Educativo Amor y Libertad</span><span>Generado por el sistema escolar</span></footer>
+</div>
+
+<script type="module">
+    import { db, auth } from '../js/firebase-config.js';
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const filtroGrupo = document.getElementById('filtroGrupo');
+    let listaMateriasOficiales = [];
+    let diccionarioNotasGlobal = {};
+    let alumnosActuales = [];
+
+    function actualizarResumenPDF(alumnoId) {
+        const valores = Object.values(diccionarioNotasGlobal[alumnoId] || {}).map(String).map(valor => valor.trim()).filter(Boolean);
+        const numericas = valores.filter(valor => /^\d+(\.\d+)?$/.test(valor)).map(Number).filter(valor => valor >= 0 && valor <= 10);
+        document.getElementById('pdf-promedio').innerText = valores.length && numericas.length === valores.length
+            ? `Promedio numérico: ${(numericas.reduce((total, valor) => total + valor, 0) / numericas.length).toFixed(1)}`
+            : 'Evaluación cualitativa o mixta';
+    }
+
+    onAuthStateChanged(auth, (user) => { if (user) cargarGrupos(); else window.location.href="login.html"; });
+
+    async function cargarGrupos() {
+        const snap = await getDocs(collection(db, "grupos"));
+        filtroGrupo.innerHTML = '<option value="">Seleccione grupo...</option>';
+        snap.forEach(doc => filtroGrupo.innerHTML += `<option value="${doc.data().nombre}">${doc.data().nombre}</option>`);
+    }
+
+    document.getElementById('btn-buscar-alumnos').addEventListener('click', async () => {
+        const grupo = filtroGrupo.value; 
+        const periodo = document.getElementById('periodoEvaluacion').value;
+        if(!grupo) return alert("Selecciona un grupo primero.");
+        
+        document.getElementById('seccion-resultados').style.display = 'block'; 
+        const tabla = document.getElementById('tabla-alumnos');
+        tabla.innerHTML = "<tr><td colspan='2' style='text-align:center;'>Buscando información... 🔍</td></tr>";
+
+        try {
+            // 1. Obtener todas las materias de este grupo
+            const qMaterias = query(collection(db, "materias"), where("grupo", "==", grupo));
+            const materiasSnap = await getDocs(qMaterias);
+            listaMateriasOficiales = [];
+            materiasSnap.forEach(doc => listaMateriasOficiales.push(doc.data().nombre));
+            listaMateriasOficiales = [...new Set(listaMateriasOficiales)];
+
+            // 2. Obtener todas las calificaciones de ese grupo en ese periodo
+            const qCalif = query(collection(db, "calificaciones"), where("grupo", "==", grupo), where("periodo", "==", periodo));
+            const califSnap = await getDocs(qCalif);
+            
+            diccionarioNotasGlobal = {}; 
+            califSnap.forEach(doc => {
+                const materia = doc.data().materia;
+                const notasPorAlumno = doc.data().notas; 
+                for (let idAlumno in notasPorAlumno) {
+                    if (!diccionarioNotasGlobal[idAlumno]) diccionarioNotasGlobal[idAlumno] = {};
+                    diccionarioNotasGlobal[idAlumno][materia] = notasPorAlumno[idAlumno];
+                }
+            });
+
+            // 3. Obtener alumnos
+            const qAlumnos = query(collection(db, "alumnos"), where("grupo", "==", grupo));
+            const alumnosSnap = await getDocs(qAlumnos);
+            
+            alumnosActuales = [];
+            tabla.innerHTML = "";
+            let contador = 0;
+
+            alumnosSnap.forEach((docSnap) => {
+                contador++; 
+                const data = docSnap.data();
+                data.id = docSnap.id;
+                alumnosActuales.push(data);
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td style="font-weight:bold;">${data.nombre}</td>
+                    <td style="text-align: center;">
+                        <button class="btn-ver-pdf" style="background:#8e44ad; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; font-weight:bold;">📄 Ver Boleta PDF</button>
+                    </td>
+                `;
+
+                // Botón para generar PDF de un solo alumno
+                row.querySelector('.btn-ver-pdf').addEventListener('click', () => {
+                    generarPDFBoleta(data, grupo, periodo);
+                });
+
+                tabla.appendChild(row);
+            });
+
+            if(contador === 0) {
+                tabla.innerHTML = "<tr><td colspan='2' style='text-align:center;'>No hay alumnos en este grupo.</td></tr>";
+                document.getElementById('btn-descargar-zip').style.display = 'none';
+            } else {
+                document.getElementById('btn-descargar-zip').style.display = 'flex';
+            }
+
+        } catch (e) { console.error(e); }
+    });
+
+    // Función que arma la tabla de materias para un alumno en específico
+    function generarPDFBoleta(alumnoData, grupo, periodo) {
+        document.getElementById('pdf-nombre').innerText = alumnoData.nombre;
+        document.getElementById('pdf-grupo').innerText = grupo;
+        document.getElementById('pdf-periodo').innerText = periodo;
+        document.getElementById('pdf-fecha').innerText = new Date().toLocaleDateString('es-MX');
+
+        const tbodyMaterias = document.getElementById('pdf-tabla-materias');
+        tbodyMaterias.innerHTML = "";
+
+        // Si no hay materias
+        if(listaMateriasOficiales.length === 0) {
+            tbodyMaterias.innerHTML = "<tr><td colspan='2'>No hay materias asignadas a este grupo.</td></tr>";
+        } else {
+            // Llenamos la tabla de la boleta
+            listaMateriasOficiales.forEach(mat => {
+                let nota = "Sin evaluar";
+                let colorNota = "#ff4d4d";
+                if (diccionarioNotasGlobal[alumnoData.id] && diccionarioNotasGlobal[alumnoData.id][mat] !== undefined && diccionarioNotasGlobal[alumnoData.id][mat] !== '') {
+                    nota = diccionarioNotasGlobal[alumnoData.id][mat];
+                    colorNota = "#004a99";
+                }
+                tbodyMaterias.innerHTML += `<tr><td>${mat}</td><td style="color:${colorNota};">${nota}</td></tr>`;
+            });
+        }
+        actualizarResumenPDF(alumnoData.id);
+
+        const plantilla = document.getElementById('plantilla-boleta');
+        plantilla.style.display = 'block';
+        
+        // FORMATO DE NOMBRE EXACTO
+        const nombreArchivo = `${alumnoData.nombre} Calificaciones ${grupo}.pdf`;
+
+        html2pdf().set({
+            margin: 10,
+            filename: nombreArchivo,
+            image: { type: 'jpeg', quality: 1 },
+            html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+            jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
+        }).from(plantilla).save().then(() => {
+            plantilla.style.display = 'none';
+        });
+    }
+
+    // MAGIA: Generar y Descargar un ZIP lleno de Boletas
+    document.getElementById('btn-descargar-zip').addEventListener('click', async () => {
+        const grupo = filtroGrupo.value;
+        const periodo = document.getElementById('periodoEvaluacion').value;
+        const estado = document.getElementById('estado-zip');
+        const btnZip = document.getElementById('btn-descargar-zip');
+        
+        btnZip.disabled = true;
+        estado.style.display = 'block';
+        estado.style.color = '#FF9800';
+        estado.innerText = "⏳ Generando Boletas y comprimiendo... (No cierres la página)";
+
+        const zip = new JSZip();
+        const carpeta = zip.folder(`Boletas_${grupo.replace(/\s+/g, '_')}`);
+        const plantilla = document.getElementById('plantilla-boleta');
+
+        try {
+            plantilla.style.display = 'block';
+
+            for (let i = 0; i < alumnosActuales.length; i++) {
+                const alumnoData = alumnosActuales[i];
+                
+                // Llenamos el diseño para ESTE alumno
+                document.getElementById('pdf-nombre').innerText = alumnoData.nombre;
+                document.getElementById('pdf-grupo').innerText = grupo;
+                document.getElementById('pdf-periodo').innerText = periodo;
+                document.getElementById('pdf-fecha').innerText = new Date().toLocaleDateString('es-MX');
+
+                const tbodyMaterias = document.getElementById('pdf-tabla-materias');
+                tbodyMaterias.innerHTML = "";
+                
+                listaMateriasOficiales.forEach(mat => {
+                    let nota = "Sin evaluar";
+                    let colorNota = "#ff4d4d";
+                    if (diccionarioNotasGlobal[alumnoData.id] && diccionarioNotasGlobal[alumnoData.id][mat] !== undefined && diccionarioNotasGlobal[alumnoData.id][mat] !== '') {
+                        nota = diccionarioNotasGlobal[alumnoData.id][mat];
+                        colorNota = "#004a99";
+                    }
+                    tbodyMaterias.innerHTML += `<tr><td>${mat}</td><td style="color:${colorNota};">${nota}</td></tr>`;
+                });
+                actualizarResumenPDF(alumnoData.id);
+
+                // Convertimos a PDF
+                const pdfBlob = await html2pdf().set({
+                    margin: 10, image: { type: 'jpeg', quality: 1 }, html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' }, jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
+                }).from(plantilla).output('blob');
+                
+                // Metemos al ZIP CON EL NOMBRE EXACTO SOLICITADO
+                const nombreArchivo = `${alumnoData.nombre} Calificaciones ${grupo}.pdf`;
+                carpeta.file(nombreArchivo, pdfBlob);
+            }
+
+            estado.innerText = "📦 Descargando archivo ZIP...";
+            const contenidoZip = await zip.generateAsync({type:"blob"});
+            
+            saveAs(contenidoZip, `Boletas_Completas_${grupo.replace(/\s+/g, '_')}.zip`);
+            
+            estado.style.color = '#4CAF50';
+            estado.innerText = "✅ ¡Descarga Finalizada!";
+            btnZip.disabled = false;
+
+        } catch (error) {
+            console.error(error);
+            estado.style.color = '#ff4d4d';
+            estado.innerText = "❌ Ocurrió un error al generar los PDFs.";
+            btnZip.disabled = false;
+        } finally {
+            plantilla.style.display = 'none';
+        }
+    });
+</script>
+<script type="module" src="../js/role-nav.js"></script>
+</body>
+</html>

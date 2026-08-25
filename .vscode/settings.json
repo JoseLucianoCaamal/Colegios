@@ -1,0 +1,20 @@
+{
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.expand": false,
+  "explorer.fileNesting.patterns": {
+    "index.html": "manifest.json, sw.js",
+    "dashboard-superadmin.html": "admin-sistema.html, mantenimiento.html, limpiar-asistencia.html",
+    "dashboard-directora.html": "gestionar-maestros.html, gestionar-grupos.html, supervision.html, descargar-fichas.html",
+    "dashboard-maestro.html": "documentos-maestro.html, asistencia.html, calificaciones.html, fichas-descriptivas.html, materias.html, fotos.html",
+    "dashboard-recepcion.html": "registro-alumnos.html, ver-alumnos.html",
+    "centro-mensajes.html": "perfil.html, cambiar-password.html",
+    "firebase.json": "firestore.rules, SEGURIDAD_FIREBASE.md",
+    "README.md": "docs/*.md, .editorconfig, package.json"
+  },
+  "files.exclude": {
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true
+  },
+  "files.trimTrailingWhitespace": true,
+  "editor.formatOnSave": false
+}

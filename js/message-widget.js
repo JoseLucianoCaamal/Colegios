@@ -16,7 +16,7 @@ onAuthStateChanged(auth, async user => {
   const role = profile.rol;
   let received = new Map(), sent = new Map(), messages = [], contacts = [], view = 'messages', activeContact = null, firstSnapshot = true;
 
-  ['css/message-widget.css', 'css/message-conversation.css'].forEach(href => {
+  ['../css/message-widget.css', '../css/message-conversation.css'].forEach(href => {
     if (document.querySelector(`link[href="${href}"]`)) return;
     const style = document.createElement('link');
     style.rel = 'stylesheet';
@@ -140,7 +140,7 @@ onAuthStateChanged(auth, async user => {
     root.querySelectorAll('[data-mw-view]').forEach(item => item.classList.toggle('active', item.dataset.mwView === view));
     if (view === 'contacts') {
       const items = contacts.filter(item => `${item.nombre} ${item.usuario} ${item.email} ${item.rol}`.toLowerCase().includes(term));
-      const mass = role === 'recepcion' ? '' : '<button class="mw-contact mw-mass-contact" data-mass-message><span class="mw-contact-avatar mw-school-logo"><img src="Img/logo.png" alt="Logo del colegio"></span><div><strong>Crear mensaje masivo</strong><span>Docentes, padres o destinatarios</span></div><b>›</b></button>';
+      const mass = role === 'recepcion' ? '' : '<button class="mw-contact mw-mass-contact" data-mass-message><span class="mw-contact-avatar mw-school-logo"><img src="../Img/logo.png" alt="Logo del colegio"></span><div><strong>Crear mensaje masivo</strong><span>Docentes, padres o destinatarios</span></div><b>›</b></button>';
       list.innerHTML = mass + (items.length ? items.map(item => `<button class="mw-contact" data-contact="${item.id}"><span class="mw-contact-avatar">${avatarContent(item)}</span><div><strong>${escapeHtml(item.nombre || item.usuario || item.email)}</strong><span>${escapeHtml(item.rol)} · ${escapeHtml(item.usuario_original || item.email)}</span></div><b>›</b></button>`).join('') : '<div class="mw-empty">No se encontraron contactos.</div>');
       list.querySelector('[data-mass-message]')?.addEventListener('click', () => { location.href = 'centro-mensajes.html'; });
       list.querySelectorAll('[data-contact]').forEach(button => button.addEventListener('click', () => openConversation(contacts.find(item => item.id === button.dataset.contact))));
@@ -165,7 +165,7 @@ onAuthStateChanged(auth, async user => {
     toastNode.innerHTML = `<strong>Nuevo mensaje de ${escapeHtml(data.creadoPorNombre || 'personal escolar')}</strong><span>${escapeHtml(data.titulo)}</span>`;
     root.appendChild(toastNode);
     setTimeout(() => toastNode.remove(), 5500);
-    if (window.Notification?.permission === 'granted') new Notification(data.titulo, { body:data.mensaje, icon:'Img/logo.png' });
+    if (window.Notification?.permission === 'granted') new Notification(data.titulo, { body:data.mensaje, icon:'../Img/logo.png' });
   }
 
   root.querySelector('.mw-launcher').addEventListener('click', () => drawer.classList.add('open'));

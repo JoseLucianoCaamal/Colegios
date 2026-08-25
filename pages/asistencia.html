@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Pase de Lista - Amor y Libertad</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/admin-power.css">
+    <link rel="stylesheet" href="../css/academic.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        body { background-color: #f4f7fa; font-family: 'Segoe UI', sans-serif;}
+        .container { max-width: 950px; margin: 30px auto; padding: 0 20px; }
+        .card { padding: 30px; border-radius: 20px; background: #ffffff; border: 1px solid #eef2f7; box-shadow: 0 8px 16px rgba(0,0,0,0.03); margin-bottom: 25px; }
+        .btn-back-clean { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 15px; color: #7f8fa4; text-decoration: none; font-weight: bold; }
+        .filters-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; align-items: end; }
+        .input-control { width: 100%; padding: 12px 15px; border: 2px solid #eef2f7; border-radius: 10px; font-size: 0.95rem; outline: none;}
+        label { font-size: 0.85rem; font-weight: 700; color: #8898aa; display: block; margin-bottom: 8px; text-transform: uppercase; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 15px; border-bottom: 1px solid #f4f7fa; text-align:left; }
+        .student-name { font-weight: 600; color: #32325d; font-size: 1.05rem; }
+        
+        .attendance-options { display: flex; gap: 10px; justify-content: flex-end; }
+        .attendance-options label { cursor: pointer; padding: 8px 18px; border-radius: 20px; background: #f4f7fa; color: #7f8fa4; font-weight: 700; font-size: 0.85rem; border: 2px solid transparent; }
+        .attendance-options input[type="radio"] { display: none; }
+        .attendance-options input[value="Presente"]:checked + label { background: #e8f5e9; color: #2e7d32; border-color: #4CAF50; }
+        .attendance-options input[value="Retardo"]:checked + label { background: #fff8e1; color: #f57f17; border-color: #FFC107; }
+        .attendance-options input[value="Falta"]:checked + label { background: #ffebee; color: #c62828; border-color: #F44336; }
+        .btn-guardar { background: linear-gradient(135deg, #4CAF50, #2E7D32); color: white; border: none; padding: 16px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s;}
+        
+        /* ESTILOS PARA EL PDF PROFESIONAL */
+        #pdf-header { display: none; border-bottom: 2px solid #004a99; padding-bottom: 15px; margin-bottom: 20px; font-family: Arial, sans-serif; }
+        .pdf-header-content { display: flex; align-items: center; justify-content: space-between; }
+        .pdf-logo { width: 80px; height: auto; }
+        .pdf-titles { text-align: center; flex: 1; }
+        .pdf-titles h2 { margin: 0; color: #004a99; font-size: 22px; }
+        .pdf-titles h3 { margin: 5px 0 0 0; color: #333; font-size: 16px; font-weight: normal; }
+        #pdf-subtitle { text-align: center; margin-top: 15px; font-weight: bold; color: #555; background: #eef2f7; padding: 8px; border-radius: 5px;}
+    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body class="academic-page">
+
+<header class="profile-header">
+    <div class="cover-photo"><img src="../Img/logo2.png" alt="Portada"></div>
+    <div class="profile-info">
+        <a href="dashboard-maestro.html" class="btn-back-clean">⬅ Volver al Panel</a>
+        <div class="profile-text">
+            <h1>Pase de Lista</h1>
+            <p style="color: #8898aa;">Control y Consulta Histórica</p>
+        </div>
+    </div>
+</header>
+
+<main class="container">
+    <section class="card">
+        <div class="filters-grid">
+            <div>
+                <label>Grupo</label>
+                <select id="filtroGrupo" class="input-control"><option value="">Cargando grupos...</option></select>
+            </div>
+            <div>
+                <label>Mis Asignaturas</label>
+                <select id="materiaAsistencia" class="input-control"><option value="">Esperando grupo...</option></select>
+            </div>
+            <div>
+                <label>Fecha a Consultar / Pasar Lista</label>
+                <input type="date" id="fechaAsistencia" class="input-control">
+            </div>
+            <div>
+                <button id="btn-cargar-lista" class="btn btn-primary" style="width:100%; padding:12px; border-radius:10px; font-weight:bold;">Generar Lista</button>
+            </div>
+        </div>
+    </section>
+
+    <section class="card" id="seccion-lista" style="display: none;">
+        
+        <!-- MEMBRETE OCULTO PARA EL PDF -->
+        <div id="pdf-header">
+            <div class="pdf-header-content">
+                <img src="../Img/logo.png" class="pdf-logo">
+                <div class="pdf-titles">
+                    <h2>Centro Educativo Amor y Libertad</h2>
+                    <h3>Reporte Oficial de Asistencia Diaria</h3>
+                </div>
+                <!-- Div vacío para centrar el texto correctamente -->
+                <div style="width: 80px;"></div> 
+            </div>
+            <div id="pdf-subtitle"></div>
+        </div>
+        <!-- FIN MEMBRETE -->
+
+        <div class="academic-head" id="tabla-header-ui">
+            <h3 style="margin: 0; color: #004a99; font-size: 1.4rem;" id="titulo-lista">Alumnos</h3>
+            <span class="academic-date" id="badge-fecha"></span>
+        </div>
+        <div class="attendance-command"><div><span class="command-label">Avance del pase</span><strong id="avance-lista">0 de 0 registrados</strong></div><button type="button" id="btn-todos-presentes" class="btn-mark-all">Marcar todos presentes</button></div>
+        <div class="academic-summary"><div class="summary-chip present"><strong id="total-presentes">0</strong><span>Presentes</span></div><div class="summary-chip late"><strong id="total-retardos">0</strong><span>Retardos</span></div><div class="summary-chip absent"><strong id="total-faltas">0</strong><span>Faltas</span></div></div>
+        
+        <table class="academic-table">
+            <thead><tr><th>Nombre del Alumno</th><th style="text-align: right; padding-right: 25px;">Asistencia</th></tr></thead>
+            <tbody id="tabla-asistencia"></tbody>
+        </table>
+        
+        <div class="academic-actions" id="botones-accion">
+            <button id="btn-guardar-asistencia" class="btn btn-save">Confirmar y guardar</button>
+            <button id="btn-exportar-pdf" class="btn btn-export">Exportar reporte PDF</button>
+        </div>
+    </section>
+</main>
+
+<script type="module">
+    import { db, auth } from '../js/firebase-config.js';
+    import { auditEvent } from '../js/security.js';
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { collection, query, where, getDocs, addDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    document.getElementById('fechaAsistencia').valueAsDate = new Date();
+    const filtroGrupo = document.getElementById('filtroGrupo');
+    const selectMateria = document.getElementById('materiaAsistencia');
+    const tabla = document.getElementById('tabla-asistencia');
+    
+    let maestroActual = null;
+    let alumnosActuales = [];
+    let idAsistenciaGuardada = null;
+
+    function actualizarResumen() {
+        const seleccionados = [...tabla.querySelectorAll('input[type="radio"]:checked')].map(input => input.value);
+        document.getElementById('total-presentes').textContent = seleccionados.filter(valor => valor === 'Presente').length;
+        document.getElementById('total-retardos').textContent = seleccionados.filter(valor => valor === 'Retardo').length;
+        document.getElementById('total-faltas').textContent = seleccionados.filter(valor => valor === 'Falta').length;
+        document.getElementById('avance-lista').textContent = `${seleccionados.length} de ${alumnosActuales.length} registrados`;
+    }
+    tabla.addEventListener('change', actualizarResumen);
+    document.getElementById('btn-todos-presentes').addEventListener('click', () => {
+        tabla.querySelectorAll('input[value="Presente"]').forEach(input => { input.checked = true; });
+        actualizarResumen();
+    });
+
+    onAuthStateChanged(auth, (user) => {
+        if (!user) window.location.href = "login.html";
+        else { maestroActual = localStorage.getItem('supliendo_a') || user.email; cargarGruposOficiales(); }
+    });
+
+    async function cargarGruposOficiales() {
+        try {
+            const snap = await getDocs(collection(db, "grupos"));
+            filtroGrupo.innerHTML = '<option value="">Seleccione grupo...</option>';
+            snap.forEach((docSnap) => { filtroGrupo.innerHTML += `<option value="${docSnap.data().nombre}">${docSnap.data().nombre}</option>`; });
+        } catch (error) { filtroGrupo.innerHTML = '<option value="">Error</option>'; }
+    }
+
+    filtroGrupo.addEventListener('change', async () => {
+        const grupoSeleccionado = filtroGrupo.value;
+        selectMateria.innerHTML = "<option value=''>Cargando tus materias...</option>";
+        if (!grupoSeleccionado) { selectMateria.innerHTML = "<option value=''>Esperando grupo...</option>"; return; }
+        try {
+            // Filtro para traer solo materias de ESTE maestro
+            const qMaterias = query(collection(db, "materias"), where("maestro_email", "==", maestroActual));
+            const querySnapshot = await getDocs(qMaterias);
+            selectMateria.innerHTML = "<option value=''>Seleccione asignatura...</option>";
+            let contador = 0;
+            querySnapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                // Verificamos si la materia pertenece al grupo seleccionado
+                if(data.grupo === grupoSeleccionado) {
+                    contador++;
+                    selectMateria.innerHTML += `<option value="${data.nombre}">${data.nombre}</option>`;
+                }
+            });
+            if (contador === 0) selectMateria.innerHTML = "<option value=''>No tienes materias en este grupo</option>";
+        } catch (error) {}
+    });
+
+    document.getElementById('btn-cargar-lista').addEventListener('click', async () => {
+        const grupo = filtroGrupo.value; const materia = selectMateria.value; const fecha = document.getElementById('fechaAsistencia').value;
+        if(!grupo || !materia) return alert("Selecciona un grupo y una asignatura.");
+        
+        document.getElementById('seccion-lista').style.display = 'block'; 
+        alumnosActuales = []; idAsistenciaGuardada = null;
+        document.getElementById('badge-fecha').innerText = fecha; document.getElementById('titulo-lista').innerText = `${grupo}`;
+
+        try {
+            let historialAsistencia = {};
+            const qHistorial = query(collection(db, "asistencias"), where("grupo", "==", grupo), where("materia", "==", materia), where("fecha", "==", fecha));
+            const historialSnap = await getDocs(qHistorial);
+            if (!historialSnap.empty) {
+                idAsistenciaGuardada = historialSnap.docs[0].id;
+                historialAsistencia = historialSnap.docs[0].data().detalles;
+                document.getElementById('btn-guardar-asistencia').innerText = "Actualizar asistencia";
+            } else {
+                document.getElementById('btn-guardar-asistencia').innerText = "Confirmar y guardar";
+            }
+
+            const qAlumnos = query(collection(db, "alumnos"), where("grupo", "==", grupo));
+            const alumnosSnap = await getDocs(qAlumnos);
+            tabla.innerHTML = ""; let contador = 0;
+            
+            alumnosSnap.forEach((docSnap) => {
+                contador++; const data = docSnap.data(); const idAlumno = docSnap.id;
+                alumnosActuales.push(idAlumno); 
+                let est = historialAsistencia[idAlumno] || "Presente";
+                const isP = est === "Presente" ? "checked" : ""; const isR = est === "Retardo" ? "checked" : ""; const isF = est === "Falta" ? "checked" : "";
+
+                tabla.innerHTML += `
+                    <tr>
+                        <td><div class="attendance-student"><span class="roster-number">${contador}</span><span class="student-initial">${data.nombre.charAt(0).toUpperCase()}</span><div><div class="student-name">${data.nombre}</div><small>Estudiante registrado</small></div></div></td>
+                        <td>
+                            <div class="attendance-options">
+                                <input type="radio" name="ast_${idAlumno}" id="p_${idAlumno}" value="Presente" ${isP}><label for="p_${idAlumno}">Presente</label>
+                                <input type="radio" name="ast_${idAlumno}" id="r_${idAlumno}" value="Retardo" ${isR}><label for="r_${idAlumno}">Retardo</label>
+                                <input type="radio" name="ast_${idAlumno}" id="f_${idAlumno}" value="Falta" ${isF}><label for="f_${idAlumno}">Falta</label>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            if(contador === 0) tabla.innerHTML = "<tr><td colspan='2'>No hay alumnos en este grupo.</td></tr>";
+            actualizarResumen();
+        } catch (error) { console.error(error); }
+    });
+
+    document.getElementById('btn-guardar-asistencia').addEventListener('click', async () => {
+        if(alumnosActuales.length === 0) return;
+        let registroAsistencia = {};
+        alumnosActuales.forEach(id => { registroAsistencia[id] = document.querySelector(`input[name="ast_${id}"]:checked`).value; });
+
+        try {
+            if (idAsistenciaGuardada) {
+                await updateDoc(doc(db, "asistencias", idAsistenciaGuardada), { detalles: registroAsistencia, timestamp: new Date() });
+                await auditEvent('asistencia.actualizada', { collection: 'asistencias', id: idAsistenciaGuardada }, `${filtroGrupo.value} · ${selectMateria.value}`);
+                alert("🔄 ¡Asistencia actualizada!");
+            } else {
+                const registroCreado = await addDoc(collection(db, "asistencias"), { grupo: filtroGrupo.value, materia: selectMateria.value, fecha: document.getElementById('fechaAsistencia').value, detalles: registroAsistencia, timestamp: new Date() });
+                await auditEvent('asistencia.creada', { collection: 'asistencias', id: registroCreado.id }, `${filtroGrupo.value} · ${selectMateria.value}`);
+                alert("🎉 ¡Lista guardada!");
+            }
+            document.getElementById('seccion-lista').style.display = 'none'; 
+        } catch (error) { alert("Error al guardar."); }
+    });
+
+    // MAGIA DEL PDF PROFESIONAL
+    document.getElementById('btn-exportar-pdf').addEventListener('click', async () => {
+        const escapar = valor => String(valor || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        const fechaISO = document.getElementById('fechaAsistencia').value;
+        const fechaTexto = fechaISO ? new Date(`${fechaISO}T12:00:00`).toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
+        const registros = [...tabla.querySelectorAll('tr')].map((fila, indice) => {
+            const nombre = fila.querySelector('.student-name')?.textContent.trim() || '';
+            const estado = fila.querySelector('input[type="radio"]:checked')?.value || 'Sin registro';
+            return nombre ? `<tr><td>${indice + 1}</td><td>${escapar(nombre)}</td><td><span class="status status-${estado.toLowerCase()}">${escapar(estado)}</span></td></tr>` : '';
+        }).join('');
+
+        const reporte = document.createElement('div');
+        reporte.className = 'attendance-pdf-report';
+        reporte.innerHTML = `
+            <header class="attendance-pdf-brand"><img src="../Img/logo.png" alt=""><div><h1>Centro Educativo Amor y Libertad</h1><p>Control institucional de asistencia</p></div></header>
+            <section class="attendance-pdf-title"><h2>Reporte de asistencia</h2><p>${escapar(fechaTexto)}</p></section>
+            <section class="attendance-pdf-data"><div><span>Grupo</span><strong>${escapar(filtroGrupo.value)}</strong></div><div><span>Asignatura</span><strong>${escapar(selectMateria.value)}</strong></div><div><span>Total de estudiantes</span><strong>${alumnosActuales.length}</strong></div></section>
+            <section class="attendance-pdf-summary"><div><strong>${document.getElementById('total-presentes').textContent}</strong><span>Presentes</span></div><div><strong>${document.getElementById('total-retardos').textContent}</strong><span>Retardos</span></div><div><strong>${document.getElementById('total-faltas').textContent}</strong><span>Faltas</span></div></section>
+            <table class="attendance-pdf-table"><thead><tr><th>No.</th><th>Nombre del estudiante</th><th>Estado</th></tr></thead><tbody>${registros}</tbody></table>
+            <footer class="attendance-pdf-footer"><span>Centro Educativo Amor y Libertad</span><span>Generado por el sistema escolar</span></footer>`;
+        const vistaPrevia = document.createElement('div');
+        vistaPrevia.style.cssText = 'position:fixed;inset:0;z-index:10000;overflow:auto;padding:24px;background:rgba(14,30,43,.62);display:flex;justify-content:center;align-items:flex-start;';
+        vistaPrevia.appendChild(reporte);
+        document.body.appendChild(vistaPrevia);
+
+        try {
+            const logoReporte = reporte.querySelector('img');
+            if (logoReporte && !logoReporte.complete) {
+                await logoReporte.decode().catch(() => new Promise(resolve => {
+                    logoReporte.addEventListener('load', resolve, { once: true });
+                    logoReporte.addEventListener('error', resolve, { once: true });
+                }));
+            }
+            await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+            await html2pdf().set({
+                margin: 12,
+                filename: `Asistencia_${filtroGrupo.value}_${fechaISO}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+                jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' },
+                pagebreak: { mode: ['css', 'legacy'] }
+            }).from(reporte).save();
+        } finally {
+            vistaPrevia.remove();
+        }
+    });
+</script>
+</body>
+</html>
