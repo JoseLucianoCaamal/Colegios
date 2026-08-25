@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="../css/styles.css">
     <link rel="stylesheet" href="../css/admin-power.css">
     <link rel="stylesheet" href="../css/academic.css">
+    <link rel="stylesheet" href="../css/workspace.css">
 
   <!-- Librerías estrictamente necesarias -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -37,37 +38,37 @@
     }
   </style>
 </head>
-<body>
+<body class="workspace-page">
 
 <header class="profile-header">
   <div class="cover-photo"><img src="../Img/logo2.png" alt="Portada"></div>
   <div class="profile-info">
     <a href="dashboard-directora.html" class="btn-back-clean" data-role-home>← Volver a mi panel</a>
     <div class="profile-text">
-      <h1>Gestión de Fichas Descriptivas</h1>
-      <p>Control y Exportación Oficial de Documentos</p>
+      <h1>Archivo de fichas descriptivas</h1>
+      <p>Consulta, control y exportación de documentos de seguimiento</p>
     </div>
   </div>
 </header>
 
 <main class="container">
   <section class="card">
-    <label>🏫 Selecciona un Grupo para ver sus Fichas</label>
+    <label>Selecciona un grupo para consultar sus fichas</label>
     <select id="filtroGrupo" class="input-control">
       <option value="">Cargando grupos...</option>
     </select>
-    <button id="btn-buscar" class="btn btn-primary" style="width: 100%; padding: 12px; border-radius: 8px; font-weight: bold; background:#004a99; border:none; cursor:pointer; color: white;">Buscar Fichas</button>
+    <button id="btn-buscar" class="btn btn-primary">Buscar fichas</button>
   </section>
 
   <section class="card" id="seccion-resultados" style="display: none;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-      <h3 style="color:#004a99; margin:0;">📋 Fichas Encontradas</h3>
+      <h3>Fichas encontradas</h3>
       <div style="display: flex; gap: 10px; flex-wrap: wrap;" id="botones-accion-global">
         <button id="btn-borrar-todo" class="btn" style="background:#ff4d4d; color:white; font-weight:bold; border:none; padding:10px 15px; border-radius:8px; cursor:pointer;">
-          🗑️ Borrar Todas
+          Borrar todas
         </button>
         <button id="btn-descargar-zip" class="btn" style="background:#FF9800; color:#333; font-weight:bold; border:none; padding:10px 15px; border-radius:8px; cursor:pointer;">
-          🗂️ Descargar ZIP
+          Descargar ZIP
         </button>
       </div>
     </div>

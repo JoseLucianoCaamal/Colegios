@@ -5,6 +5,7 @@
     <title>Gestionar Grupos - Directora</title>
     <link rel="stylesheet" href="../css/styles.css">
     <link rel="stylesheet" href="../css/admin-power.css">
+    <link rel="stylesheet" href="../css/workspace.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         .grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 1000px; margin: 20px auto; padding: 0 20px; }
@@ -16,15 +17,15 @@
         @media (max-width: 768px) { .grid-layout { grid-template-columns: 1fr; } }
     </style>
 </head>
-<body>
+<body class="workspace-page">
 
 <header class="profile-header">
     <div class="cover-photo"><img src="../Img/logo2.png" alt="Portada"></div>
     <div class="profile-info">
         <a href="dashboard-directora.html" class="btn-back-clean" data-role-home>← Volver a mi panel</a>
         <div class="profile-text">
-            <h1>Gestión de Grupos</h1>
-            <p>Configuración de Grados Escolares</p>
+            <h1>Organización de grupos</h1>
+            <p>Crea y administra la estructura académica del ciclo escolar</p>
         </div>
     </div>
 </header>
@@ -32,15 +33,15 @@
 <main class="grid-layout">
     <!-- Formulario para agregar -->
     <section class="card">
-        <h3 style="margin-top: 0; color: #FF9800;">🏫 Crear Nuevo Grupo</h3>
+        <h3>Crear grupo</h3>
         <label style="font-weight:bold; font-size:0.9rem;">Nombre Oficial del Grupo</label>
         <input type="text" id="nombreGrupo" class="input-control" placeholder="Ej: Secundaria 1">
-        <button id="btn-guardar" class="btn btn-primary" style="width: 100%; padding: 12px; border-radius: 8px; font-weight: bold; background:#FF9800; border:none;">Guardar Grupo</button>
+        <button id="btn-guardar" class="btn btn-primary">Guardar grupo</button>
     </section>
 
     <!-- Lista de grupos -->
     <section class="card">
-        <h3 style="margin-top: 0; color: #004a99;">📋 Grupos Actuales</h3>
+        <h3>Grupos activos</h3>
         <table>
             <thead><tr><th>Nombre del Grupo</th><th>Acciones</th></tr></thead>
             <tbody id="lista-grupos"></tbody>

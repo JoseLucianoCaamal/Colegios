@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="../css/styles.css">
     <link rel="stylesheet" href="../css/admin-power.css">
     <link rel="stylesheet" href="../css/academic.css">
+    <link rel="stylesheet" href="../css/workspace.css">
     
     <!-- Librerías para PDF y ZIP -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -41,15 +42,15 @@
         .tabla-boleta-pdf th:last-child{text-align:center}.tabla-boleta-pdf td{padding:11px 12px;border-bottom:1px solid #dfe7ed;text-align:center;font-size:11px;font-weight:bold;color:#172534}.tabla-boleta-pdf td:first-child{text-align:left;font-weight:normal}.pdf-grade-summary{display:flex;justify-content:flex-end;margin-top:15px}.pdf-grade-summary span{padding:8px 12px;border-radius:7px;color:#073763;background:#eaf3f8;font-size:10px;font-weight:bold}.pdf-report-footer{position:absolute;left:44px;right:44px;bottom:20px;display:flex;justify-content:space-between;padding-top:9px;border-top:1px solid #dfe7ed;color:#718092;font-size:8px}
     </style>
 </head>
-<body class="academic-page">
+<body class="academic-page workspace-page">
 
 <header class="profile-header">
     <div class="cover-photo"><img src="../Img/logo2.png" alt="Portada"></div>
     <div class="profile-info">
         <a href="dashboard-directora.html" class="btn-back-clean" data-role-home>← Volver a mi panel</a>
         <div class="profile-text">
-            <h1>Boletas de Calificaciones</h1>
-            <p>Generación de Documentos Individuales</p>
+            <h1>Boletas y resultados académicos</h1>
+            <p>Consulta, revisión y generación de documentos por estudiante</p>
         </div>
     </div>
 </header>
@@ -70,16 +71,16 @@
                 </select>
             </div>
             <div>
-                <button id="btn-buscar-alumnos" class="btn btn-primary" style="width:100%; padding:12px; border-radius:8px; background:#8e44ad; border:none; font-weight:bold; cursor:pointer;">Buscar Alumnos</button>
+                <button id="btn-buscar-alumnos" class="btn btn-primary">Buscar alumnos</button>
             </div>
         </div>
     </section>
 
     <section class="card" id="seccion-resultados" style="display: none;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h3 style="color:#8e44ad; margin:0;" id="titulo-lista">Alumnos Encontrados</h3>
-            <button id="btn-descargar-zip" class="btn" style="background:#FF9800; color:#333; font-weight:bold; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; display:flex; align-items:center; gap:8px;">
-                🗂️ Descargar Boletas en ZIP
+            <h3 id="titulo-lista">Alumnos encontrados</h3>
+            <button id="btn-descargar-zip" class="btn">
+                Descargar boletas en ZIP
             </button>
         </div>
         

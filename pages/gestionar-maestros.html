@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="../css/styles.css">
     <link rel="stylesheet" href="../css/admin-power.css">
     <link rel="stylesheet" href="../css/manage.css">
+    <link rel="stylesheet" href="../css/workspace.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         .grid-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; max-width: 1000px; margin: 20px auto; padding: 0 20px; }
@@ -22,34 +23,34 @@
         .btn-delete:hover { background: #c62828; }
     </style>
 </head>
-<body class="admin-powered">
+<body class="admin-powered workspace-page">
 
 <header class="profile-header">
     <div class="cover-photo"><img src="../Img/logo2.png" alt="Portada"></div>
     <div class="profile-info">
         <a href="dashboard-superadmin.html" class="btn-back-clean" data-role-home>← Regresar a mi panel</a>
         <div class="profile-text">
-            <h1>Gestionar Maestros</h1>
-            <p>Panel Administrativo</p>
+            <h1>Gestión del personal docente</h1>
+            <p>Altas, consulta y control de acceso del equipo académico</p>
         </div>
     </div>
 </header>
 
 <main class="grid-layout">
     <section class="card">
-        <h3 style="margin-top:0; color:#073763;">Nuevo maestro</h3>
+        <h3>Registrar docente</h3>
         <label>Nombre Completo del Docente</label>
         <input type="text" id="nombreMaestro" class="input-control" placeholder="Ej: Mtra. Sofía Martínez">
         <label>Nombre de Usuario</label>
         <input type="text" id="usuarioMaestro" class="input-control" placeholder="Ej: Mtr.Juan">
         <label>Contraseña Temporal</label>
         <input type="password" id="claveMaestro" class="input-control" placeholder="Mínimo 6 caracteres">
-        <button id="btn-registrar" class="btn btn-primary" style="width:100%; padding:12px; border-radius:8px; cursor:pointer; font-weight:bold;">REGISTRAR MAESTRO</button>
+        <button id="btn-registrar" class="btn btn-primary">Registrar docente</button>
     </section>
 
     <section class="card">
-        <h3 style="margin-top:0; color:#073763;">Maestros registrados</h3>
-        <p style="color:#c62828; font-size:0.85rem; font-weight:bold;">Borrar un maestro revocará su acceso al sistema inmediatamente.</p>
+        <h3>Personal registrado</h3>
+        <p style="color:#667483; font-size:0.78rem;">Al retirar un acceso, el docente dejará de entrar al sistema inmediatamente.</p>
         <div style="overflow-x: auto;">
             <table>
                 <thead>
