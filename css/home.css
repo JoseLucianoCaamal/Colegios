@@ -26,12 +26,6 @@ button, a { -webkit-tap-highlight-color: transparent; }
 img { max-width: 100%; }
 .home-container { width: min(1240px, calc(100% - 48px)); margin-inline: auto; }
 
-.institutional-bar { color: #d8e7f2; background: #032b4e; font-size: .69rem; letter-spacing: .025em; }
-.institutional-inner { display: flex; min-height: 34px; align-items: center; justify-content: space-between; gap: 24px; }
-.institutional-inner div { display: flex; align-items: center; gap: 11px; }
-.institutional-inner a { color: inherit; text-decoration: none; }
-.institutional-inner strong { color: #fff; font-weight: 700; }
-
 .home-header {
     position: sticky;
     top: 0;
@@ -86,6 +80,10 @@ img { max-width: 100%; }
 
 .hero-copy, .hero-visual { min-width: 0; }
 .hero-visual { position: relative; padding: 0 28px 44px 34px; }
+.hero-shape { position: absolute; z-index: 0; display: block; pointer-events: none; }
+.hero-shape-coral { top: -34px; left: -3px; width: 116px; height: 116px; border-radius: 34% 66% 58% 42%; background: linear-gradient(145deg,#f4727a,#df414e); opacity: .94; animation: hero-float 7s ease-in-out infinite; }
+.hero-shape-gold { right: -18px; bottom: 88px; width: 92px; height: 92px; border: 18px solid #e7b85f; border-radius: 50%; opacity: .78; animation: hero-float 8s ease-in-out -2.5s infinite reverse; }
+.hero-dots { position: absolute; right: 1px; top: 78px; z-index: 4; width: 76px; height: 76px; opacity: .35; background-image: radial-gradient(#fff 2px,transparent 2.5px); background-size: 13px 13px; pointer-events: none; animation: dots-drift 10s ease-in-out infinite; }
 .hero-photo { position: relative; overflow: hidden; min-width: 0; height: 455px; border-radius: 4px 42px 4px 4px; background: #dce9f3; box-shadow: 0 30px 75px rgba(7,55,99,0.2); }
 .hero-photo img { width: 154%; max-width: none; height: 100%; object-fit: cover; object-position: left center; }
 .hero-photo::after { content: ""; position: absolute; inset: 0; background: linear-gradient(0deg, rgba(3,37,65,0.2), transparent 45%); }
@@ -98,6 +96,12 @@ img { max-width: 100%; }
 .hero-note span { display: block; margin-top: 5px; color: var(--home-muted); font-size: 0.73rem; line-height: 1.45; }
 .hero-logo { position: absolute; left: 0; bottom: 0; z-index: 3; display: grid; width: 92px; height: 92px; place-items: center; border-radius: 4px; background: #fff; box-shadow: var(--home-shadow); }
 .hero-logo img { width: 68px; height: 68px; object-fit: contain; }
+
+@keyframes hero-float { 0%,100% { transform: translate3d(0,0,0) rotate(0); } 50% { transform: translate3d(0,-13px,0) rotate(6deg); } }
+@keyframes dots-drift { 0%,100% { transform: translateY(0); } 50% { transform: translateY(14px); } }
+@keyframes hero-enter { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+.hero-copy { animation: hero-enter .75s cubic-bezier(.2,.75,.25,1) both; }
+.hero-visual { animation: hero-enter .9s .12s cubic-bezier(.2,.75,.25,1) both; }
 
 .school-facts { position: relative; z-index: 2; color: #fff; background: var(--home-navy); }
 .facts-grid { display: grid; grid-template-columns: .55fr .72fr 1fr 1.8fr; }
@@ -209,8 +213,6 @@ img { max-width: 100%; }
 
 @media (max-width: 700px) {
     .home-container { width: min(100% - 28px, 1160px); }
-    .institutional-inner { justify-content: center; }
-    .institutional-inner > span { display: none; }
     .home-nav { min-height: 72px; }
     .home-brand img { width: 42px; height: 42px; }
     .home-brand small { display: none; }
@@ -223,6 +225,9 @@ img { max-width: 100%; }
     .hero-photo { height: 310px; border-radius: 4px 28px 4px 4px; }
     .hero-photo img { min-height: 0; }
     .hero-photo-label { display: none; }
+    .hero-shape-coral { top: -4px; left: 0; width: 76px; height: 76px; }
+    .hero-shape-gold { right: -3px; bottom: 70px; width: 62px; height: 62px; border-width: 12px; }
+    .hero-dots { right: 8px; top: 48px; }
     .hero-note { right: 0; width: 205px; padding: 14px; }
     .hero-logo { width: 70px; height: 70px; }
     .hero-logo img { width: 56px; height: 56px; }
