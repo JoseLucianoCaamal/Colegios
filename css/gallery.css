@@ -1,12 +1,12 @@
-:root { --gallery-navy:#073763; --gallery-dark:#042847; --gallery-blue:#1272b8; --gallery-red:#e84c57; --gallery-text:#172534; --gallery-muted:#667689; --gallery-border:#e1e9f0; --gallery-bg:#f5f8fb; }
+:root { --gallery-navy:#073763; --gallery-dark:#042847; --gallery-blue:#1272b8; --gallery-red:#e84c57; --gallery-gold:#bb8a37; --gallery-text:#172534; --gallery-muted:#667689; --gallery-border:#e1e9f0; --gallery-bg:#f5f8fb; }
 * { box-sizing:border-box; } html { scroll-behavior:smooth; }
 body.gallery-page { margin:0; overflow-x:hidden; color:var(--gallery-text); background:var(--gallery-bg); font-family:"Segoe UI",Arial,sans-serif; }
-.gallery-container { width:min(1160px,calc(100% - 40px)); margin-inline:auto; }
+.gallery-container { width:min(1240px,calc(100% - 48px)); margin-inline:auto; }
 .gallery-nav { border-bottom:1px solid var(--gallery-border); background:#fff; }
-.gallery-nav-inner { display:flex; min-height:76px; align-items:center; justify-content:space-between; gap:20px; }
+.gallery-nav-inner { display:flex; min-height:88px; align-items:center; justify-content:space-between; gap:20px; }
 .gallery-brand { display:flex; align-items:center; gap:11px; color:var(--gallery-text); text-decoration:none; }.gallery-brand img{width:46px;height:46px;object-fit:contain}.gallery-brand strong,.gallery-brand span{display:block}.gallery-brand strong{font-size:.87rem}.gallery-brand span{margin-top:3px;color:var(--gallery-muted);font-size:.68rem}
 .gallery-back { display:inline-flex; min-height:40px; padding:0 14px; align-items:center; gap:7px; border:1px solid var(--gallery-border); border-radius:10px; color:var(--gallery-navy); font-size:.75rem; font-weight:800; text-decoration:none; }.gallery-back:hover{background:#f1f6fa}.gallery-back svg{width:16px;height:16px}
-.gallery-hero { position:relative; overflow:hidden; padding:64px 0 70px; color:#fff; background:linear-gradient(120deg,#073763,#0e609f); }
+.gallery-hero { position:relative; overflow:hidden; padding:82px 0 88px; color:#fff; background:linear-gradient(116deg,#032b4e,#0b568f); }
 .gallery-hero::after{content:"";position:absolute;width:300px;height:300px;right:-80px;top:-170px;border:45px solid rgba(255,255,255,.06);border-radius:50%}
 .gallery-hero-content{position:relative;z-index:1;display:flex;align-items:end;justify-content:space-between;gap:35px}.gallery-kicker{margin:0 0 11px;color:#9bd3f4;font-size:.71rem;font-weight:800;letter-spacing:.13em;text-transform:uppercase}.gallery-hero h1{margin:0;font-size:clamp(2rem,5vw,3.7rem);letter-spacing:-.045em}.gallery-hero-copy>p:last-child{max-width:650px;margin:16px 0 0;color:#d7e7f2;line-height:1.65}.gallery-stat{flex:0 0 auto;padding:15px 18px;border:1px solid rgba(255,255,255,.18);border-radius:13px;background:rgba(255,255,255,.1)}.gallery-stat strong,.gallery-stat span{display:block}.gallery-stat strong{font-size:1.4rem}.gallery-stat span{margin-top:3px;color:#c6dce9;font-size:.7rem}
 .gallery-content { padding:40px 0 72px; }
@@ -17,4 +17,3 @@ body.gallery-page { margin:0; overflow-x:hidden; color:var(--gallery-text); back
 .gallery-footer{padding:27px 0;color:#9fb4c4;background:#031f37;font-size:.7rem}.gallery-footer-inner{display:flex;align-items:center;justify-content:space-between;gap:20px}.gallery-footer a{color:#fff;text-decoration:none}
 @media(max-width:900px){.photo-gallery-modern{grid-template-columns:repeat(2,minmax(0,1fr))}.gallery-hero-content{align-items:flex-start;flex-direction:column}.gallery-toolbar{align-items:flex-start;flex-direction:column}.select-wrap{width:100%}}
 @media(max-width:560px){.gallery-container{width:calc(100% - 28px)}.gallery-nav-inner{min-height:67px}.gallery-brand span{display:none}.gallery-back span{display:none}.gallery-hero{padding:48px 0}.gallery-content{padding-top:24px}.photo-gallery-modern{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.photo-card img{height:150px}.photo-meta{min-height:62px;padding:10px}.photo-meta strong{max-width:105px;font-size:.71rem}.download-photo{width:34px;height:34px}.gallery-footer-inner{align-items:flex-start;flex-direction:column}.lightbox{padding:14px}.lightbox-caption{right:20px;left:20px}}
-
